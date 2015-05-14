@@ -260,9 +260,15 @@ public class Weaver {
             }
 
             // Instrument
-            // For @Before, instrument the snippet just before the
-            // entrance of a region.
+
+            //
+            // For @Before snippets, insert the snippet code just before the
+            // region entry.
+            //
             if (snippet.hasAnnotation (Before.class)) {
+                final int initialMaxLocals = methodNode.maxLocals;
+                int phaseMaxLocals = initialMaxLocals;
+
                 for (final Shadow shadow : shadows) {
                     final AbstractInsnNode loc = shadow.getWeavingRegion ().getStart ();
 
@@ -270,22 +276,50 @@ public class Weaver {
                         methodNode, staticInfoHolder, piResolver, info,
                         snippet, code, shadow, loc
                     );
+
+                    //
+                    // Reset method max locals after each snippet, but keep
+                    // track of the max locals for all snippets in this phase.
+                    //
+                    phaseMaxLocals = Math.max (phaseMaxLocals, methodNode.maxLocals);
+                    methodNode.maxLocals = initialMaxLocals;
                 }
+
+                //
+                // Set max locals to the max level reached in this phase.
+                //
+                methodNode.maxLocals = phaseMaxLocals;
             }
+
 
             //
             // For regular after (after returning), insert the snippet
             // after each adjusted exit of a region.
             //
             if (snippet.hasAnnotation (AfterReturning.class) || snippet.hasAnnotation (After.class)) {
+                final int initialMaxLocals = methodNode.maxLocals;
+                int phaseMaxLocals = initialMaxLocals;
+
                 for (final Shadow shadow : shadows) {
                     for (final AbstractInsnNode loc : shadow.getWeavingRegion ().getEnds ()) {
                         __insert (
                             methodNode, staticInfoHolder, piResolver, info,
                             snippet, code, shadow, loc
                         );
+
+                        //
+                        // Reset method max locals after each snippet, but keep
+                        // track of the max locals for all snippets in this phase.
+                        //
+                        phaseMaxLocals = Math.max (phaseMaxLocals, methodNode.maxLocals);
+                        methodNode.maxLocals = initialMaxLocals;
                     }
                 }
+
+                //
+                // Set max locals to the max level reached in this phase.
+                //
+                methodNode.maxLocals = phaseMaxLocals;
             }
 
 
@@ -295,6 +329,9 @@ public class Weaver {
             // handler.
             //
             if (snippet.hasAnnotation(AfterThrowing.class) || snippet.hasAnnotation(After.class)) {
+                final int initialMaxLocals = methodNode.maxLocals;
+                int phaseMaxLocals = initialMaxLocals;
+
                 for (final Shadow shadow : shadows) {
                     // after-throwing inserts the snippet once, and marks
                     // the start and the very end as the scope
@@ -316,7 +353,19 @@ public class Weaver {
 
                     methodNode.tryCatchBlocks.add (tcb);
                     methodNode.tryCatchBlocks.addAll (wc.getTCBs ());
+
+                    //
+                    // Reset method max locals after each snippet, but keep
+                    // track of the max locals for all snippets in this phase.
+                    //
+                    phaseMaxLocals = Math.max (phaseMaxLocals, methodNode.maxLocals);
+                    methodNode.maxLocals = initialMaxLocals;
                 }
+
+                //
+                // Set max locals to the max level reached in this phase.
+                //
+                methodNode.maxLocals = phaseMaxLocals;
             }
         }
 
