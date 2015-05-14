@@ -23,7 +23,6 @@ import org.objectweb.asm.tree.MethodNode;
 import ch.usi.dag.disl.classparser.DislClasses;
 import ch.usi.dag.disl.exception.DiSLException;
 import ch.usi.dag.disl.exception.DiSLInMethodException;
-import ch.usi.dag.disl.exclusion.ExclusionSet;
 import ch.usi.dag.disl.guard.GuardHelper;
 import ch.usi.dag.disl.localvar.SyntheticLocalVar;
 import ch.usi.dag.disl.localvar.ThreadLocalVar;

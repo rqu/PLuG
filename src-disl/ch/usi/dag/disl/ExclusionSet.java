@@ -1,4 +1,4 @@
-package ch.usi.dag.disl.exclusion;
+package ch.usi.dag.disl;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -14,7 +14,6 @@ import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import ch.usi.dag.disl.InitializationException;
 import ch.usi.dag.disl.scope.Scope;
 import ch.usi.dag.disl.scope.ScopeMatcher;
 import ch.usi.dag.disl.util.JavaNames;
@@ -28,7 +27,7 @@ import ch.usi.dag.disl.util.JavaNames;
  * @author Lukas Marek
  * @author Lubomir Bulej
  */
-public abstract class ExclusionSet {
+abstract class ExclusionSet {
 
     public static Set <Scope> prepare (final Stream <URL> urlStream) {
         try {
