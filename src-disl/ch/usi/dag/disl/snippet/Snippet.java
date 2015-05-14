@@ -2,6 +2,7 @@ package ch.usi.dag.disl.snippet;
 
 import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.objectweb.asm.Type;
@@ -76,10 +77,17 @@ public class Snippet implements Comparable <Snippet> {
 
 
     /**
-     * @return The snippet annotation class.
+     * Checks whether this snippet's annotation class matches the given
+     * annotation class.
+     *
+     * @param checkClass
+     * @return {@code true} if this snippet's annotation class matches the given
+     *         annotation class.
      */
-    public Class <?> getAnnotationClass () {
-        return annotationClass;
+    public boolean hasAnnotation (final Class <?> checkClass) {
+        assert Objects.requireNonNull (checkClass).isAnnotation ();
+        return annotationClass.equals (checkClass);
+
     }
 
 
