@@ -123,6 +123,15 @@ public class Code {
         return _containsHandledException;
     }
 
+
+    /**
+     * @return the number of local slots occupied by parameters of the method
+     *         representing this code.
+     */
+    public int getParameterSlotCount () {
+        return AsmHelper.getParameterSlotCount (__method);
+    }
+
     //
 
     /**

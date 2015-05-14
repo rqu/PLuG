@@ -1,8 +1,6 @@
 package ch.usi.dag.disl.snippet;
 
-import java.io.PrintStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,18 +11,13 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.InsnNode;
-import org.objectweb.asm.tree.LabelNode;
 import org.objectweb.asm.tree.LdcInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.tree.TryCatchBlockNode;
 
 import ch.usi.dag.disl.DiSL.CodeOption;
 import ch.usi.dag.disl.coderep.Code;
 import ch.usi.dag.disl.coderep.UnprocessedCode;
-import ch.usi.dag.disl.dynamicbypass.DynamicBypass;
-import ch.usi.dag.disl.exception.DiSLFatalException;
 import ch.usi.dag.disl.exception.ProcessorException;
 import ch.usi.dag.disl.exception.ReflectionException;
 import ch.usi.dag.disl.localvar.LocalVars;
@@ -33,8 +26,8 @@ import ch.usi.dag.disl.marker.Marker;
 import ch.usi.dag.disl.processor.ArgProcessor;
 import ch.usi.dag.disl.processorcontext.ArgumentProcessorContext;
 import ch.usi.dag.disl.processorcontext.ArgumentProcessorMode;
-import ch.usi.dag.disl.util.AsmHelper;
 import ch.usi.dag.disl.util.AsmHelper.Insns;
+import ch.usi.dag.disl.util.CodeTransformer;
 
 
 /**
@@ -69,8 +62,6 @@ public class SnippetUnprocessedCode {
         __snippetDynamicBypass = snippetDynamicBypass;
     }
 
-
-
     //
 
     public String className () {
@@ -99,22 +90,41 @@ public class SnippetUnprocessedCode {
         //
         // Process code:
         //
-        // If required, insert dynamic bypass control around the snippet,
-        // or code to catch all exceptions to avoid disrupting program flow.
+        // - reclaim local variable slots taken by snippet context parameters
+        //
+        //   The context parameters to a snippet take up local variable slots.
+        //   These are not used at runtime, needlessly increasing the stack
+        //   frame. To reclaim these slots, we shift all local variable
+        //   accesses by the amount of slots occupied by the context
+        //   parameters.
+        //
+        // - If required, insert dynamic bypass control around the snippet.
+        // - If required, catch all exceptions around the snippet.
         //
         // Code processing has to be done before looking for argument processor
         // invocations, otherwise the analysis will produce wrong instruction
         // references.
         //
-        final InsnList insns = code.getInstructions ();
+        final List <CodeTransformer> transformers = new ArrayList <> ();
+
+        transformers.add (
+            new ShiftLocalVarSlotCodeTransformer (-code.getParameterSlotCount ())
+        );
+
         if (options.contains (CodeOption.DYNAMIC_BYPASS) && __snippetDynamicBypass) {
-            __insertDynamicBypassControl (insns);
+            transformers.add (new InsertDynamicBypassControlCodeTransformer ());
         }
 
-        final List <TryCatchBlockNode> tcbs = code.getTryCatchBlocks ();
         if (options.contains (CodeOption.CATCH_EXCEPTIONS)) {
-            __insertExceptionHandler (insns, tcbs);
+            transformers.add (
+                new InsertExceptionHandlerCodeTransformer (
+                    __template.location (), code.getTryCatchBlocks ()
+                )
+            );
         }
+
+        final InsnList insns = code.getInstructions ();
+        CodeTransformer.apply (insns, transformers);
 
         //
         // Analyze code:
@@ -254,116 +264,6 @@ public class SnippetUnprocessedCode {
         return new ProcessorInfo (
             i, new ProcInvocation (processor, procApplyType)
         );
-    }
-
-    //
-
-    private static final Method __printlnMethod__ = __getMethod (PrintStream.class, "println", String.class);
-    private static final Method __printStackTraceMethod__ = __getMethod (Throwable.class, "printStackTrace");
-    private static final Method __exitMethod__ = __getMethod (System.class, "exit", int.class);
-    private static final Field __errField__ = __getField (System.class, "err");
-
-    /**
-     * Inserts a try-finally block for each snippet and fails immediately if a
-     * snippet produces an exception.
-     */
-    private void __insertExceptionHandler (
-        final InsnList insns, final List <TryCatchBlockNode> tcbs
-    ) {
-        //
-        // The inserted code:
-        //
-        // TRY_BEGIN:       try {
-        //                      ... original snippet code ...
-        //                      goto HANDLER_END;
-        // TRY_END:         } finally (e) {
-        // HANDLER_BEGIN:       System.err.println(...);
-        //                      e.printStackTrace();
-        //                      System.exit(666);
-        //                      throw e;
-        // HANDLER_END:     }
-        //
-        // In the finally block, the exception will be at the top of the stack.
-        //
-        final LabelNode tryBegin = new LabelNode();
-        insns.insert (tryBegin);
-
-        final LabelNode handlerEnd = new LabelNode ();
-        insns.add (AsmHelper.jumpTo (handlerEnd));
-
-        final LabelNode tryEnd = new LabelNode ();
-        insns.add (tryEnd);
-
-        final LabelNode handlerBegin = new LabelNode ();
-        insns.add (handlerBegin);
-
-        // System.err.println(...);
-        insns.add (AsmHelper.getStatic (__errField__));
-        insns.add (AsmHelper.loadConst (String.format (
-            "%s: failed to handle an exception", __template.location (tryBegin)
-        )));
-        insns.add (AsmHelper.invokeVirtual (__printlnMethod__));
-
-        // e.printStackTrace();
-        insns.add (new InsnNode (Opcodes.DUP));
-        insns.add (AsmHelper.invokeVirtual (__printStackTraceMethod__));
-
-        // System.exit(666)
-        insns.add (AsmHelper.loadConst (666));
-        insns.add (AsmHelper.invokeStatic (__exitMethod__));
-
-        // Re-throw the exception (just for proper stack frame calculation)
-        insns.add (new InsnNode (Opcodes.ATHROW));
-        insns.add (handlerEnd);
-
-        // Add the exception handler to the list.
-        tcbs.add (new TryCatchBlockNode (tryBegin, tryEnd, handlerBegin, null));
-    }
-
-    //
-
-    private static final Method __dbActivate__ = __getMethod (DynamicBypass.class, "activate");
-    private static final Method __dbDeactivate__ = __getMethod (DynamicBypass.class, "deactivate");
-
-    private static void __insertDynamicBypassControl (final InsnList insns) {
-        //
-        // Wraps the given list of instructions with code that controls the
-        // dynamic bypass. The bypass is enabled before the first instruction
-        // and disabled again after the last instruction:
-        //
-        //      DynamicBypass.activate();
-        //      ... original snippet code ...
-        //      DynamicBypass.deactivate();
-        //
-        insns.insert (AsmHelper.invokeStatic (__dbActivate__));
-        insns.add (AsmHelper.invokeStatic (__dbDeactivate__));
-    }
-
-    //
-
-
-    private static Method __getMethod (
-        final Class <?> owner, final String name, final Class <?> ... types
-    ) {
-        try {
-            return owner.getMethod (name, types);
-
-        } catch (final NoSuchMethodException e) {
-            throw new DiSLFatalException (
-                "could not find method %s in class %s", name, owner.getName ()
-            );
-        }
-    }
-
-    private static Field __getField (final Class <?> owner, final String name) {
-        try {
-            return owner.getField (name);
-
-        } catch (final NoSuchFieldException nsfe) {
-            throw new DiSLFatalException (
-                "could not find field %s in class %s", name, owner.getName ()
-            );
-        }
     }
 
 }

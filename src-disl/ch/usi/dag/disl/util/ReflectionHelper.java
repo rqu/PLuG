@@ -1,10 +1,12 @@
 package ch.usi.dag.disl.util;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import org.objectweb.asm.Type;
 
+import ch.usi.dag.disl.exception.DiSLFatalException;
 import ch.usi.dag.disl.exception.ReflectionException;
 
 public final class ReflectionHelper {
@@ -175,6 +177,33 @@ public final class ReflectionHelper {
         }
 
         return false;
+    }
+
+    //
+
+    public static Method getMethod (
+        final Class <?> owner, final String name, final Class <?> ... types
+    ) {
+        try {
+            return owner.getMethod (name, types);
+
+        } catch (final NoSuchMethodException e) {
+            throw new DiSLFatalException (
+                "could not find method %s in class %s", name, owner.getName ()
+            );
+        }
+    }
+
+
+    public static Field getField (final Class <?> owner, final String name) {
+        try {
+            return owner.getField (name);
+
+        } catch (final NoSuchFieldException nsfe) {
+            throw new DiSLFatalException (
+                "could not find field %s in class %s", name, owner.getName ()
+            );
+        }
     }
 
 }
