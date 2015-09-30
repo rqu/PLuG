@@ -358,15 +358,6 @@ abstract class AbstractParser {
 
                 break;
 
-            case Opcodes.LCONST_0:
-                tlv.setDefaultValue(0);
-                break;
-
-            case Opcodes.FCONST_0:
-            case Opcodes.DCONST_0:
-                tlv.setDefaultValue(0.0);
-                break;
-
             case Opcodes.ICONST_1:
 
                 if (fieldInsn.desc.equals("Z")) {
@@ -376,17 +367,8 @@ abstract class AbstractParser {
                 }
 
                 break;
-            case Opcodes.LCONST_1:
-                tlv.setDefaultValue(1);
-                break;
-
-            case Opcodes.FCONST_1:
-            case Opcodes.DCONST_1:
-                tlv.setDefaultValue(1.0);
-                break;
 
             case Opcodes.ICONST_2:
-            case Opcodes.FCONST_2:
                 tlv.setDefaultValue(2);
                 break;
 
@@ -400,6 +382,34 @@ abstract class AbstractParser {
 
             case Opcodes.ICONST_5:
                 tlv.setDefaultValue(5);
+                break;
+
+            case Opcodes.LCONST_0:
+                tlv.setDefaultValue(0L);
+                break;
+
+            case Opcodes.LCONST_1:
+                tlv.setDefaultValue(1L);
+                break;
+
+            case Opcodes.FCONST_0:
+                tlv.setDefaultValue(0.0F);
+                break;
+
+            case Opcodes.FCONST_1:
+                tlv.setDefaultValue(1.0F);
+                break;
+
+            case Opcodes.FCONST_2:
+                tlv.setDefaultValue(2.0F);
+                break;
+
+            case Opcodes.DCONST_0:
+                tlv.setDefaultValue(0.0D);
+                break;
+
+            case Opcodes.DCONST_1:
+                tlv.setDefaultValue(1.0D);
                 break;
 
             case Opcodes.BIPUSH:
