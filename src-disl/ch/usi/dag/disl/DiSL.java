@@ -227,7 +227,7 @@ public final class DiSL {
             .findFirst ();
 
         if (excludeMatch.isPresent ()) {
-            __log.debug ("excluded %s.%s(%s) via %s", className, methodName, methodDesc, excludeMatch.get ());
+            __log.debug ("excluded %s.%s%s via %s", className, methodName, methodDesc, excludeMatch.get ());
             return false;
         }
 
@@ -243,7 +243,7 @@ public final class DiSL {
         // if there is nothing to instrument -> quit
         // just to be faster out
         if (matchedSnippets.isEmpty ()) {
-            __log.debug ("skipping unaffected method: %s.%s(%s)",
+            __log.debug ("skipping unaffected method: %s.%s%s",
                 className, methodName, methodDesc);
             return false;
         }
@@ -277,7 +277,7 @@ public final class DiSL {
 
         // *** compute static info ***
 
-        __log.trace ("calculating static information for method: %s.%s(%s)",
+        __log.trace ("calculating static information for method: %s.%s%s",
             className, methodName, methodDesc);
 
         // prepares SCGenerator class (computes static context)
@@ -285,7 +285,7 @@ public final class DiSL {
 
         // *** used synthetic local vars in snippets ***
 
-        __log.trace ("finding synthetic locals used by method: %s.%s(%s)",
+        __log.trace ("finding synthetic locals used by method: %s.%s%s",
             className, methodName, methodDesc);
 
         // weaver needs list of synthetic locals that are actively used in
@@ -298,7 +298,7 @@ public final class DiSL {
 
         // *** prepare processors ***
 
-        __log.trace ("preparing argument processors for method: %s.%s(%s)",
+        __log.trace ("preparing argument processors for method: %s.%s%s",
             className, methodName, methodDesc);
 
         final PIResolver piResolver = new ProcGenerator ().compute (snippetMarkings);
@@ -315,7 +315,7 @@ public final class DiSL {
         // *** weaving ***
 
         if (snippetMarkings.size () > 0) {
-            __log.debug ("found %d snippet marking(s), weaving method: %s.%s(%s)",
+            __log.debug ("found %d snippet marking(s), weaving method: %s.%s%s",
                 snippetMarkings.size (), className, methodName, methodDesc);
             Weaver.instrument (
                 classNode, methodNode, snippetMarkings,
@@ -326,7 +326,7 @@ public final class DiSL {
             return true;
 
         } else {
-            __log.debug ("found %d snippet marking(s), skipping method: %s.%s(%s)",
+            __log.debug ("found %d snippet marking(s), skipping method: %s.%s%s",
                 snippetMarkings.size (), className, methodName, methodDesc);
 
             return false;
