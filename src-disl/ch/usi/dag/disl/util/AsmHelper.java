@@ -282,8 +282,8 @@ public abstract class AsmHelper {
             return new InsnNode (Opcodes.FCONST_0);
         case Type.DOUBLE:
             return new InsnNode (Opcodes.DCONST_0);
+        case Type.ARRAY:
         case Type.OBJECT:
-            // XXX LB: consider putting Type.ARRAY here as well
             return new InsnNode (Opcodes.ACONST_NULL);
         default:
             throw new DiSLFatalException (
