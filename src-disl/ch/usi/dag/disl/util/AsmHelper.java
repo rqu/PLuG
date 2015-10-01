@@ -63,7 +63,6 @@ public abstract class AsmHelper {
 
         } else if (
             value instanceof Byte ||
-            value instanceof Character ||
             value instanceof Short ||
             value instanceof Integer
         ) {
