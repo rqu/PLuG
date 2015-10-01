@@ -3,31 +3,46 @@ package ch.usi.dag.disl.localvar;
 import org.objectweb.asm.Type;
 
 
-public class ThreadLocalVar extends AbstractLocalVar {
+public final class ThreadLocalVar extends AbstractLocalVar {
 
-    private Object defaultValue;
-    private boolean inheritable;
+    private Object __initialValue;
+    private final boolean __inheritable;
 
-    public ThreadLocalVar(String className, String fieldName, Type type,
-            boolean inheritable) {
+    //
 
-        super(className, fieldName, type);
-        this.inheritable = inheritable;
+    public ThreadLocalVar (
+        final String className, final String fieldName,
+        final Type type, final boolean inheritable
+    ) {
+        super (className, fieldName, type);
+        __inheritable = inheritable;
     }
 
-    public String getTypeAsDesc() {
-        return getType().getDescriptor();
+
+    /**
+     * @return the initial value of this thread local variable.
+     */
+    public Object getInitialValue() {
+        return __initialValue;
     }
 
-    public Object getDefaultValue() {
-        return defaultValue;
+    /**
+     * Sets the initial value of this thread local variable.
+     *
+     * @param value the value to initialize the variable to
+     */
+    public void setInitialValue (final Object value) {
+        __initialValue = value;
     }
 
-    public void setDefaultValue(Object defaultValue) {
-        this.defaultValue = defaultValue;
-    }
 
-    public boolean isInheritable() {
-        return inheritable;
+    /**
+     * Determines whether the initial value of this variable should
+     * be inherited from the current {@link Thread}.
+     *
+     * @return {@code true} if the variable value is inheritable.
+     */
+    public boolean isInheritable () {
+        return __inheritable;
     }
 }

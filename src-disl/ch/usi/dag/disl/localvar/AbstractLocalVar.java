@@ -44,6 +44,10 @@ public abstract class AbstractLocalVar {
         return type;
     }
 
+    public String getDescriptor () {
+        return type.getDescriptor ();
+    }
+
     //
 
     /**

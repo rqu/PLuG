@@ -12,216 +12,192 @@ import org.objectweb.asm.commons.AdviceAdapter;
 import ch.usi.dag.disl.localvar.ThreadLocalVar;
 import ch.usi.dag.disl.util.AsmHelper;
 import ch.usi.dag.disl.util.JavaNames;
+import ch.usi.dag.disl.util.ReflectionHelper;
+
 
 final class TLVInserter extends ClassVisitor {
 
-    private final Set<ThreadLocalVar> threadLocalVars;
+    private static final Type __threadType__ = Type.getType (Thread.class);
+    private static final String __currentThreadName__ = "currentThread";
+    private static final Type __currentThreadType__ = Type.getType (
+        ReflectionHelper.getMethod (Thread.class, __currentThreadName__)
+    );
 
-    public TLVInserter(final ClassVisitor cv, final Set<ThreadLocalVar> tlvs) {
-        super(Opcodes.ASM4, cv);
-        this.threadLocalVars = tlvs;
+    //
+
+    private final Set <ThreadLocalVar> __threadLocals__;
+
+    //
+
+    public TLVInserter (final ClassVisitor cv, final Set <ThreadLocalVar> tlvs) {
+        super (Opcodes.ASM5, cv);
+        __threadLocals__ = tlvs;
     }
 
-    @Override
-    public MethodVisitor visitMethod(final int access, final String name, final String desc,
-            final String sig, final String[] exceptions) {
 
-        // add field initialization
+    @Override
+    public void visit (
+        final int version, final int access, final String name,
+        final String signature, final String superName, final String [] interfaces
+    ) {
+        super.visit (version, access, name, signature, superName, interfaces);
+        assert __threadType__.getInternalName().equals (name);
+    }
+
+
+    @Override
+    public MethodVisitor visitMethod (
+        final int access, final String name, final String desc,
+        final String sig, final String [] exceptions
+    ) {
+        final MethodVisitor mv = super.visitMethod (
+            access, name, desc, sig, exceptions
+        );
+
         if (JavaNames.isConstructorName (name)) {
-            return new TLVInitializer(super.visitMethod(access, name, desc,
-                    sig, exceptions), access, name, desc);
+            // Add field initialization code to the constructor.
+            return new TLVInitializer (mv, access, name, desc);
+        } else {
+            return mv;
         }
-
-        return super.visitMethod(access, name, desc, sig, exceptions);
     }
 
     @Override
-    public void visitEnd() {
-
-        // add fields
-        for (final ThreadLocalVar tlv : threadLocalVars) {
-            super.visitField(Opcodes.ACC_PUBLIC, tlv.getName(),
-                    tlv.getTypeAsDesc(), null, null);
+    public void visitEnd () {
+        // Add instance fields to the class.
+        for (final ThreadLocalVar tlv : __threadLocals__) {
+            super.visitField (
+                Opcodes.ACC_PUBLIC, tlv.getName (), tlv.getDescriptor (),
+                null /* no generic signature */, null /* no static value */
+            );
         }
 
-        super.visitEnd();
+        super.visitEnd ();
     }
+
+    //
 
     private class TLVInitializer extends AdviceAdapter {
 
-        private TLVInitializer(final MethodVisitor mv, final int access, final String name,
-                final String desc) {
-
-            super(Opcodes.ASM4, mv, access, name, desc);
+        private TLVInitializer (
+            final MethodVisitor mv,
+            final int access, final String name, final String desc
+        ) {
+            super (Opcodes.ASM5, mv, access, name, desc);
+            assert JavaNames.isConstructorName (name);
         }
+
+        //
 
         @Override
-        protected void onMethodEnter() {
+        protected void onMethodEnter () {
+            //
+            // Insert initialization code for each thread local variable.
+            // The code for inheritable variables has the following structure:
+            //
+            //   if (Thread.currentThread() != null) {
+            //     this.value = Thread.currentThread().value;
+            //   } else {
+            //     this.value = <predefined-value> | <type-specific default>
+            //   }
+            //
+            // The code for initialized variables has the following structure:
+            //     this.value = <predefined-value> | <type-specific default>
+            //
+            for (final ThreadLocalVar tlv : __threadLocals__) {
+                // Load "this" on the stack, for the final PUTFIELD.
+                __loadThis ();
 
-            final String THREAD_CLASS_NAME =
-                Type.getType(Thread.class).getInternalName();
-            final String CURRENTTHREAD_METHOD_NAME = "currentThread";
-            final String CURRENTTHREAD_METHOD_SIG =
-                "()L" + THREAD_CLASS_NAME + ";";
-
-            // for each thread local var insert initialization
-            for (final ThreadLocalVar tlv : threadLocalVars) {
-
-                final Label getDefaultValue = new Label();
-                final Label putValue = new Label();
-
-                // put this on the stack - for putfield
-                visitVarInsn(ALOAD, 0);
-
-                // -- inherited value --
+                final Label setValueLabel = new Label();
                 if (tlv.isInheritable()) {
+                    //
+                    // Get initial value from the current thread. If the
+                    // current thread is invalid, use the type-specific
+                    // default value.
+                    //
+                    final Label getDefaultValueLable = new Label();
 
-                    // put current thread instance on the stack
-                    visitMethodInsn(INVOKESTATIC,
-                            THREAD_CLASS_NAME,
-                            CURRENTTHREAD_METHOD_NAME,
-                            CURRENTTHREAD_METHOD_SIG, false);
+                    __loadCurrentThread ();
+                    __jumpIfNull (getDefaultValueLable);
 
-                    // if null, go to "get default value"
-                    visitJumpInsn(IFNULL, getDefaultValue);
+                    __loadCurrentThread ();
+                    __getThreadField (tlv);
+                    __jump (setValueLabel);
 
-                    // put current thread instance on the stack
-                    visitMethodInsn(INVOKESTATIC,
-                            THREAD_CLASS_NAME,
-                            CURRENTTHREAD_METHOD_NAME,
-                            CURRENTTHREAD_METHOD_SIG, false);
-
-                    // get value from parent thread ant put it on the stack
-                    visitFieldInsn(GETFIELD, THREAD_CLASS_NAME, tlv.getName(),
-                            tlv.getTypeAsDesc());
-
-                    // go to "put value"
-                    visitJumpInsn(GOTO, putValue);
+                    __setJumpTarget (getDefaultValueLable);
                 }
 
-                // -- default value --
-                visitLabel(getDefaultValue);
+                //
+                // Load the initial value on the stack. If there is no
+                // predefined initial value, a type-specific default is used.
+                //
+                __loadInitialValue (tlv);
 
-                // put the default value on the stack
-                final Object defaultVal = tlv.getDefaultValue();
-                if (defaultVal != null) {
-                    // default value
-                    switch (tlv.getType ().getSort ()) {
-                    case Type.BOOLEAN:
-                        if ((Boolean) defaultVal) {
-                            visitInsn (Opcodes.ICONST_1);
-                        } else {
-                            visitInsn (Opcodes.ICONST_0);
-                        }
-                        break;
-
-                    case Type.CHAR:
-                    case Type.BYTE:
-                    case Type.SHORT:
-                    case Type.INT:
-                        final int intValue = ((Number) defaultVal).intValue ();
-
-                        if (-1 <= intValue && intValue <= 5) {
-                            // The opcodes from ICONST_M1 to ICONST_5 are
-                            // consecutive.
-                            visitInsn (Opcodes.ICONST_0 + intValue);
-                        } else if (Byte.MIN_VALUE <= intValue
-                            && intValue <= Byte.MAX_VALUE) {
-                            visitIntInsn (Opcodes.BIPUSH, intValue);
-                        } else if (Short.MIN_VALUE <= intValue
-                            && intValue <= Short.MAX_VALUE) {
-                            visitIntInsn (Opcodes.SIPUSH, intValue);
-                        } else {
-                            visitLdcInsn (defaultVal);
-                        }
-                        break;
-
-                    case Type.LONG:
-                        final long longValue = ((Long) defaultVal).longValue ();
-
-                        if (longValue == 0) {
-                            visitInsn (Opcodes.LCONST_0);
-                        } else if (longValue == 1) {
-                            visitInsn (Opcodes.LCONST_1);
-                        } else {
-                            visitLdcInsn (defaultVal);
-                        }
-                        break;
-
-                    case Type.FLOAT:
-                        final float floatValue = ((Float) defaultVal).floatValue ();
-
-                        if (floatValue == 0) {
-                            visitInsn (Opcodes.FCONST_0);
-                        } else if (floatValue == 1) {
-                            visitInsn (Opcodes.FCONST_1);
-                        } else if (floatValue == 2) {
-                            visitInsn (Opcodes.FCONST_2);
-                        } else {
-                            visitLdcInsn (defaultVal);
-                        }
-                        break;
-
-                    case Type.DOUBLE:
-                        final double doubleValue = ((Double) defaultVal).doubleValue ();
-
-                        if (doubleValue == 0) {
-                            visitInsn (Opcodes.DCONST_0);
-                        } else if (doubleValue == 1) {
-                            visitInsn (Opcodes.DCONST_1);
-                        } else {
-                            visitLdcInsn (defaultVal);
-                        }
-                        break;
-
-                    case Type.OBJECT:
-                        visitLdcInsn (defaultVal);
-                    default:
-                        break;
-                    }
-                }
-                else {
-
-                    // if object or array
-                    if(AsmHelper.isReferenceType(tlv.getType())) {
-                        // insert null
-                        visitInsn(ACONST_NULL);
-                    }
-                    // if basic type
-                    else {
-                        // insert 0 as default
-                        switch (tlv.getType ().getSort ()) {
-                        case Type.BOOLEAN:
-                        case Type.CHAR:
-                        case Type.BYTE:
-                        case Type.SHORT:
-                        case Type.INT:
-                            visitInsn (ICONST_0);
-                            break;
-
-                        case Type.LONG:
-                            visitInsn (LCONST_0);
-                            break;
-
-                        case Type.FLOAT:
-                            visitInsn (FCONST_0);
-                            break;
-
-                        case Type.DOUBLE:
-                            visitInsn (DCONST_0);
-                            break;
-                        default:
-                            break;
-                        }
-                    }
-                }
-
-                // -- put value to the field --
-                visitLabel(putValue);
-
-                visitFieldInsn(PUTFIELD, THREAD_CLASS_NAME, tlv.getName(),
-                        tlv.getTypeAsDesc());
+                //
+                // Store the value into the corresponding field. This stores
+                // either the "inherited" or the predefined/default value.
+                //
+                __setJumpTarget (setValueLabel);
+                __putThreadField (tlv);
             }
         }
+
+        private void __loadInitialValue (final ThreadLocalVar tlv) {
+            if (tlv.getInitialValue () != null) {
+                __loadConstant (tlv.getInitialValue ());
+            } else {
+                __loadDefault (tlv.getType ());
+            }
+        }
+
+        //
+
+        private void __jump (final Label target) {
+            visitJumpInsn (GOTO, target);
+        }
+
+
+        private void __jumpIfNull (final Label target) {
+            visitJumpInsn (IFNULL, target);
+        }
+
+        private void __setJumpTarget (final Label target) {
+            visitLabel (target);
+        }
+
+        //
+
+        private void __loadThis () {
+            AsmHelper.loadThis ().accept (this);
+        }
+
+        private void __loadDefault (final Type type) {
+            AsmHelper.loadDefault (type).accept (this);
+        }
+
+        private void __loadConstant (final Object value) {
+            AsmHelper.loadConst (value).accept (this);
+        }
+
+        private void __loadCurrentThread () {
+            AsmHelper.invokeStatic (
+                __threadType__, __currentThreadName__, __currentThreadType__
+            ).accept (this);
+        }
+
+        //
+
+        private void __getThreadField (final ThreadLocalVar tlv) {
+            AsmHelper.getField (
+                __threadType__, tlv.getName (), tlv.getDescriptor ()
+            ).accept (this);
+        }
+
+        private void __putThreadField (final ThreadLocalVar tlv) {
+            AsmHelper.putField (
+                __threadType__, tlv.getName (), tlv.getDescriptor ()
+            ).accept (this);
+        }
+
     }
 }

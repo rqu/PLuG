@@ -345,15 +345,15 @@ abstract class AbstractParser {
             // break;
 
             case Opcodes.ICONST_M1:
-                tlv.setDefaultValue(-1);
+                tlv.setInitialValue(-1);
                 break;
 
             case Opcodes.ICONST_0:
 
                 if (fieldInsn.desc.equals("Z")) {
-                    tlv.setDefaultValue(false);
+                    tlv.setInitialValue(false);
                 } else {
-                    tlv.setDefaultValue(0);
+                    tlv.setInitialValue(0);
                 }
 
                 break;
@@ -361,64 +361,64 @@ abstract class AbstractParser {
             case Opcodes.ICONST_1:
 
                 if (fieldInsn.desc.equals("Z")) {
-                    tlv.setDefaultValue(true);
+                    tlv.setInitialValue(true);
                 } else {
-                    tlv.setDefaultValue(1);
+                    tlv.setInitialValue(1);
                 }
 
                 break;
 
             case Opcodes.ICONST_2:
-                tlv.setDefaultValue(2);
+                tlv.setInitialValue(2);
                 break;
 
             case Opcodes.ICONST_3:
-                tlv.setDefaultValue(3);
+                tlv.setInitialValue(3);
                 break;
 
             case Opcodes.ICONST_4:
-                tlv.setDefaultValue(4);
+                tlv.setInitialValue(4);
                 break;
 
             case Opcodes.ICONST_5:
-                tlv.setDefaultValue(5);
+                tlv.setInitialValue(5);
                 break;
 
             case Opcodes.LCONST_0:
-                tlv.setDefaultValue(0L);
+                tlv.setInitialValue(0L);
                 break;
 
             case Opcodes.LCONST_1:
-                tlv.setDefaultValue(1L);
+                tlv.setInitialValue(1L);
                 break;
 
             case Opcodes.FCONST_0:
-                tlv.setDefaultValue(0.0F);
+                tlv.setInitialValue(0.0F);
                 break;
 
             case Opcodes.FCONST_1:
-                tlv.setDefaultValue(1.0F);
+                tlv.setInitialValue(1.0F);
                 break;
 
             case Opcodes.FCONST_2:
-                tlv.setDefaultValue(2.0F);
+                tlv.setInitialValue(2.0F);
                 break;
 
             case Opcodes.DCONST_0:
-                tlv.setDefaultValue(0.0D);
+                tlv.setInitialValue(0.0D);
                 break;
 
             case Opcodes.DCONST_1:
-                tlv.setDefaultValue(1.0D);
+                tlv.setInitialValue(1.0D);
                 break;
 
             case Opcodes.BIPUSH:
             case Opcodes.SIPUSH:
-                tlv.setDefaultValue(((IntInsnNode) source).operand);
+                tlv.setInitialValue(((IntInsnNode) source).operand);
                 break;
 
             case Opcodes.LDC:
-                tlv.setDefaultValue(((LdcInsnNode) source).cst);
+                tlv.setInitialValue(((LdcInsnNode) source).cst);
                 break;
 
             default:

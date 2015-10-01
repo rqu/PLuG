@@ -427,7 +427,7 @@ public final class DiSL {
                     null, "bypass", Type.getType (boolean.class), false
                 );
 
-                tlv.setDefaultValue (false);
+                tlv.setInitialValue (false);
                 insertTLVs.add (tlv);
             }
 
