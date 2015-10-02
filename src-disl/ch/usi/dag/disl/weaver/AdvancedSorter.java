@@ -43,7 +43,10 @@ public class AdvancedSorter extends TryCatchBlockSorter {
                         AsmHelper.offsetBefore(instructions, istart, jend) &&
                         AsmHelper.offsetBefore(instructions, jend, iend)
                 )) {
-                    throw new DiSLFatalException ("Overlapping exception handler.");
+                    throw new DiSLFatalException (String.format (
+                        "Overlapping exception handlers #%d [%d,%d) and #%d [%d, %d)",
+                        i, istart, iend, j, jstart, jend
+                    ));
                 }
             }
         }
@@ -70,8 +73,15 @@ public class AdvancedSorter extends TryCatchBlockSorter {
     }
 
     public static void sort(MethodNode method) {
-        AdvancedSorter sorter = new AdvancedSorter(method);
-        sorter.visitEnd();
-        sorter.validate();
+        try {
+            AdvancedSorter sorter = new AdvancedSorter(method);
+            sorter.visitEnd();
+            sorter.validate();
+        } catch (final Exception ex) {
+            throw new DiSLFatalException (
+                "error instrumenting method %s%s: %s",
+                method.name, method.desc, ex.getMessage ()
+            );
+        }
     }
 }
