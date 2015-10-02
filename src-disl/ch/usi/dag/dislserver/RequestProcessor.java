@@ -1,19 +1,20 @@
 package ch.usi.dag.dislserver;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Set;
 import java.util.UUID;
+
+import org.objectweb.asm.ClassReader;
 
 import ch.usi.dag.disl.DiSL;
 import ch.usi.dag.disl.DiSL.CodeOption;
 import ch.usi.dag.disl.exception.DiSLException;
-import ch.usi.dag.disl.util.Constants;
 import ch.usi.dag.disl.util.JavaNames;
 import ch.usi.dag.disl.util.Logging;
 import ch.usi.dag.util.Strings;
@@ -63,7 +64,7 @@ final class RequestProcessor {
         //
         try {
             if (uninstrPath != null) {
-                __dumpClass (className, classBytes, uninstrPath);
+                __dumpClass (classBytes, className, uninstrPath);
             }
 
             // TODO: instrument the bytecode according to given options
@@ -73,7 +74,7 @@ final class RequestProcessor {
 
             if (newClassBytes != null) {
                 if (instrPath != null) {
-                    __dumpClass (className, newClassBytes, instrPath);
+                    __dumpClass (newClassBytes, className, instrPath);
                 }
 
                 return Message.createClassModifiedResponse (newClassBytes);
@@ -102,7 +103,7 @@ final class RequestProcessor {
 
 
     private static String __getClassName (
-        final byte [] nameBytes, final byte [] codeBytes
+        final byte [] nameBytes, final byte [] classBytes
     ) {
         String result = Strings.EMPTY_STRING;
         if (nameBytes.length > 0) {
@@ -110,7 +111,7 @@ final class RequestProcessor {
         }
 
         if (result.isEmpty ()) {
-            result = __parseInternalClassName (codeBytes);
+            result = new ClassReader (classBytes).getClassName ();
             if (result == null || result.isEmpty ()) {
                 result = UUID.randomUUID ().toString ();
             }
@@ -120,119 +121,40 @@ final class RequestProcessor {
     }
 
 
-    private static String __parseInternalClassName (final byte [] byteCode) {
-        final int CLASS_MAGIC = 0xCAFEBABE;
 
-        final int TAG_CONSTANT_UTF8 = 1;
-        final int TAG_CONSTANT_LONG = 5;
-        final int TAG_CONSTANT_DOUBLE = 6;
-        final int TAG_CONSTANT_CLASS = 7;
-        final int TAG_CONSTANT_STRING = 8;
-        final int TAG_CONSTANT_METHOD_HANDLE = 15;
-        final int TAG_CONSTANT_METHOD_TYPE = 16;
-
-        //
-
-        try (
-            final DataInputStream dis = new DataInputStream (
-                new ByteArrayInputStream (byteCode)
-            );
-        ) {
-            // verify magic field
-            if (dis.readInt () != CLASS_MAGIC) {
-                throw new IOException ("invalid class file format");
-            }
-
-            // skip minor_version and major_version fields
-            dis.readUnsignedShort ();
-            dis.readUnsignedShort ();
-
-            //
-            // Scan the constant pool to pick up the UTF-8 strings and the
-            // class info references to those strings. Skip everything else.
-            // Valid index into the constant pool must be greater than 0.
-            //
-            final int constantCount = dis.readUnsignedShort ();
-            final int [] classIndices = new int [constantCount];
-            final String [] utfStrings = new String [constantCount];
-
-            for (int poolIndex = 1; poolIndex < constantCount; poolIndex++) {
-                final int poolTag = dis.readUnsignedByte ();
-
-                switch (poolTag) {
-                case TAG_CONSTANT_UTF8:
-                    utfStrings [poolIndex] = dis.readUTF ();
-                    break;
-
-                case TAG_CONSTANT_CLASS:
-                    classIndices [poolIndex] = dis.readUnsignedShort ();
-                    break;
-
-                case TAG_CONSTANT_STRING:
-                case TAG_CONSTANT_METHOD_TYPE:
-                    // string_index or descriptor_index
-                    dis.readUnsignedShort ();
-                    break;
-
-                case TAG_CONSTANT_METHOD_HANDLE:
-                    // reference_kind & reference_index
-                    dis.readUnsignedByte ();
-                    dis.readUnsignedShort ();
-                    break;
-
-                case TAG_CONSTANT_LONG:
-                case TAG_CONSTANT_DOUBLE:
-                    // high_bytes & low_bytes
-                    dis.readInt ();
-                    dis.readInt ();
-
-                    // 64-bit values take up two constant pool slots
-                    poolIndex++;
-                    break;
-
-                default:
-                    // all other constant structures fit into 4 bytes
-                    dis.skip (4);
-                }
-            }
-
-            // skip access_flags field
-            dis.readUnsignedShort ();
-
-            // get this_class constant pool index
-            final int thisClassIndex = dis.readUnsignedShort ();
-
-            // resolve the (internal) class name
-            return utfStrings [classIndices [thisClassIndex]];
-
-        } catch (final IOException ioe) {
-            // failed to parse class name
-            return null;
-        }
-    }
-
-
+    /**
+     * Dumps binary representation of a class into a file. The class file is
+     * written into a file in a hierarchy of directories corresponding to class
+     * package hierarchy, with the top-level directory.
+     *
+     * @param byteCode
+     *        class byte code, must not be {@code null}
+     * @param className
+     *        class name, must not be empty
+     * @param root
+     *        the top-level directory of the directory hierarchy into which the
+     *        class file will be stored, must not be {@code null}
+     * @throws IOException
+     */
     private static void __dumpClass (
-        final String className, final byte[] byteCode, final String path
+        final byte[] byteCode, final String className, final String root
     ) throws IOException {
-        // extract the class name and package name
-        final int i = className.lastIndexOf (Constants.PACKAGE_INTERN_DELIM);
-        final String simpleClassName = className.substring (i + 1);
-        final String packageName = className.substring (0, i + 1);
+        // Create the package directory hierarchy
+        final Path dir = FileSystems.getDefault ().getPath (
+            root, JavaNames.canonicalToInternal (JavaNames.packageName (className))
+        );
 
-        // construct path to the class
-        final String pathWithPkg = path + File.separator + packageName;
+        Files.createDirectories (dir);
 
-        // create directories
-        new File (pathWithPkg).mkdirs ();
+        // Dump the class byte code.
+        final Path file = dir.resolve (JavaNames.appendClassFileExtension (
+            JavaNames.simpleClassName (className)
+        ));
 
-        // dump the class code
         try (
-            final FileOutputStream fo = new FileOutputStream (
-                pathWithPkg + JavaNames.appendClassFileExtension (simpleClassName)
-            );
+            final OutputStream os = Files.newOutputStream (file);
         ) {
-            fo.write(byteCode);
+            os.write (byteCode);
         }
     }
 

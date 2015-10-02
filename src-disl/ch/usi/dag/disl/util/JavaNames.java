@@ -12,7 +12,7 @@ package ch.usi.dag.disl.util;
 public final class JavaNames {
 
     private JavaNames () {
-        // TODO Auto-generated constructor stub
+        // not to be instantiated
     }
 
     //
@@ -41,8 +41,13 @@ public final class JavaNames {
         return name.replace (__INTERNAL_PKG_SEPARATOR_CHAR__, __CANONICAL_PKG_SEPARATOR_CHAR__);
     }
 
+    /**
+     * @return Internal class name for the given canonical class name.
+     */
     public static String canonicalToInternal (final String name) {
-        return name.replace (__CANONICAL_PKG_SEPARATOR_CHAR__, __INTERNAL_PKG_SEPARATOR_CHAR__);
+        return name.replace (
+            __CANONICAL_PKG_SEPARATOR_CHAR__, __INTERNAL_PKG_SEPARATOR_CHAR__
+        );
     }
 
     //
@@ -64,6 +69,10 @@ public final class JavaNames {
 
     //
 
+    public static boolean hasPackageName (final String name) {
+        return __lastIndexOfPkgSeparator (name) >= 0;
+    }
+
     public static boolean hasInternalPackageName (final String name) {
         return name.indexOf (__INTERNAL_PKG_SEPARATOR_CHAR__, 0) >= 0;
     }
@@ -71,6 +80,8 @@ public final class JavaNames {
     public static boolean hasCanonicalPackageName (final String name) {
         return name.indexOf (__CANONICAL_PKG_SEPARATOR_CHAR__, 0) >= 0;
     }
+
+    //
 
     private static final String __INTERNAL_PKG_SEPARATOR__ =
         String.valueOf (__INTERNAL_PKG_SEPARATOR_CHAR__);
@@ -90,8 +101,22 @@ public final class JavaNames {
     //
 
     public static String simpleClassName (final Object object) {
-        final String className = object.getClass ().getName ();
-        return className.substring (className.lastIndexOf (".") + 1);
+        return simpleClassName (object.getClass ().getName ());
+    }
+
+    public static String simpleClassName (final String name) {
+        return name.substring (__lastIndexOfPkgSeparator (name) + 1);
+    }
+
+    public static String packageName (final String name) {
+        final int endIndex =  __lastIndexOfPkgSeparator (name);
+        return (endIndex >= 0) ? name.substring (0, endIndex) : "";
+    }
+
+
+    private static int __lastIndexOfPkgSeparator (final String name) {
+        final int idx = name.lastIndexOf (__CANONICAL_PKG_SEPARATOR_CHAR__);
+        return (idx >= 0) ? idx : name.lastIndexOf (__INTERNAL_PKG_SEPARATOR_CHAR__);
     }
 
 }
