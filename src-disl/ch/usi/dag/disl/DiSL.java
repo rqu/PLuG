@@ -438,7 +438,7 @@ public final class DiSL {
 
             if (!insertTLVs.isEmpty ()) {
                 // instrument fields
-                final ClassNode cnWithFields = new ClassNode (Opcodes.ASM4);
+                final ClassNode cnWithFields = new ClassNode (Opcodes.ASM5);
                 classNode.accept (new TLVInserter (cnWithFields, insertTLVs));
 
                 // replace original code with instrumented one

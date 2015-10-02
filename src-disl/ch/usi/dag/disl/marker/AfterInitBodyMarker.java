@@ -76,7 +76,7 @@ public class AfterInitBodyMarker extends AbstractMarker {
         //
         final AtomicBoolean superInitialized = new AtomicBoolean (false);
         final AdviceAdapter adapter = new AdviceAdapter (
-            Opcodes.ASM4, new MethodVisitor (Opcodes.ASM4) { /* empty */ },
+            Opcodes.ASM5, new MethodVisitor (Opcodes.ASM5) { /* empty */ },
             method.access, method.name, method.desc
         ) {
             @Override
