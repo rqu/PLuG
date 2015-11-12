@@ -66,8 +66,7 @@ final class ClassResources {
      *         files and properties used to initialize a {@link DiSL} instance.
      */
     public Stream <String> transformers () {
-        return __manifests.stream ()
-            .flatMap (DislManifest::transformers);
+        return __manifests.stream ().flatMap (DislManifest::transformers);
     }
 
 
@@ -98,7 +97,7 @@ final class ClassResources {
         // Get class names from system properties.
         final List <String> dislClasses = __getClassNames (
             Optional.ofNullable (properties.getProperty (__PROP_DISL_CLASSES__))
-        ).orElse (Collections.emptyList ());
+        );
 
         manifests.add (new DislManifest (dislClasses));
 
@@ -110,12 +109,12 @@ final class ClassResources {
 
     private static final Pattern __splitter__ = Pattern.compile (__SEPARATOR__);
 
-    private static Optional <List <String>> __getClassNames (final Optional <String> value) {
+    private static List <String> __getClassNames (final Optional <String> value) {
         return value.map (v -> __splitter__.splitAsStream (v)
             .map (String::trim)
             .filter (s -> !s.isEmpty ())
             .collect (Collectors.toList ())
-        );
+        ).orElse (Collections.emptyList ());
     }
 
     //
@@ -130,8 +129,8 @@ final class ClassResources {
         //
 
         List <DislManifest> loadAll () {
+            // Avoid parallel streams to keep order of transformers consistent.
             return __manifestUrlStream ()
-//                .parallel () // keep ordering for transformers
                 .map (url -> __loadManifest (url))
                 .filter (Optional::isPresent)
                 .map (Optional::get)
@@ -171,12 +170,10 @@ final class ClassResources {
                 final List <String> transformers = __getClasses (attrs, __ATTR_DISL_TRANSFORMER__);
                 transformers.addAll (__getClasses (attrs, __ATTR_DISL_TRANSFORMERS__));
 
-                if (__log.debugIsLoggable ()) {
-                    __log.debug (
-                        "loaded %s, classes [%s], transformers [%s]",
-                        url, String.join (",", classes), String.join (",", transformers)
-                    );
-                }
+                __log.debug (
+                    "loaded %s, classes [%s], transformers [%s]",
+                    url, String.join (",", classes), String.join (",", transformers)
+                );
 
                 return Optional.of (new DislManifest (url, classes, transformers));
 
@@ -189,9 +186,7 @@ final class ClassResources {
 
 
         private List <String> __getClasses (final Optional <Attributes> attrs, final String attrName) {
-            return __getClassNames (
-                attrs.map (a -> a.getValue (attrName))
-            ).orElse (Collections.emptyList ());
+            return __getClassNames (attrs.map (a -> a.getValue (attrName)));
         }
     }
 
