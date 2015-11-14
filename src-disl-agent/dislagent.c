@@ -7,13 +7,14 @@
 
 #include "common.h"
 #include "jvmtiutil.h"
-
 #include "dislagent.h"
-#include "connection.h"
 
+#include "connection.h"
 #include "network.h"
 #include "msgchannel.h"
+
 #include "bytecode.h"
+#include "classparser.h"
 #include "codeflags.h"
 
 
@@ -35,6 +36,12 @@
 
 #define DISL_CATCH_EXCEPTIONS "disl.excepthandler"
 #define DISL_CATCH_EXCEPTIONS_DEFAULT false
+
+#define DISL_FORCE_SUPERCLASS "disl.forcesuperclass"
+#define DISL_FORCE_SUPERCLASS_DEFAULT false
+
+#define DISL_FORCE_INTERFACES "disl.forceinterfaces"
+#define DISL_FORCE_INTERFACES_DEFAULT false
 
 #define DISL_DEBUG "debug"
 #define DISL_DEBUG_DEFAULT false
@@ -86,6 +93,8 @@ struct config {
 	enum bypass_mode bypass_mode;
 	bool split_methods;
 	bool catch_exceptions;
+	bool force_superclass;
+	bool force_interfaces;
 
 	bool debug;
 };
@@ -144,6 +153,12 @@ __calc_code_flags (struct config * config, bool jvm_is_booting) {
 }
 
 
+static inline const char *
+__safe (const char * class_name) {
+	return (class_name != NULL) ? class_name : "<unknown class>";
+}
+
+
 /**
  * Sends the given class to the remote server for instrumentation. If the
  * server modified the class, provided class definition structure is updated
@@ -186,8 +201,7 @@ __instrument_class (
 	//
 	if (response.control_size > 0) {
 		fprintf (
-			stderr,
-			"%sinstrumentation server error:\n%s\n",
+			stderr, "%sinstrumentation server error:\n%s\n",
 			ERROR_PREFIX, response.control
 		);
 
@@ -210,6 +224,83 @@ __instrument_class (
 }
 
 
+static void
+__force_class (JNIEnv * jni, const char * class_name, const char * kind) {
+	rdprintf ("\tforce-loading %s %s\n", kind, class_name);
+	if (jni != NULL) {
+		jclass found_class = (* jni)->FindClass (jni, class_name);
+		if (found_class == NULL) {
+			warn ("failed to force-load %s %s\n", kind, class_name);
+		}
+
+	} else {
+		rdprintf ("\tJNI not ready, force-loading aborted\n");
+	}
+}
+
+static void
+__force_superclass (JNIEnv * jni, class_t inst_class) {
+	char * super_name = class_super_class_name (inst_class);
+	if (super_name != NULL) {
+		__force_class (jni, super_name, "super class");
+		free (super_name);
+
+	} else {
+		rdprintf ("\tclass does not have super class\n");
+	}
+}
+
+
+static void
+__force_interfaces (JNIEnv * jni, class_t inst_class) {
+	int count = class_interface_count (inst_class);
+	if (count == 0) {
+		rdprintf ("\tclass does not implement interfaces\n");
+		return;
+	}
+
+	for (int index = 0; index < count; index++) {
+		char * iface_name = class_interface_name (inst_class, index);
+		if  (iface_name != NULL) {
+			__force_class (jni, iface_name, "interface");
+			free (iface_name);
+
+		} else {
+			warn ("failed to get the name of interface %d\n", index);
+		}
+	}
+}
+
+
+/**
+ * Forces loading of the super class (or the implemented interfaces) of the
+ * class being instrumented. For this, we need to parse the constant pool
+ * of the class to discover the names of the classes to be force-loaded.
+ * We then use JNI to find the classes, which will force their loading.
+ */
+static void
+__force_classes (
+	JNIEnv * jni, const char * class_name,
+	const unsigned char * class_bytes, jint class_byte_count
+) {
+	class_t inst_class = class_alloc (class_bytes, class_byte_count);
+	if (inst_class != NULL) {
+		if (agent_config.force_superclass) {
+			__force_superclass (jni, inst_class);
+		}
+
+		if (agent_config.force_interfaces) {
+			__force_interfaces (jni, inst_class);
+		}
+
+		class_free (inst_class);
+
+	} else {
+		warn ("failed to parse class %s\n", __safe (class_name));
+	}
+}
+
+
 static void JNICALL
 jvmti_callback_class_file_load (
 	jvmtiEnv * jvmti, JNIEnv * jni,
@@ -222,18 +313,24 @@ jvmti_callback_class_file_load (
 
 	rdprintf (
 		"%s loaded, %ld bytes at %p\n",
-		(class_name != NULL) ? class_name : "<unknown class>",
-		(long) class_byte_count, class_bytes
+		__safe (class_name), (long) class_byte_count, class_bytes
 	);
 
 	//
 	// Avoid instrumenting the bypass check class.
 	//
-	if (class_name != NULL && (strcmp (class_name, BPC_CLASS_NAME) == 0)) {
+	if (class_name != NULL && strcmp (class_name, BPC_CLASS_NAME) == 0) {
 		rdprintf ("skipping bypass check class (%s)\n", class_name);
 		return;
 	}
 
+	//
+	// Force loading of the super class or the interface classes.
+	//
+	if (agent_config.force_superclass || agent_config.force_interfaces) {
+		rdprintf ("forcing classes for %s\n", __safe (class_name));
+		__force_classes (jni, class_name, class_bytes, class_byte_count);
+	}
 
 	//
 	// Instrument the class and if changed by the server, provide the
@@ -334,8 +431,6 @@ __configure_from_properties (jvmtiEnv * jvmti, struct config * config) {
 	config->bypass_mode = bypass_index;
 	free (bypass);
 
-	rdprintf ("bypass mode: %s\n", values [bypass_index]);
-
 	//
 	// Get boolean values from system properties
 	//
@@ -347,9 +442,26 @@ __configure_from_properties (jvmtiEnv * jvmti, struct config * config) {
 		jvmti, DISL_CATCH_EXCEPTIONS, DISL_CATCH_EXCEPTIONS_DEFAULT
 	);
 
+	config->force_superclass = jvmti_get_system_property_bool (
+		jvmti, DISL_FORCE_SUPERCLASS, DISL_FORCE_SUPERCLASS_DEFAULT
+	);
+
+	config->force_interfaces = jvmti_get_system_property_bool (
+		jvmti, DISL_FORCE_INTERFACES, DISL_FORCE_INTERFACES_DEFAULT
+	);
+
 	config->debug = jvmti_get_system_property_bool (
 		jvmti, DISL_DEBUG, DISL_DEBUG_DEFAULT
 	);
+
+	//
+	// Configuration summary.
+	//
+	rdprintf ("bypass mode: %s\n", values [bypass_index]);
+	rdprintf ("split methods: %d\n", config->split_methods);
+	rdprintf ("catch exceptions: %d\n", config->catch_exceptions);
+	rdprintf ("force superclass: %d\n", config->force_superclass);
+	rdprintf ("force interfaces: %d\n", config->force_interfaces);
 }
 
 

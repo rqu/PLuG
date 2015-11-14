@@ -138,7 +138,7 @@ connection_pool_close (struct connection_pool * cp) {
 
 	list_destroy (&cp->free_connections, __connection_destructor, (void *) cp);
 	if (!list_is_empty (&cp->busy_connections)) {
-		fprintf (stderr, "warning: closing %d active connections", cp->connections_count);
+		warn ("closing %d active connections", cp->connections_count);
 		list_destroy (&cp->busy_connections, __connection_destructor, (void *) cp);
 	}
 }

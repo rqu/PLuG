@@ -59,7 +59,8 @@ endif
 
 # Source and object files needed to create the library
 SOURCES = bytecode.c common.c jvmtiutil.c connection.c \
-	connpool.c msgchannel.c network.c dislagent.c
+	connpool.c msgchannel.c network.c classparser.c \
+	dislagent.c
 
 HEADERS = $(wildcard *.h) codeflags.h
 GENSRCS = bytecode.c codeflags.h
