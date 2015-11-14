@@ -225,12 +225,33 @@ __instrument_class (
 
 
 static void
+__handle_exception (JNIEnv * jni, jthrowable ex_obj) {
+	jclass ex_class = (* jni)->GetObjectClass (jni, ex_obj);
+	jmethodID m_getClass = (* jni)->GetMethodID (jni, ex_class, "getClass", "()Ljava/lang/Class;");
+	jobject cl_obj = (* jni)->CallObjectMethod (jni, ex_obj, m_getClass);
+
+	jclass cl_class = (* jni)->GetObjectClass (jni, cl_obj);
+	jmethodID m_getName = (* jni)->GetMethodID (jni, cl_class, "getName", "()Ljava/lang/String;");
+	jstring cl_name = (* jni)->CallObjectMethod (jni, cl_obj, m_getName);
+
+	const char * cl_name_chars = (* jni)->GetStringUTFChars (jni, cl_name, NULL);
+	rdprintf ("\texception %s occured, cleared\n", cl_name_chars);
+	(* jni)->ReleaseStringUTFChars (jni, cl_name, cl_name_chars);
+}
+
+
+static void
 __force_class (JNIEnv * jni, const char * class_name, const char * kind) {
 	rdprintf ("\tforce-loading %s %s\n", kind, class_name);
 	if (jni != NULL) {
 		jclass found_class = (* jni)->FindClass (jni, class_name);
 		if (found_class == NULL) {
 			warn ("failed to force-load %s %s\n", kind, class_name);
+			jthrowable exception = (* jni)->ExceptionOccurred (jni);
+			if (exception != NULL) {
+				(* jni)->ExceptionClear (jni);
+				__handle_exception (jni, exception);
+			}
 		}
 
 	} else {
