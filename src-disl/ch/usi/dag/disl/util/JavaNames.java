@@ -30,23 +30,25 @@ public final class JavaNames {
 
     //
 
-    private static final char __CANONICAL_PKG_SEPARATOR_CHAR__ = '.';
-    private static final char __INTERNAL_PKG_SEPARATOR_CHAR__ = '/';
+    private static final char __TYPE_NAME_PKG_SEPARATOR_CHAR__ = '.';
+    private static final char __INTERNAL_NAME_PKG_SEPARATOR_CHAR__ = '/';
 
 
     /**
-     * @return Canonical class name for the given internal class name.
+     * @return Type type name for the given internal class name.
      */
-    public static String internalToCanonical (final String name) {
-        return name.replace (__INTERNAL_PKG_SEPARATOR_CHAR__, __CANONICAL_PKG_SEPARATOR_CHAR__);
+    public static String internalToType (final String internalName) {
+        return internalName.replace (
+            __INTERNAL_NAME_PKG_SEPARATOR_CHAR__, __TYPE_NAME_PKG_SEPARATOR_CHAR__
+        );
     }
 
     /**
-     * @return Internal class name for the given canonical class name.
+     * @return Internal class name for the given type name.
      */
-    public static String canonicalToInternal (final String name) {
-        return name.replace (
-            __CANONICAL_PKG_SEPARATOR_CHAR__, __INTERNAL_PKG_SEPARATOR_CHAR__
+    public static String typeToInternal (final String typeName) {
+        return typeName.replace (
+            __TYPE_NAME_PKG_SEPARATOR_CHAR__, __INTERNAL_NAME_PKG_SEPARATOR_CHAR__
         );
     }
 
@@ -73,29 +75,29 @@ public final class JavaNames {
         return __lastIndexOfPkgSeparator (name) >= 0;
     }
 
-    public static boolean hasInternalPackageName (final String name) {
-        return name.indexOf (__INTERNAL_PKG_SEPARATOR_CHAR__, 0) >= 0;
+    public static boolean internalNameHasPackage (final String name) {
+        return name.indexOf (__INTERNAL_NAME_PKG_SEPARATOR_CHAR__, 0) >= 0;
     }
 
-    public static boolean hasCanonicalPackageName (final String name) {
-        return name.indexOf (__CANONICAL_PKG_SEPARATOR_CHAR__, 0) >= 0;
+    public static boolean typeNameHasPackage (final String name) {
+        return name.indexOf (__TYPE_NAME_PKG_SEPARATOR_CHAR__, 0) >= 0;
     }
 
     //
 
-    private static final String __INTERNAL_PKG_SEPARATOR__ =
-        String.valueOf (__INTERNAL_PKG_SEPARATOR_CHAR__);
+    private static final String __INTERNAL_NAME_PKG_SEPARATOR__ =
+        String.valueOf (__INTERNAL_NAME_PKG_SEPARATOR_CHAR__);
 
     public static String joinInternal (final String ... elements) {
-        return String.join (__INTERNAL_PKG_SEPARATOR__, elements);
+        return String.join (__INTERNAL_NAME_PKG_SEPARATOR__, elements);
     }
 
 
-    private static final String __CANONICAL_PKG_SEPARATOR__ =
-        String.valueOf (__CANONICAL_PKG_SEPARATOR_CHAR__);
+    private static final String __TYPE_NAME_PKG_SEPARATOR__ =
+        String.valueOf (__TYPE_NAME_PKG_SEPARATOR_CHAR__);
 
-    public static String joinCanonical (final String ... elements) {
-        return String.join (__CANONICAL_PKG_SEPARATOR__, elements);
+    public static String typeNameJoin (final String ... elements) {
+        return String.join (__TYPE_NAME_PKG_SEPARATOR__, elements);
     }
 
     //
@@ -115,8 +117,8 @@ public final class JavaNames {
 
 
     private static int __lastIndexOfPkgSeparator (final String name) {
-        final int idx = name.lastIndexOf (__CANONICAL_PKG_SEPARATOR_CHAR__);
-        return (idx >= 0) ? idx : name.lastIndexOf (__INTERNAL_PKG_SEPARATOR_CHAR__);
+        final int idx = name.lastIndexOf (__TYPE_NAME_PKG_SEPARATOR_CHAR__);
+        return (idx >= 0) ? idx : name.lastIndexOf (__INTERNAL_NAME_PKG_SEPARATOR_CHAR__);
     }
 
 }

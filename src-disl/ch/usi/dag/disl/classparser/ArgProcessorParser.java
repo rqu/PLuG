@@ -47,7 +47,7 @@ class ArgProcessorParser extends AbstractParser {
 
         //
 
-        final String className = AsmHelper.className (dislClass);
+        final String className = AsmHelper.typeName (dislClass);
         final List <ArgProcessorMethod> methods = __parseMethods (dislClass);
         if (methods.isEmpty ()) {
             throw new ParserException (
@@ -68,7 +68,7 @@ class ArgProcessorParser extends AbstractParser {
         final ClassNode disClass
     ) throws ParserException {
         try {
-            final String className = AsmHelper.className (disClass);
+            final String className = AsmHelper.typeName (disClass);
             return disClass.methods.parallelStream ().unordered ()
                 .filter (m -> !JavaNames.isConstructorName (m.name))
                 .filter (m -> !JavaNames.isInitializerName (m.name))

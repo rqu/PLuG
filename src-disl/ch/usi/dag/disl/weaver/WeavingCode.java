@@ -1094,7 +1094,7 @@ public class WeavingCode {
                             "%s: unexpected bytecode at call site in %s.%s() "+
                             "when applying ArgumentProcessorContext.getArgs() ",
                             __location (snippet, invokeInsn),
-                            JavaNames.internalToCanonical (shadow.getClassNode ().name),
+                            JavaNames.internalToType (shadow.getClassNode ().name),
                             shadow.getMethodNode ().name
                         );
                     }
@@ -1108,7 +1108,7 @@ public class WeavingCode {
                             "%s: failed to obtain source frame at call site in %s.%s() "+
                             "when applying ArgumentProcessorContext.getArgs() ",
                             __location (snippet, invokeInsn),
-                            JavaNames.internalToCanonical (shadow.getClassNode ().name),
+                            JavaNames.internalToType (shadow.getClassNode ().name),
                             shadow.getMethodNode ().name
                         );
                     }

@@ -57,7 +57,7 @@ class SnippetParser extends AbstractParser {
         //
 
         try {
-            final String className = AsmHelper.className (dislClass);
+            final String className = AsmHelper.typeName (dislClass);
 
             snippets.addAll (dislClass.methods.parallelStream ().unordered ()
                 .filter (m -> !JavaNames.isConstructorName (m.name))

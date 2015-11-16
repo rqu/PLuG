@@ -1155,10 +1155,10 @@ public abstract class AsmHelper {
     //
 
     /**
-     * @return Canonical class name for the given {@link ClassNode}.
+     * @return Type name for the given {@link ClassNode}.
      */
-    public static String className (final ClassNode classNode) {
-        return JavaNames.internalToCanonical (classNode.name);
+    public static String typeName (final ClassNode classNode) {
+        return JavaNames.internalToType (classNode.name);
     }
 
 }

@@ -141,7 +141,7 @@ final class RequestProcessor {
     ) throws IOException {
         // Create the package directory hierarchy
         final Path dir = FileSystems.getDefault ().getPath (
-            root, JavaNames.canonicalToInternal (JavaNames.packageName (className))
+            root, JavaNames.typeToInternal (JavaNames.packageName (className))
         );
 
         Files.createDirectories (dir);

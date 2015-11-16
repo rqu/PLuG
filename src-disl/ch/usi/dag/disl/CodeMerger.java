@@ -141,7 +141,7 @@ abstract class CodeMerger {
         System.err.printf (
             "warning: method %s.%s%s not instrumented, because its size "+
             "(%d) exceeds the maximal allowed method size (%d)\n",
-            AsmHelper.className (instCN), instMN.name, instMN.desc,
+            AsmHelper.typeName (instCN), instMN.name, instMN.desc,
             __methodSize (instMN), ALLOWED_SIZE
         );
     }

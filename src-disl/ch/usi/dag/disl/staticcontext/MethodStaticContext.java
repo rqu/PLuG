@@ -39,7 +39,7 @@ public class MethodStaticContext extends AbstractStaticContext {
      * qualified class name, with packages delimited by the '.' character.
      */
     public String thisClassCanonicalName () {
-        return JavaNames.internalToCanonical (__classInternalName ());
+        return JavaNames.internalToType (__classInternalName ());
     }
 
 

@@ -176,7 +176,7 @@ public class ScopeMatcher implements Scope {
 
     private static WildCardMatcher __classNameMatcherForPattern (final String input) {
         return WildCardMatcher.forPattern (
-            JavaNames.canonicalToInternal (__fixupClassName (input))
+            JavaNames.typeToInternal (__fixupClassName (input))
         );
     }
 
@@ -185,9 +185,9 @@ public class ScopeMatcher implements Scope {
             // This will already match any prefix, no modifications needed.
             return input;
 
-        } else if (!JavaNames.hasCanonicalPackageName (input)) {
+        } else if (!JavaNames.typeNameHasPackage (input)) {
             // Add package wild card to classes without package specification.
-            return JavaNames.joinCanonical (WildCardMatcher.WILDCARD, input);
+            return JavaNames.typeNameJoin (WildCardMatcher.WILDCARD, input);
 
         } else if (input.startsWith (__DEFAULT_PKG_WITH_SEPARATOR__)) {
             // Strip the [default] package specifier, leaving the separator.
@@ -291,7 +291,7 @@ public class ScopeMatcher implements Scope {
         // will make them matchable by scopes that match on class name but not
         // on package name. We must be able to match default packages as well.
         //
-        final String className = JavaNames.hasInternalPackageName (classInternalName) ?
+        final String className = JavaNames.internalNameHasPackage (classInternalName) ?
             classInternalName : JavaNames.joinInternal ("", classInternalName);
 
         //

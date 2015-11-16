@@ -192,7 +192,7 @@ public class UnprocessedCode {
             final MethodInsnNode insn = e.insn ();
             throw new InitializationException (
                 "%s: invocation of static context method %s.%s: %s",
-                location (insn), JavaNames.internalToCanonical (insn.owner),
+                location (insn), JavaNames.internalToType (insn.owner),
                 insn.name, e.getMessage ()
             );
         }

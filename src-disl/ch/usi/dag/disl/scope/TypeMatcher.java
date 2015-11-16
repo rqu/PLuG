@@ -63,7 +63,7 @@ abstract class TypeMatcher {
             // we need to add package separator to such descriptors so that
             // the default package is an empty package.
             //
-            if (__isObjectType (typeDesc) && !JavaNames.hasInternalPackageName (typeDesc)) {
+            if (__isObjectType (typeDesc) && !JavaNames.internalNameHasPackage (typeDesc)) {
                 return __matcher.match (__fixupDefaultPackage (typeDesc));
             } else {
                 return __matcher.match (typeDesc);
@@ -110,7 +110,7 @@ abstract class TypeMatcher {
         } else {
             final String descPattern = __getDescriptorPattern (trimmed);
             final WildCardMatcher matcher = WildCardMatcher.forPattern (
-                JavaNames.canonicalToInternal (descPattern)
+                JavaNames.typeToInternal (descPattern)
             );
 
             return new Generic (matcher);
@@ -202,9 +202,9 @@ abstract class TypeMatcher {
             // This will already match any prefix, no modifications needed.
             return input;
 
-        } else if (!JavaNames.hasCanonicalPackageName (input)) {
+        } else if (!JavaNames.typeNameHasPackage (input)) {
             // Append package wild card to classes without package specification.
-            return JavaNames.joinCanonical (WildCardMatcher.WILDCARD, input);
+            return JavaNames.typeNameJoin (WildCardMatcher.WILDCARD, input);
 
         } else if (input.startsWith (__DEFAULT_PKG_WITH_SEPARATOR__)) {
             // Strip the [default] package specifier, leaving the separator.

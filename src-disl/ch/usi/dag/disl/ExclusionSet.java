@@ -97,7 +97,7 @@ abstract class ExclusionSet {
                     .map (JarEntry::getName)
                     .filter (JavaNames::hasClassFileExtension)
                     .map (entryName -> {
-                        final String className = JavaNames.internalToCanonical (
+                        final String className = JavaNames.internalToType (
                             JavaNames.stripClassFileExtension (entryName)
                         );
 
