@@ -14,16 +14,19 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
-#ifndef AI_NUMERICSERV
-#define AI_NUMERICSERV 0x00000008
-#endif
-
 #else /* !MINGW */
 
 #include <sys/socket.h>
 #include <netdb.h>
 
-#endif /* !MINGW */
+#endif
+
+//
+// This appears to be missing on MingW and as well on DarwinX.
+//
+#ifndef AI_NUMERICSERV
+#define AI_NUMERICSERV 0x00000008
+#endif
 
 
 /**

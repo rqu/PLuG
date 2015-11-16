@@ -1,7 +1,7 @@
 #include "common.h"
-#include "jvmtiutil.h"
 #include "dislagent.h"
 
+#include "jvmtiutil.h"
 #include "connection.h"
 #include "network.h"
 #include "msgchannel.h"

@@ -24,10 +24,8 @@ LIBRARY_MACOSX = lib$(LIBRARY_BASE).jnilib
 LIBRARY_LINUX = lib$(LIBRARY_BASE).so
 
 ifneq ($(HOST_ENV),$(TARGET_ENV))
-    ifneq ($(TARGET_ENV),MinGW)
-        $(error Cross-compiling is only supported for TARGET_ENV=MinGW)
-    else
-        $(warning The MinGW port for the Windows platform is experimental!)
+    ifeq (,$(filter MinGW DarwinX,$(TARGET_ENV)))
+        $(error Cross-compiling is only supported for TARGET_ENV=MinGW or TARGET_ENV=DarwinX)
     endif
 endif
 
@@ -40,18 +38,32 @@ ifneq (,$(filter MinGW Cygwin,$(TARGET_ENV)))
 
         CFLAGS += -DMINGW -mthreads
         CFLAGS_LD += -Wl,--kill-at
+        CFLAGS_PARTS := -flto
+        CFLAGS_WHOLE := -flto -fwhole-program
+
         LIBS += -lws2_32
     endif
 
-else ifeq (Darwin,$(TARGET_ENV))
+else ifneq (,$(filter DarwinX Darwin,$(TARGET_ENV)))
     JDK_TARGET := macosx
     LIBRARY := $(LIBRARY_MACOSX)
+
+    ifeq (DarwinX,$(TARGET_ENV))
+        CC := darwinx-gcc
+        CFLAGS += -DDARWINX
+    endif
 
 else ifeq (Linux,$(TARGET_ENV))
     LIBRARY := $(LIBRARY_LINUX)
     JDK_TARGET := linux
 
-    CFLAGS_WHOLE := -fwhole-program
+    #
+    # Despite the GCC documentation saying that -flto should not be used with
+    # -fwhole-program, the option needs to be there, otherwise GCC produces a
+    # library with undefined symbols (bypass bytecode) despite them being present.
+    #
+    CFLAGS_PARTS := -flto
+    CFLAGS_WHOLE := -flto -fwhole-program
 else
     $(error Target environment $(TARGET_ENV) is not supported)
 endif
@@ -81,9 +93,7 @@ CFLAGS_LD += -shared
 
 #
 # For non-MinGW targets, use position independent code
-# and dynamically link to the pthread library. When
-# building the library as a whole, tell GCC to build
-# a shared library as well.
+# and dynamically link to the pthread library.
 #
 ifneq (MinGW,$(TARGET_ENV))
     CFLAGS += -fPIC
@@ -129,19 +139,14 @@ codeflags.h:
 
 ifneq (,$(WHOLE))
 
-#
-# Despite the GCC documentation saying that -flto should not be used with
-# -fwhole-program, the option needs to be there, otherwise GCC produces a
-# library with undefined symbols (bypass bytecode) despite them being present.
-#
-CFLAGS += -DWHOLE -flto $(CFLAGS_WHOLE)
+CFLAGS += -DWHOLE $(CFLAGS_WHOLE)
 
 $(LIBRARY): $(HEADERS) $(SOURCES)
 	$(CC) $(CFLAGS) $(TARGET_ARCH) $(CFLAGS_LD) $(SOURCES) $(LIBS) $(OUTPUT_OPTION)
 
 else
 
-CFLAGS += -flto
+CFLAGS += $(CFLAGS_PARTS)
 
 $(LIBRARY): $(OBJECTS)
 	$(CC) $(CFLAGS) $(TARGET_ARCH) $(CFLAGS_LD) $(OBJECTS) $(LIBS) $(OUTPUT_OPTION)
