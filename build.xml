@@ -575,8 +575,9 @@
 			</then><else>
 				<echo>Running all tests.</echo>
 				<fileset id="test.batch" dir="${src.test}">
-					<include name="**/scope/*Test.java" />
 					<include name="**/junit/*Test.java" />
+					<include name="**/disl/*Test.java" />
+					<include name="**/disl/scope/*Test.java" />
 				</fileset>
 			</else>
 		</if>

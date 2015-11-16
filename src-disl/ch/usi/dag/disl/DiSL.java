@@ -477,6 +477,7 @@ public final class DiSL {
 
         final byte [] transformedBytes = __transformers.apply (originalBytes);
         final ClassNode inputCN = ClassNodeHelper.FULL.unmarshal (transformedBytes);
+        Reflection.systemClassLoader ().notifyClassLoaded (inputCN);
 
         //
         // Instrument the class. If the class is modified neither by DiSL,
