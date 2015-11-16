@@ -10,7 +10,7 @@
 #define _LIST_H_
 
 #include <assert.h>
-#include <stdio.h>
+#include <stddef.h>
 #include <stdbool.h>
 
 /****************************************************************************\
@@ -56,8 +56,7 @@ typedef int (* list_match_fn) (struct list * item, void * data);
  * @param member
  *	the name of the member within the struct
  */
-#define __offset_of(type, member) \
-	((size_t) &((type *) 0)->member)
+#define __offset_of(type, member) offsetof(type, member)
 
 
 /**

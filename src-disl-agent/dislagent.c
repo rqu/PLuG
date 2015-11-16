@@ -1,10 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <jni.h>
-#include <jvmti.h>
-
 #include "common.h"
 #include "jvmtiutil.h"
 #include "dislagent.h"
@@ -16,6 +9,13 @@
 #include "bytecode.h"
 #include "classparser.h"
 #include "codeflags.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <jni.h>
+#include <jvmti.h>
 
 
 // ****************************************************************************
@@ -544,13 +544,6 @@ __get_jvmti (JavaVM * jvm) {
 
 	return jvmti;
 }
-
-
-#ifdef WHOLE
-#define VISIBLE __attribute__((externally_visible))
-#else
-#define VISIBLE
-#endif
 
 
 JNIEXPORT jint JNICALL VISIBLE

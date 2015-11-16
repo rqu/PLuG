@@ -1,11 +1,9 @@
-#define _POSIX_C_SOURCE 200908L
-
-#include <stdio.h>
-
 #include "common.h"
 #include "list.h"
 #include "connection.h"
 #include "connpool.h"
+
+#include <stdio.h>
 
 
 /**

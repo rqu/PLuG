@@ -1,3 +1,6 @@
+#include "common.h"
+#include "jvmtiutil.h"
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -5,8 +8,7 @@
 
 #include <jvmti.h>
 
-#include "common.h"
-#include "jvmtiutil.h"
+//
 
 #ifndef ERROR_PREFIX
 #error ERROR_PREFIX macro has to be defined
@@ -16,6 +18,7 @@
 #error ERROR_JVMTI macro has to be defined
 #endif
 
+//
 
 /**
  * Allocates JVM memory for the given buffer and copies the buffer

@@ -1,6 +1,8 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
+#define _POSIX_C_SOURCE 200809L
+
 #include <stdio.h>
 #include <stdbool.h>
 #include <errno.h>
@@ -15,10 +17,30 @@
 
 
 /**
- * Returns size of an array in array elements.
+ * Compiler attributes.
+ */
+#define PACKED __attribute__ ((__packed__))
+
+#ifdef WHOLE
+#define VISIBLE __attribute__ ((externally_visible))
+#else
+#define VISIBLE
+#endif
+
+
+
+/**
+ * Returns the size of an array in array elements.
  */
 #define sizeof_array(array) \
 	(sizeof (array) / sizeof ((array) [0]))
+
+
+/**
+ * Returns the size of a structure member.
+ */
+#define sizeof_member(type, member) \
+	(sizeof (((type *) 0)->member))
 
 
 /**
@@ -77,7 +99,7 @@ void die_with_std_error (const char * message, int errnum);
  * Reports a general error and terminates the program if the provided
  * error condition is true.
  */
-inline static void
+static inline void
 check_error (bool error, const char * message) {
 	if (error) {
 		die_with_error (message);
@@ -89,10 +111,22 @@ check_error (bool error, const char * message) {
  * Reports a standard library error and terminates the program if the provided
  * error condition is true.
  */
-inline static void
+static inline void
 check_std_error (bool error, const char * message) {
 	if (error) {
 		die_with_std_error (message, errno);
+	}
+}
+
+
+/**
+ * Warns about a standard library error if the provided
+ * error condition is true.
+ */
+static inline void
+warn_std_error (bool error, const char * message) {
+	if (error) {
+		warn (message, errno);
 	}
 }
 
@@ -107,7 +141,7 @@ void die_with_win_error (const char * message, DWORD errnum);
  * Reports a windows error and terminates the program if the provided
  * error condition is true.
  */
-inline static void
+static inline void
 check_win_error (bool error, const char * message) {
 	if (error) {
 		die_with_win_error (message, GetLastError ());

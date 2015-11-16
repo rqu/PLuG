@@ -13,10 +13,6 @@ typedef const uint8_t * utf8_t;
 class_t class_alloc (const uint8_t * class_bytes, size_t byte_count);
 void class_free (class_t java_class);
 
-int class_cp_entry_count (class_t java_class);
-utf8_t class_cp_get_utf8 (class_t java_class, int index, size_t * utf8_length);
-utf8_t class_cp_get_class_name (class_t java_class, int class_index, size_t * utf8_length);
-
 char * class_name (class_t java_class);
 char * class_super_class_name (class_t java_class);
 bool class_has_super_class (class_t java_class);

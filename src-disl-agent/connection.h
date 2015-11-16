@@ -1,18 +1,27 @@
 #ifndef _CONNECTION_H_
 #define _CONNECTION_H_
 
-#ifdef MINGW
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#else
-#include <sys/uio.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#endif
-
 #include <sys/types.h>
 
+//
+
+#ifdef MINGW
+
+#include <winsock2.h>
+#include <ws2tcpip.h>
+
+#else
+
+#include <sys/socket.h>
+#include <netdb.h>
+
+#endif
+
+//
+
 #include "list.h"
+
+//
 
 struct connection {
 	/** File descriptor of the connection socket. */
@@ -38,8 +47,12 @@ ssize_t connection_send (struct connection * connection, const void * buf, const
 ssize_t connection_recv (struct connection * connection, void * buf, const ssize_t len);
 
 #ifndef MINGW
+
+#include <sys/uio.h>
+
 ssize_t connection_send_iov (struct connection * connection, struct iovec * iovs, int iov_count);
 ssize_t connection_recv_iov (struct connection * connection, struct iovec * iovs, int iov_count);
+
 #endif
 
 #endif /* _CONNECTION_H_ */

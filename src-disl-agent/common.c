@@ -1,9 +1,11 @@
+#include "common.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
-#include "common.h"
-
+//
 
 /**
  * Returns the index of the given value in the given array of values.

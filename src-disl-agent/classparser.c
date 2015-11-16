@@ -1,4 +1,3 @@
-
 #include "common.h"
 #include "classparser.h"
 
@@ -6,15 +5,25 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include <endian.h>
+
+//
+
+#ifdef MINGW
+
+#include <ws2tcpip.h>
+
+#else
+
+#include <arpa/inet.h>
+
+#endif
+
+#define read_be16(value) ntohs(value)
+#define read_be32(value) ntohl(value)
 
 //
 
 #define CLASS_MAGIC 0xCAFEBABE
-
-#define __PACKED__  __attribute__ ((__packed__))
-
-#define member_sizeof(type, member) sizeof(((type *)0)->member)
 
 struct java_class {
 	// Class bytecode.
@@ -43,25 +52,25 @@ enum cp_tag {
 };
 
 
-struct __PACKED__ cp_info {
+struct PACKED cp_info {
 	uint8_t tag;
 
-	union __PACKED__ {
-		struct __PACKED__ cp_info_utf8 {
+	union PACKED {
+		struct PACKED cp_info_utf8 {
 			uint16_t length;
 			uint8_t bytes [];
 		} utf8;
 
-		struct __PACKED__ cp_info_class {
+		struct PACKED cp_info_class {
 			uint16_t name_index;
 		} class;
 
-		struct __PACKED__ cp_info_method_handle {
+		struct PACKED cp_info_method_handle {
 			uint8_t reference_kind;
 			uint16_t reference_index;
 		} method_handle;
 
-		struct __PACKED__ cp_info_long_double {
+		struct PACKED cp_info_long_double {
 			uint32_t high_bytes;
 			uint32_t low_bytes;
 		} long_double;
@@ -70,7 +79,7 @@ struct __PACKED__ cp_info {
 
 //
 
-struct __PACKED__ class_file_start {
+struct PACKED class_file_start {
 	uint32_t magic;
 	uint16_t minor_version;
 	uint16_t major_version;
@@ -78,7 +87,7 @@ struct __PACKED__ class_file_start {
 	struct cp_info constant_pool []; // [constant_pool_count - 1]
 };
 
-struct __PACKED__ class_file_access {
+struct PACKED class_file_access {
 	uint16_t access_flags;
 	uint16_t this_class;
 	uint16_t super_class;
@@ -104,38 +113,38 @@ __class_file_access (class_t java_class) {
 
 static inline bool
 __class_bytes_valid (const uint8_t * class_bytes) {
-	return be32toh (__class_file_start (class_bytes)->magic) == CLASS_MAGIC;
+	return read_be32 (__class_file_start (class_bytes)->magic) == CLASS_MAGIC;
 }
 
 
 static inline int
 __cp_entry_count (const uint8_t * class_bytes) {
-	return be16toh (__class_file_start (class_bytes)->constant_pool_count);
+	return read_be16 (__class_file_start (class_bytes)->constant_pool_count);
 }
 
 //
 
 static inline int
 __class_this_class_index (class_t java_class) {
-	return be16toh (__class_file_access (java_class)->this_class);
+	return read_be16 (__class_file_access (java_class)->this_class);
 }
 
 
 static inline int
 __class_super_class_index (class_t java_class) {
-	return be16toh (__class_file_access (java_class)->super_class);
+	return read_be16 (__class_file_access (java_class)->super_class);
 }
 
 
 static inline int
 __class_interface_count (class_t java_class) {
-	return be16toh (__class_file_access (java_class)->interfaces_count);
+	return read_be16 (__class_file_access (java_class)->interfaces_count);
 }
 
 
 static inline int
 __class_interface_index (class_t java_class, int index) {
-	return be16toh (__class_file_access (java_class)->interfaces [index]);
+	return read_be16 (__class_file_access (java_class)->interfaces [index]);
 }
 
 //
@@ -173,7 +182,7 @@ __cp_scan_entries (const uint8_t * class_bytes, size_t * offsets) {
 		switch (entry->tag) {
 
 		case CP_TAG_UTF8: {
-			uint_fast16_t length = be16toh (entry->utf8.length);
+			uint_fast16_t length = read_be16 (entry->utf8.length);
 			offset += sizeof (struct cp_info_utf8) + length;
 			break;
 		}
@@ -203,7 +212,7 @@ __cp_scan_entries (const uint8_t * class_bytes, size_t * offsets) {
 		}
 
 		// Account for the type tag.
-		offset += member_sizeof (struct cp_info, tag);
+		offset += sizeof_member (struct cp_info, tag);
 	}
 
 	return offset;
@@ -215,7 +224,7 @@ __cp_scan_entries (const uint8_t * class_bytes, size_t * offsets) {
 static inline struct java_class *
 __class_alloc (const uint8_t * class_bytes) {
 	int const_count = 1 + __cp_entry_count (class_bytes);
-	int offsets_size = const_count * member_sizeof (struct java_class, cp_offsets[0]);
+	int offsets_size = const_count * sizeof_member (struct java_class, cp_offsets[0]);
 	return (struct java_class *) malloc (sizeof (struct java_class) + offsets_size);
 }
 
@@ -251,15 +260,7 @@ class_alloc (const uint8_t * class_bytes, size_t byte_count) {
 
 //
 
-int
-class_cp_entry_count (class_t java_class) {
-	assert (java_class != NULL);
-
-	return __cp_entry_count (java_class->bytes);
-}
-
-
-utf8_t
+static utf8_t
 class_cp_get_utf8 (class_t java_class, int index, size_t * utf8_length) {
 	assert (java_class != NULL);
 
@@ -267,7 +268,7 @@ class_cp_get_utf8 (class_t java_class, int index, size_t * utf8_length) {
 	if (entry != NULL) {
 		if (entry->tag == CP_TAG_UTF8) {
 			if (utf8_length != NULL) {
-				*utf8_length = be16toh (entry->utf8.length);
+				*utf8_length = read_be16 (entry->utf8.length);
 			}
 
 			return &entry->utf8.bytes [0];
@@ -281,14 +282,14 @@ class_cp_get_utf8 (class_t java_class, int index, size_t * utf8_length) {
 }
 
 
-utf8_t
+static utf8_t
 class_cp_get_class_name (
 	class_t java_class, int class_index, size_t * utf8_length
 ) {
 	struct cp_info * entry = __class_cp_get_entry (java_class, class_index);
 	if (entry != NULL) {
 		if (entry->tag == CP_TAG_CLASS) {
-			int index = be16toh (entry->class.name_index);
+			int index = read_be16 (entry->class.name_index);
 			return class_cp_get_utf8 (java_class, index, utf8_length);
 
 		} else {
@@ -303,7 +304,14 @@ class_cp_get_class_name (
 
 static inline char *
 __utf8dup (utf8_t bytes, size_t length) {
-	return (bytes != NULL) ? strndup ((const char *) bytes, length) : NULL;
+	size_t len = length + 1;
+	char * result = (char *) malloc (len);
+	if (result != NULL) {
+		strncpy (result, (const char *) bytes, length);
+		result [length] = '\0';
+	}
+
+	return result;
 }
 
 

@@ -1,3 +1,7 @@
+#include "common.h"
+#include "msgchannel.h"
+#include "connection.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,15 +12,11 @@
 
 #include <jni.h>
 
-#include "common.h"
-#include "msgchannel.h"
-#include "connection.h"
-
-
+//
 
 #ifdef MINGW
 
-inline static ssize_t
+static inline ssize_t
 __send (struct connection * conn, struct message * msg, void * header, const size_t header_size) {
 	ssize_t sent = connection_send (conn, header, header_size);
 	sent += connection_send (conn, msg->control, msg->control_size);
@@ -25,7 +25,7 @@ __send (struct connection * conn, struct message * msg, void * header, const siz
 }
 
 
-inline static void
+static inline void
 __recv (struct connection * conn, void * control, const size_t control_size, void * classcode, const size_t classcode_size) {
 	connection_recv (conn, control, control_size);
 	connection_recv (conn, classcode, classcode_size);
@@ -33,7 +33,7 @@ __recv (struct connection * conn, void * control, const size_t control_size, voi
 
 #else
 
-inline static ssize_t
+static inline ssize_t
 __send (struct connection * conn, struct message * msg, void * header, const size_t header_size) {
 	struct iovec iovs [] = {
 		{ .iov_base = header, .iov_len = header_size },
@@ -45,7 +45,7 @@ __send (struct connection * conn, struct message * msg, void * header, const siz
 }
 
 
-inline static void
+static inline void
 __recv (struct connection * conn, void * control, const size_t control_size, void * classcode, const size_t classcode_size) {
 	struct iovec iovs [2] = {
 		{ .iov_base = control, .iov_len = control_size },

@@ -1,28 +1,23 @@
-#define _POSIX_C_SOURCE 200908L
+#include "common.h"
+#include "connection.h"
 
 #include <assert.h>
 #include <stdlib.h>
 #include <unistd.h>
 
+//
+
 #ifdef MINGW
 
-#include <winsock2.h>
 #define setsockopt(a,b,c,d,e) setsockopt(a,b,c,(const void*)(d),e)
 
 #else
 
-#include <sys/uio.h>
-#include <sys/socket.h>
 #include <netinet/tcp.h>
-#include <netdb.h>
 
 #endif
 
-#include <sys/types.h>
-
-#include "common.h"
-#include "connection.h"
-
+//
 
 static void
 __connection_init (struct connection * connection, const int sockfd) {
@@ -91,7 +86,7 @@ connection_close (struct connection * connection) {
 
 typedef ssize_t (* xfer_fn) (int sockfd, void * buf, size_t len, int flags);
 
-inline static ssize_t
+static inline ssize_t
 __socket_xfer (xfer_fn xfer, const int sockfd, const void * buf, const ssize_t len) {
 	unsigned char * buf_tail = (unsigned char *) buf;
 	size_t remaining = len;
@@ -157,7 +152,7 @@ connection_recv (struct connection * connection, void * buf, const ssize_t len) 
 
 typedef ssize_t (* xfer_iov_fn) (int sockfd, struct iovec * iovs, int iov_count);
 
-inline static ssize_t
+static inline ssize_t
 __socket_xfer_iov (
 	xfer_iov_fn xfer_iov, const int sockfd, struct iovec * iovs, const int iov_count
 ) {

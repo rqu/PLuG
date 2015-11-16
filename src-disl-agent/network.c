@@ -1,7 +1,13 @@
-#include <assert.h>
+#include "common.h"
+#include "threads.h"
+#include "connpool.h"
+#include "connection.h"
+#include "msgchannel.h"
 
+#include <assert.h>
 #include <sys/types.h>
 
+//
 
 #ifdef MINGW
 
@@ -18,13 +24,6 @@
 #include <netdb.h>
 
 #endif /* !MINGW */
-
-
-#include "common.h"
-#include "threads.h"
-#include "connpool.h"
-#include "connection.h"
-#include "msgchannel.h"
 
 
 /**
