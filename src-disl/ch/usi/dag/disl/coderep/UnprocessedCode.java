@@ -28,7 +28,6 @@ import ch.usi.dag.disl.localvar.ThreadLocalVar;
 import ch.usi.dag.disl.util.AsmHelper;
 import ch.usi.dag.disl.util.AsmHelper.Insns;
 import ch.usi.dag.disl.util.CodeTransformer;
-import ch.usi.dag.disl.util.Constants;
 import ch.usi.dag.disl.util.JavaNames;
 import ch.usi.dag.disl.util.ReflectionHelper;
 import ch.usi.dag.disl.util.cfg.CtrlFlowGraph;
@@ -200,7 +199,7 @@ public class UnprocessedCode {
 
 
     private static String __methodId (final MethodInsnNode methodInsn) {
-        return methodInsn.owner + Constants.STATIC_CONTEXT_METHOD_DELIM + methodInsn.name;
+        return JavaNames.methodName (methodInsn.owner, methodInsn.name);
     }
 
 

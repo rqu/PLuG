@@ -75,9 +75,9 @@ public class PartialEvaluator {
 
                 changed = true;
                 AbstractInsnNode prev = null;
-                AbstractInsnNode iter = bb.getEntrance();
+                AbstractInsnNode iter = bb.getEntryNode();
 
-                while (prev != bb.getExit()) {
+                while (prev != bb.getExitNode()) {
                     prev = iter;
                     iter = iter.getNext();
 
@@ -110,7 +110,7 @@ public class PartialEvaluator {
 
         for (BasicBlock bb : cfg.getNodes()) {
 
-            AbstractInsnNode instr = Insns.REVERSE.firstRealInsn (bb.getExit());
+            AbstractInsnNode instr = Insns.REVERSE.firstRealInsn (bb.getExitNode());
             int opcode = instr.getOpcode();
             Frame<ConstValue> frame = frames.get(instr);
 
@@ -168,7 +168,7 @@ public class PartialEvaluator {
                     ilist.insertBefore(instr, new InsnNode(Opcodes.POP));
                     ilist.insertBefore(instr, new JumpInsnNode(Opcodes.GOTO,
                             ((JumpInsnNode) instr).label));
-                    bb.setExit(instr.getPrevious());
+                    bb.setExitNode(instr.getPrevious());
                     ilist.remove(instr);
                 } else {
 
@@ -182,7 +182,7 @@ public class PartialEvaluator {
                     }
 
                     ilist.insertBefore(instr, new InsnNode(Opcodes.POP));
-                    bb.setExit(instr.getPrevious());
+                    bb.setExitNode(instr.getPrevious());
                     ilist.remove(instr);
                 }
 
@@ -226,7 +226,7 @@ public class PartialEvaluator {
 
                 ilist.insertBefore(instr, new InsnNode(Opcodes.POP));
                 ilist.insertBefore(instr, new JumpInsnNode(Opcodes.GOTO, label));
-                bb.setExit(instr.getPrevious());
+                bb.setExitNode(instr.getPrevious());
                 ilist.remove(instr);
                 isOptimized = true;
                 break;
@@ -269,7 +269,7 @@ public class PartialEvaluator {
 
                 ilist.insertBefore(instr, new InsnNode(Opcodes.POP));
                 ilist.insertBefore(instr, new JumpInsnNode(Opcodes.GOTO, label));
-                bb.setExit(instr.getPrevious());
+                bb.setExitNode(instr.getPrevious());
                 ilist.remove(instr);
                 isOptimized = true;
                 break;
@@ -375,7 +375,7 @@ public class PartialEvaluator {
 
         AbstractInsnNode prev = instr.getPrevious();
 
-        while (prev != bb.getExit()) {
+        while (prev != bb.getExitNode()) {
             switch (instr.getOpcode()) {
             case Opcodes.ILOAD:
             case Opcodes.LLOAD:
@@ -418,7 +418,7 @@ public class PartialEvaluator {
                 continue;
             }
 
-            if (loadAfterStore(next, next.getEntrance(), store.var)) {
+            if (loadAfterStore(next, next.getEntryNode(), store.var)) {
                 return false;
             }
 

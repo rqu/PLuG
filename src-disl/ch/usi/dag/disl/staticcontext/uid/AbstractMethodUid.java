@@ -3,7 +3,7 @@ package ch.usi.dag.disl.staticcontext.uid;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
-import ch.usi.dag.disl.util.Constants;
+import ch.usi.dag.disl.util.JavaNames;
 
 
 public abstract class AbstractMethodUid extends AbstractUniqueId {
@@ -31,9 +31,7 @@ public abstract class AbstractMethodUid extends AbstractUniqueId {
         final ClassNode classNode = staticContextData.getClassNode ();
         final MethodNode methodNode = staticContextData.getMethodNode ();
 
-        return
-            classNode.name + Constants.CLASS_DELIM +
-            methodNode.name +"("+ methodNode.desc +")";
+        return JavaNames.methodUniqueName (classNode.name, methodNode.name, methodNode.desc);
     }
 
     @Override

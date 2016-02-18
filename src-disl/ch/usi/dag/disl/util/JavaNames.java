@@ -121,4 +121,14 @@ public final class JavaNames {
         return (idx >= 0) ? idx : name.lastIndexOf (__INTERNAL_NAME_PKG_SEPARATOR_CHAR__);
     }
 
+    //
+
+    public static String methodName (final String owner, final String name) {
+        return String.format ("%s.%s", owner, name);
+    }
+
+    public static String methodUniqueName (final String owner, final String name, final String desc) {
+        return String.format ("%s.%s%s", owner, name, desc);
+    }
+
 }

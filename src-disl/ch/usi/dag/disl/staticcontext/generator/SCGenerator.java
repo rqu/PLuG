@@ -12,7 +12,7 @@ import ch.usi.dag.disl.resolver.SCResolver;
 import ch.usi.dag.disl.snippet.Shadow;
 import ch.usi.dag.disl.snippet.Snippet;
 import ch.usi.dag.disl.staticcontext.StaticContext;
-import ch.usi.dag.disl.util.Constants;
+import ch.usi.dag.disl.util.JavaNames;
 
 public class SCGenerator {
 
@@ -29,7 +29,7 @@ public class SCGenerator {
         public StaticContextKey (
             final Shadow shadow, final String className, final String methodName
         ) {
-            this (shadow, className + Constants.STATIC_CONTEXT_METHOD_DELIM + methodName);
+            this (shadow, JavaNames.methodName (className, methodName));
         }
 
         //

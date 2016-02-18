@@ -93,7 +93,7 @@ public class CtrlFlowGraph {
 
         while (instr != null) {
             for (int i = 0; i < nodes.size(); i++) {
-                if (nodes.get(i).getEntrance().equals(instr)) {
+                if (nodes.get(i).getEntryNode().equals(instr)) {
                     return nodes.get(i);
                 }
             }
@@ -171,7 +171,7 @@ public class CtrlFlowGraph {
         for (int i = connected_size; i < connected_nodes.size(); i++) {
 
             BasicBlock current = connected_nodes.get(i);
-            AbstractInsnNode exit = current.getExit();
+            AbstractInsnNode exit = current.getExitNode();
 
             int opcode = exit.getOpcode();
 
@@ -239,7 +239,7 @@ public class CtrlFlowGraph {
         for (BasicBlock bb : nodes) {
 
             if (bb.getSuccessors().size() == 0) {
-                ends.add(bb.getExit());
+                ends.add(bb.getExitNode());
             }
         }
 

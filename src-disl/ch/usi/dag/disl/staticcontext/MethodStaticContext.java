@@ -1,23 +1,26 @@
 package ch.usi.dag.disl.staticcontext;
 
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
 
-import ch.usi.dag.disl.util.Constants;
 import ch.usi.dag.disl.util.JavaNames;
 
 
 /**
- * Provides static context information about the instrumented method.
+ * Provides method related static context information for the method being
+ * instrumented.
  */
 public class MethodStaticContext extends AbstractStaticContext {
-
-    // *** Class ***
 
     /**
      * Returns the internal name of the instrumented class, i.e., a fully
      * qualified class name, with packages delimited by the '/' character.
+     * <p>
+     * <b>Note:</b> This method is being deprecated, please use
+     * {@link ClassStaticContext#getInternalName()} instead.
      */
-    // XXX LB: This would be better named "thisClassInternalName".
+    @Deprecated
     public String thisClassName () {
         return __classInternalName ();
     }
@@ -26,18 +29,24 @@ public class MethodStaticContext extends AbstractStaticContext {
     /**
      * Returns the simple name of the instrumented class, i.e., a class name
      * without the package part of the name.
+     * <p>
+     * <b>Note:</b> This method is being deprecated, please use
+     * {@link ClassStaticContext#getSimpleName()} instead.
      */
+    @Deprecated
     public String thisClassSimpleName () {
-        final String name = __classInternalName ();
-        final int start = name.lastIndexOf (Constants.PACKAGE_INTERN_DELIM);
-        return (start >= 0) ? name.substring (start + 1) : name;
+        return JavaNames.simpleClassName (__classInternalName ());
     }
 
 
     /**
      * Returns the canonical name of the instrumented class, i.e., a fully
      * qualified class name, with packages delimited by the '.' character.
+     * <p>
+     * <b>Note:</b> This method is being deprecated, please use
+     * {@link ClassStaticContext#getName()} instead.
      */
+    @Deprecated
     public String thisClassCanonicalName () {
         return JavaNames.internalToType (__classInternalName ());
     }
@@ -47,43 +56,63 @@ public class MethodStaticContext extends AbstractStaticContext {
      * Returns the internal name of the class enclosing the instrumented class,
      * or {@code null} if the instrumented class is not enclosed in another
      * class.
+     * <p>
+     * <b>Note:</b> This method is being deprecated, please use
+     * {@link ClassStaticContext#getOuterClassInternalName()} instead.
      */
+    @Deprecated
     public String thisClassOuterClass () {
-        return staticContextData.getClassNode ().outerClass;
+        return __classNode ().outerClass;
     }
 
 
     /**
      * Returns the name of the method enclosing the instrumented class, or
      * {@code null} if the class is not enclosed in a method.
+     * <p>
+     * <b>Note:</b> This method is being deprecated, please use
+     * {@link ClassStaticContext#getOuterMethodName()} instead.
      */
+    @Deprecated
     public String thisClassOuterMethod () {
-        return staticContextData.getClassNode ().outerMethod;
+        return __classNode ().outerMethod;
     }
 
 
     /**
      * Returns outer method descriptor of the instrumented class.
+     * <p>
+     * <b>Note:</b> This method is being deprecated, please use
+     * {@link ClassStaticContext#getOuterMethodDescriptor()} instead.
      */
+    @Deprecated
     public String thisClassOuterMethodDesc () {
-        return staticContextData.getClassNode ().outerMethodDesc;
+        return __classNode ().outerMethodDesc;
     }
 
 
     /**
      * Returns the signature of the instrumented class, or {@code null} if the
      * class is not a generic type.
+     * <p>
+     * <b>Note:</b> This method is being deprecated, please use
+     * {@link ClassStaticContext#getSignature()} instead.
      */
+    @Deprecated
     public String thisClassSignature () {
-        return staticContextData.getClassNode ().signature;
+        return __classNode ().signature;
     }
 
 
     /**
      * Returns the name of the source file containing the instrumented class.
+     * <p>
+     * <b>Note:</b> This method is being deprecated, please use
+     * {@link ClassStaticContext#getSourceFile()} instead.
      */
+    @Deprecated
     public String thisClassSourceFile () {
-        return staticContextData.getClassNode ().sourceFile;
+        return __classNode ().sourceFile;
     }
 
 
@@ -91,23 +120,35 @@ public class MethodStaticContext extends AbstractStaticContext {
      * Returns the internal name of the super class of the instrumented class,
      * i.e., a fully qualified class name, with package names delimited by the
      * '/' character.
+     * <p>
+     * <b>Note:</b> This method is being deprecated, please use
+     * {@link ClassStaticContext#getSuperClassInternalName()} instead.
      */
+    @Deprecated
     public String thisClassSuperName () {
-        return staticContextData.getClassNode ().superName;
+        return __classNode ().superName;
     }
 
 
     /**
      * Returns class version as (ASM) integer of the instrumented class.
+     * <p>
+     * <b>Note:</b> This method is being deprecated, please use
+     * {@link ClassStaticContext#getVersion()} instead.
      */
+    @Deprecated
     public int thisClassVersion () {
-        return staticContextData.getClassNode ().version;
+        return __classNode ().version;
     }
 
 
     /**
      * Returns {@code true} if the instrumented class is abstract.
+     * <p>
+     * <b>Note:</b> This method is being deprecated, please use
+     * {@link ClassStaticContext#isAbstract()} instead.
      */
+    @Deprecated
     public boolean isClassAbstract () {
         return __classAccessFlag (Opcodes.ACC_ABSTRACT);
     }
@@ -115,7 +156,11 @@ public class MethodStaticContext extends AbstractStaticContext {
 
     /**
      * Returns {@code true} if the instrumented class is an annotation.
+     * <p>
+     * <b>Note:</b> This method is being deprecated, please use
+     * {@link ClassStaticContext#isAnnotation()} instead.
      */
+    @Deprecated
     public boolean isClassAnnotation () {
         return __classAccessFlag (Opcodes.ACC_ANNOTATION);
     }
@@ -123,7 +168,11 @@ public class MethodStaticContext extends AbstractStaticContext {
 
     /**
      * Returns {@code true} if the instrumented class is an enum.
+     * <p>
+     * <b>Note:</b> This method is being deprecated, please use
+     * {@link ClassStaticContext#isEnum()} instead.
      */
+    @Deprecated
     public boolean isClassEnum () {
         return __classAccessFlag (Opcodes.ACC_ENUM);
     }
@@ -131,7 +180,11 @@ public class MethodStaticContext extends AbstractStaticContext {
 
     /**
      * Returns {@code true} if the instrumented class is final.
+     * <p>
+     * <b>Note:</b> This method is being deprecated, please use
+     * {@link ClassStaticContext#isFinal()} instead.
      */
+    @Deprecated
     public boolean isClassFinal () {
         return __classAccessFlag (Opcodes.ACC_FINAL);
     }
@@ -139,7 +192,11 @@ public class MethodStaticContext extends AbstractStaticContext {
 
     /**
      * Returns {@code true} if the instrumented class is an interface.
+     * <p>
+     * <b>Note:</b> This method is being deprecated, please use
+     * {@link ClassStaticContext#isInterface()} instead.
      */
+    @Deprecated
     public boolean isClassInterface () {
         return __classAccessFlag (Opcodes.ACC_INTERFACE);
     }
@@ -147,7 +204,11 @@ public class MethodStaticContext extends AbstractStaticContext {
 
     /**
      * Returns {@code true} if the instrumented class is private.
+     * <p>
+     * <b>Note:</b> This method is being deprecated, please use
+     * {@link ClassStaticContext#isPrivate()} instead.
      */
+    @Deprecated
     public boolean isClassPrivate () {
         return __classAccessFlag (Opcodes.ACC_PRIVATE);
     }
@@ -155,7 +216,11 @@ public class MethodStaticContext extends AbstractStaticContext {
 
     /**
      * Returns {@code true} if the instrumented class is protected.
+     * <p>
+     * <b>Note:</b> This method is being deprecated, please use
+     * {@link ClassStaticContext#isProtected()} instead.
      */
+    @Deprecated
     public boolean isClassProtected () {
         return __classAccessFlag (Opcodes.ACC_PROTECTED);
     }
@@ -163,7 +228,11 @@ public class MethodStaticContext extends AbstractStaticContext {
 
     /**
      * Returns {@code true} if the instrumented class is public.
+     * <p>
+     * <b>Note:</b> This method is being deprecated, please use
+     * {@link ClassStaticContext#isPublic()} instead.
      */
+    @Deprecated
     public boolean isClassPublic () {
         return __classAccessFlag (Opcodes.ACC_PUBLIC);
     }
@@ -171,7 +240,11 @@ public class MethodStaticContext extends AbstractStaticContext {
 
     /**
      * Returns {@code true} if the instrumented class is synthetic.
+     * <p>
+     * <b>Note:</b> This method is being deprecated, please use
+     * {@link ClassStaticContext#isSynthetic()} instead.
      */
+    @Deprecated
     public boolean isClassSynthetic () {
         return __classAccessFlag (Opcodes.ACC_SYNTHETIC);
     }
@@ -179,8 +252,12 @@ public class MethodStaticContext extends AbstractStaticContext {
 
     // *** Method ***
 
+
     /**
-     * Returns the name of the instrumented method.
+     * Returns the plain name of this method. This name does includes neither
+     * the class name, nor the parameter type descriptor.
+     *
+     * @return The name of this method.
      */
     public String thisMethodName () {
         return __methodName ();
@@ -192,7 +269,18 @@ public class MethodStaticContext extends AbstractStaticContext {
      * i.e., including the (internal) name of the class containing the method.
      */
     public String thisMethodFullName () {
-        return __classInternalName () + Constants.STATIC_CONTEXT_METHOD_DELIM + __methodName ();
+        return JavaNames.methodName (__classInternalName (), __methodName ());
+    }
+
+
+    /**
+     * Returns the fully qualified (internal) name of the instrumented method,
+     * i.e., including the (internal) name of the class containing the method.
+     */
+    public String getUniqueInternalName () {
+        return JavaNames.methodUniqueName (
+            __classInternalName (), __methodName (), __methodNode ().desc
+        );
     }
 
 
@@ -200,15 +288,16 @@ public class MethodStaticContext extends AbstractStaticContext {
      * Returns the descriptor of the instrumented method.
      */
     public String thisMethodDescriptor () {
-        return staticContextData.getMethodNode ().desc;
+        return __methodNode ().desc;
     }
 
 
     /**
-     * Returns the signature of the instrumented method.
+     * Returns the generic signature of the instrumented method or {@code null}
+     * if the method is not a generic method.
      */
     public String thisMethodSignature () {
-        return staticContextData.getMethodNode ().signature;
+        return __methodNode ().signature;
     }
 
 
@@ -296,23 +385,33 @@ public class MethodStaticContext extends AbstractStaticContext {
     //
 
     private String __classInternalName () {
-        return staticContextData.getClassNode ().name;
+        return __classNode ().name;
     }
 
 
     private boolean __classAccessFlag (final int flagMask) {
-        final int access = staticContextData.getClassNode ().access;
+        final int access = __classNode ().access;
         return (access & flagMask) != 0;
     }
 
 
+    private ClassNode __classNode () {
+        return staticContextData.getClassNode ();
+    }
+
+
     private String __methodName () {
-        return staticContextData.getMethodNode ().name;
+        return __methodNode ().name;
+    }
+
+
+    private MethodNode __methodNode () {
+        return staticContextData.getMethodNode ();
     }
 
 
     private boolean __methodAccessFlag (final int flagMask) {
-        final int access = staticContextData.getMethodNode ().access;
+        final int access = __methodNode ().access;
         return (access & flagMask) != 0;
     }
 

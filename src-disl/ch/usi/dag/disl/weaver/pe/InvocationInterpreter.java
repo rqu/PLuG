@@ -9,7 +9,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.MethodInsnNode;
 
-import ch.usi.dag.disl.util.Constants;
+import ch.usi.dag.disl.util.JavaNames;
 
 public class InvocationInterpreter {
 
@@ -94,7 +94,7 @@ public class InvocationInterpreter {
     }
 
     public void register(String owner, String name, String desc) {
-        registeredMethods.add(owner + Constants.CLASS_DELIM + name + desc);
+        registeredMethods.add(JavaNames.methodUniqueName (owner, name, desc));
     }
 
     public void register(Class<?> clazz) {
@@ -112,7 +112,7 @@ public class InvocationInterpreter {
     }
 
     private String getMethodID(MethodInsnNode min) {
-        return min.owner + Constants.CLASS_DELIM + min.name + min.desc;
+        return JavaNames.methodUniqueName (min.owner, min.name, min.desc);
     }
 
     public boolean isRegistered(MethodInsnNode min) {

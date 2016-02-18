@@ -1,9 +1,9 @@
 package ch.usi.dag.disl.staticcontext;
 
-import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.FieldInsnNode;
 
 import ch.usi.dag.disl.marker.BytecodeMarker;
+import ch.usi.dag.disl.util.JavaNames;
 
 
 /**
@@ -50,19 +50,44 @@ public final class FieldAccessStaticContext extends AbstractStaticContext {
 
 
     /**
-     * @return The name of the field's owner class.
+     * Returns the type name of the field's owner class. This is a fully
+     * qualified class name, with packages delimited by the '.' character.
+     * <p>
+     * <b>Note:</b> This method is being deprecated, please use the
+     * {@link #getOwnerName()} method instead.
+     *
+     * @return The type name of the field's owner class.
      */
+    @Deprecated
     public String getOwnerClassName () {
-        return Type.getObjectType (__getFieldInsnNode ().owner).getClassName ();
+        return getOwnerName ();
     }
 
 
     /**
-     * @return The internal name of the field's owner class.
+     * Returns the type name of the field's owner class. This is a fully
+     * qualified class name, with packages delimited by the '.' character.
+     *
+     * @return The type name of the field's owner class.
+     */
+    public String getOwnerName () {
+        return JavaNames.internalToType (__getFieldInsnNode ().owner);
+    }
+
+
+    /**
+     * Returns the internal name of the field's owner class. This is a fully
+     * qualified class name, with packages delimited by the '/' character.
+     *
+     * @return The internal name of the field's owner class. This is
      */
     public String getOwnerInternalName () {
         return __getFieldInsnNode ().owner;
     }
+
+    //
+
+    // TODO Add query methods for access type.
 
     //
 
