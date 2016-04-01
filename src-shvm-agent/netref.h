@@ -65,43 +65,35 @@ static inline void set_bits(uint64_t * to, uint64_t bits,
 	*to |= bits_pos;
 }
 
-inline jlong net_ref_get_object_id(jlong net_ref) {
-
+static inline jlong net_ref_get_object_id(jlong net_ref) {
 	return get_bits(net_ref, OBJECT_ID_MASK, OBJECT_ID_POS);
 }
 
-inline jint net_ref_get_class_id(jlong net_ref) {
-
+static inline jint net_ref_get_class_id(jlong net_ref) {
 	return get_bits(net_ref, CLASS_ID_MASK, CLASS_ID_POS);
 }
 
-inline unsigned char net_ref_get_spec(jlong net_ref) {
-
+static inline unsigned char net_ref_get_spec(jlong net_ref) {
 	return get_bits(net_ref, SPEC_MASK, SPEC_POS);
 }
 
-inline unsigned char net_ref_get_class_instance_bit(jlong net_ref) {
-
+static inline unsigned char net_ref_get_class_instance_bit(jlong net_ref) {
 	return get_bits(net_ref, CLASS_INSTANCE_MASK, CLASS_INSTANCE_POS);
 }
 
-inline void net_ref_set_object_id(jlong * net_ref, jlong object_id) {
-
+static inline void net_ref_set_object_id(jlong * net_ref, jlong object_id) {
 	set_bits((uint64_t *)net_ref, object_id, OBJECT_ID_MASK, OBJECT_ID_POS);
 }
 
-inline void net_ref_set_class_id(jlong * net_ref, jint class_id) {
-
+static inline void net_ref_set_class_id(jlong * net_ref, jint class_id) {
 	set_bits((uint64_t *)net_ref, class_id, CLASS_ID_MASK, CLASS_ID_POS);
 }
 
-inline void net_ref_set_class_instance(jlong * net_ref, unsigned char cibit) {
-
+static inline void net_ref_set_class_instance(jlong * net_ref, unsigned char cibit) {
 	set_bits((uint64_t *)net_ref, cibit, CLASS_INSTANCE_MASK, CLASS_INSTANCE_POS);
 }
 
-inline void net_ref_set_spec(jlong * net_ref, unsigned char spec) {
-
+static inline void net_ref_set_spec(jlong * net_ref, unsigned char spec) {
 	set_bits((uint64_t *)net_ref, spec, SPEC_MASK, SPEC_POS);
 }
 
@@ -111,7 +103,6 @@ inline void net_ref_set_spec(jlong * net_ref, unsigned char spec) {
 
 // only retrieves object tag data
 jlong get_tag(jvmtiEnv * jvmti_env, jobject obj) {
-
 	jlong net_ref;
 
 	jvmtiError error = (*jvmti_env)->GetTag(jvmti_env, obj, &net_ref);
@@ -126,12 +117,10 @@ jlong get_net_reference(JNIEnv * jni_env, jvmtiEnv * jvmti_env,
 
 // !!! returned local reference should be freed
 static jclass _get_class_for_object(JNIEnv * jni_env, jobject obj) {
-
 	return (*jni_env)->GetObjectClass(jni_env, obj);
 }
 
 static int _object_is_class(jvmtiEnv * jvmti_env,  jobject obj) {
-
 	// TODO isn't there better way?
 
 	jvmtiError error =
