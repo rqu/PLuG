@@ -355,12 +355,18 @@
 	<!-- pathconvert property="build.disl.thread.available" setonempty="false">
 		<fileset dir="." includes="${build.disl.thread}/**/Thread.class"/>
 	</pathconvert -->
-	<condition property="build.disl.thread.available"><and>
-		<available file="${build.disl.thread}/java/lang/Thread.class"/>
-		<length file="${build.disl.thread}/java/lang/Thread.class" when="greater" length="1024"/>
-	</and></condition>
+	<target name="-check-disl-thread">
+		<condition property="build.disl.thread.available"><and>
+			<available file="${build.disl.thread}/java/lang/Thread.class"/>
+			<length file="${build.disl.thread}/java/lang/Thread.class" when="greater" length="1024"/>
+		</and></condition>
+	</target>
 
-	<target name="-prepare-disl-thread" unless="build.disl.thread.available" depends="compile-tools">
+	<target name="-create-disl-thread-if-needed" unless="build.disl.thread.available" depends="-check-disl-thread">
+		<antcall target="-create-disl-thread"/>
+	</target>
+
+	<target name="-create-disl-thread" depends="compile-tools">
 		<local name="extender.class"/>
 		<find-class property="extender.class" dir="${build.tools}" name="ExtendThread"/>
 
@@ -389,7 +395,7 @@
 		The DiSL server requires both classes to create class literals
 		in the weaver code.
 	-->
-	<target name="compile-disl-bypass" depends="-init,-prepare-disl-thread">
+	<target name="compile-disl-bypass" depends="-init,-create-disl-thread-if-needed">
 		<ac:for list="always,never,dynamic" param="variant">
 			<sequential>
 				<mkdir dir="${build.disl.bypass}/@{variant}"/>
@@ -1056,7 +1062,7 @@
 	</target>
 
 
-	<target name="clean" depends="clean-examples" description="Removes all files produced during the build.">
+	<target name="clean" description="Removes all files produced during the build.">
 		<exec executable="make" dir="${src.disl.agent}">
 			<arg value="cleanall"/>
 		</exec>
