@@ -87,7 +87,7 @@ int find_value_index (const char * strval, const char * values [], int nvals);
 #define ERROR_STD 10002
 #define ERROR_JVMTI 10003
 
-#define ERROR_PREFIX "DiSL-agent error: "
+#define ERROR_PREFIX "disl-agent: error: "
 
 //
 

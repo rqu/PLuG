@@ -1,5 +1,4 @@
 #include "common.h"
-#include "dislagent.h"
 
 #include "jvmtiutil.h"
 #include "connection.h"
@@ -113,16 +112,56 @@ static volatile jint agent_code_flags;
 
 
 /**
- * Prints a debug message to stdout, if runtime agent debugging is enabled.
- *
- * @format	format string for printf
- * @args	arguments associated with the format string
- *
+ * Flag indicating that the VM has been started, which
+ * allows calling any JNI function.
  */
-#define rdprintf(args...) \
-	if (agent_config.debug) { \
-		fprintf (stdout, "agent: "); \
-		fprintf (stdout, args); \
+static volatile bool jvm_is_started;
+
+
+/**
+ * Flag indicating that the VM has been initialized,
+ * which allows calling any JNI or JVMTI function.
+ */
+static volatile bool jvm_is_initialized;
+
+
+/**
+ * Runtime debuging output macros.
+ */
+#define rdexec \
+	if (agent_config.debug)
+
+#define rdoutput(args...) \
+	fprintf (stdout, args);
+
+#define __safe_name(name) \
+	(((name) == NULL) ? "<unknown>" : (name))
+
+#define rdaprefix(args...) \
+	rdoutput ("disl-agent: "); \
+	rdoutput (args);
+
+#define rdatprefix(info, args...) \
+	rdoutput ("disl-agent [%s]: ", __safe_name ((info)->name)); \
+	rdoutput (args);
+
+#define rdatiprefix(info, args...) \
+	rdoutput ("disl-agent [%s, %" PRId64 "]: ", __safe_name ((info)->name), (info)->id); \
+	rdoutput (args);
+
+#define rdaprintf(args...) \
+	rdexec { \
+		rdaprefix (args); \
+	}
+
+#define rdatprintf(info, args...) \
+	rdexec { \
+		rdatprefix (info, args); \
+	}
+
+#define rdatiprintf(info, args...) \
+	rdexec { \
+		rdatiprefix (info, args); \
 	}
 
 
@@ -235,27 +274,22 @@ __handle_exception (JNIEnv * jni, jthrowable ex_obj) {
 	jstring cl_name = (* jni)->CallObjectMethod (jni, cl_obj, m_getName);
 
 	const char * cl_name_chars = (* jni)->GetStringUTFChars (jni, cl_name, NULL);
-	rdprintf ("\texception %s occured, cleared\n", cl_name_chars);
+	rdaprintf ("\texception %s occured, cleared\n", cl_name_chars);
 	(* jni)->ReleaseStringUTFChars (jni, cl_name, cl_name_chars);
 }
 
 
 static void
 __force_class (JNIEnv * jni, const char * class_name, const char * kind) {
-	rdprintf ("\tforce-loading %s %s\n", kind, class_name);
-	if (jni != NULL) {
-		jclass found_class = (* jni)->FindClass (jni, class_name);
-		if (found_class == NULL) {
-			warn ("failed to force-load %s %s\n", kind, class_name);
-			jthrowable exception = (* jni)->ExceptionOccurred (jni);
-			if (exception != NULL) {
-				(* jni)->ExceptionClear (jni);
-				__handle_exception (jni, exception);
-			}
+	rdaprintf ("\tforce-loading %s %s\n", kind, class_name);
+	jclass found_class = (* jni)->FindClass (jni, class_name);
+	if (found_class == NULL) {
+		warn ("failed to force-load %s %s\n", kind, class_name);
+		jthrowable exception = (* jni)->ExceptionOccurred (jni);
+		if (exception != NULL) {
+			(* jni)->ExceptionClear (jni);
+			__handle_exception (jni, exception);
 		}
-
-	} else {
-		rdprintf ("\tJNI not ready, force-loading aborted\n");
 	}
 }
 
@@ -267,7 +301,7 @@ __force_superclass (JNIEnv * jni, class_t inst_class) {
 		free (super_name);
 
 	} else {
-		rdprintf ("\tclass does not have super class\n");
+		rdaprintf ("\tclass does not have super class\n");
 	}
 }
 
@@ -276,7 +310,7 @@ static void
 __force_interfaces (JNIEnv * jni, class_t inst_class) {
 	int count = class_interface_count (inst_class);
 	if (count == 0) {
-		rdprintf ("\tclass does not implement interfaces\n");
+		rdaprintf ("\tclass does not implement interfaces\n");
 		return;
 	}
 
@@ -304,6 +338,8 @@ __force_classes (
 	JNIEnv * jni, const char * class_name,
 	const unsigned char * class_bytes, jint class_byte_count
 ) {
+	assert (jni != NULL & jvm_is_started);
+
 	class_t inst_class = class_alloc (class_bytes, class_byte_count);
 	if (inst_class != NULL) {
 		if (agent_config.force_superclass) {
@@ -321,6 +357,89 @@ __force_classes (
 	}
 }
 
+static jlong
+__thread_id (JNIEnv * jni) {
+	assert (jni != NULL && jvm_is_started);
+
+	static jclass thread_class;
+	if (thread_class == NULL) {
+		jclass thread_class_local = (* jni)->FindClass (jni, "java/lang/Thread");
+		if (thread_class_local == NULL) {
+			return -1;
+		}
+		
+		thread_class = (jclass) (* jni)->NewGlobalRef (jni, thread_class_local);
+		if (thread_class == NULL) {
+			return -1;
+		}
+	}
+
+	//
+
+	static jmethodID m_currentThread;
+	if (m_currentThread == NULL) {
+		m_currentThread = (* jni)->GetStaticMethodID (jni, thread_class, "currentThread", "()Ljava/lang/Thread;");
+		if (m_currentThread == NULL) {
+			return -1;
+		}
+	}
+
+	jobject thread = (* jni)->CallStaticObjectMethod (jni, thread_class, m_currentThread);
+
+	//
+
+	static jmethodID m_getId;
+	if (m_getId == NULL) {
+		m_getId = (* jni)->GetMethodID (jni, thread_class, "getId", "()J");
+		if (m_getId == NULL) {
+			return -1;
+		}
+	}
+
+	return (thread != NULL) ? (* jni)->CallLongMethod (jni, thread, m_getId) : -1;
+}
+
+
+static char *
+__thread_name (jvmtiEnv * jvmti) {
+	assert (jvmti != NULL && jvm_is_initialized);
+
+	jvmtiThreadInfo info;
+	jvmtiError error = (* jvmti)->GetThreadInfo (jvmti, NULL, &info);
+	check_jvmti_error (jvmti, error, "failed to get current thread info");
+
+	return info.name;
+}
+
+
+struct thread_info {
+	jlong id;
+	char * name;
+};
+
+#define INIT_THREAD_INFO { .id = -1, .name = NULL }
+
+
+static void
+__thread_info_init (jvmtiEnv * jvmti, JNIEnv * jni, struct thread_info * info) {
+	if (jvmti != NULL && jvm_is_initialized) {
+		info->name = __thread_name (jvmti);
+	}
+
+	if (jni != NULL && jvm_is_started) {
+		info->id = __thread_id (jni);
+	}
+}
+
+
+static void
+__thread_info_done (jvmtiEnv * jvmti, struct thread_info * info) {
+	if (info->name != NULL) {
+		(* jvmti)->Deallocate (jvmti, (unsigned char *) info->name);
+		info->name = NULL;
+	}
+}
+
 
 static void JNICALL
 jvmti_callback_class_file_load (
@@ -330,27 +449,36 @@ jvmti_callback_class_file_load (
 	jint class_byte_count, const unsigned char * class_bytes,
 	jint * new_class_byte_count, unsigned char ** new_class_bytes
 ) {
-	assert (jvmti != NULL);
+	struct thread_info info = INIT_THREAD_INFO;
+	rdexec {
+		__thread_info_init (jvmti, jni, &info);
 
-	rdprintf (
-		"%s loaded, %ld bytes at %p\n",
-		__safe (class_name), (long) class_byte_count, class_bytes
-	);
+		rdatiprefix (
+			&info, "processing %s (%ld bytes)\n",
+			__safe (class_name), (long) class_byte_count
+		);
+	}
 
 	//
 	// Avoid instrumenting the bypass check class.
 	//
 	if (class_name != NULL && strcmp (class_name, BPC_CLASS_NAME) == 0) {
-		rdprintf ("skipping bypass check class (%s)\n", class_name);
+		rdatiprintf (&info, "ignored %s (bypass check class)\n", class_name);
 		return;
 	}
 
 	//
-	// Force loading of the super class or the interface classes.
+	// Force loading of the super class or the interface classes. This is
+	// only used when the VM is out of the primordial phase, which allows
+	// JNI calls to be made.
 	//
 	if (agent_config.force_superclass || agent_config.force_interfaces) {
-		rdprintf ("forcing classes for %s\n", __safe (class_name));
-		__force_classes (jni, class_name, class_bytes, class_byte_count);
+		if (jni != NULL) {
+			rdatiprintf (&info, "forcing lookup of dependent classes for %s\n", __safe (class_name));
+			__force_classes (jni, class_name, class_bytes, class_byte_count);
+		} else {
+			rdatiprintf (&info, "VM still primordial, skipping lookup of dependent classes for %s\n", __safe (class_name));
+		}
 	}
 
 	//
@@ -376,12 +504,16 @@ jvmti_callback_class_file_load (
 		*new_class_byte_count = class_def.class_byte_count;
 		*new_class_bytes = jvm_class_bytes;
 
-		rdprintf (
-			"class redefined, %ld bytes at %p\n",
-			(long) class_def.class_byte_count, jvm_class_bytes
+		rdatiprintf (
+			&info, "redefined %s (%ld bytes)\n", 
+			__safe (class_name), (long) class_def.class_byte_count
 		);
 	} else {
-		rdprintf ("class not modified\n");
+		rdatiprintf (&info, "loaded %s (unmodified)\n", __safe (class_name));
+	}
+
+	rdexec {
+		__thread_info_done (jvmti, &info);
 	}
 }
 
@@ -392,12 +524,17 @@ jvmti_callback_class_file_load (
 
 static void JNICALL
 jvmti_callback_vm_init (jvmtiEnv * jvmti, JNIEnv * jni, jthread thread) {
-	rdprintf ("the VM has been initialized\n");
-
 	//
-	// Update code flags to reflect that the VM has stopped booting.
+	// Update flags to reflect that the VM has stopped booting.
 	//
+	jvm_is_initialized = true;
 	agent_code_flags = __calc_code_flags (&agent_config, false);
+
+	struct thread_info info = INIT_THREAD_INFO;
+	rdexec {
+		__thread_info_init (jvmti, jni, &info);
+		rdatiprefix (&info, "vm_init (the VM has been initialized)\n");
+	}
 
 	//
 	// Redefine the bypass check class. If dynamic bypass is required, use
@@ -406,14 +543,35 @@ jvmti_callback_vm_init (jvmtiEnv * jvmti, JNIEnv * jni, jthread thread) {
 	//
 	jvmtiClassDefinition * bpc_classdef;
 	if (agent_config.bypass_mode == BYPASS_MODE_DYNAMIC) {
-		rdprintf ("redefining BypassCheck for dynamic bypass\n");
+		rdatiprintf (&info, "redefining BypassCheck for dynamic bypass\n");
 		bpc_classdef = &dynamic_BypassCheck_classdef;
 	} else {
-		rdprintf ("redefining BypassCheck to disable bypass\n");
+		rdatiprintf (&info, "redefining BypassCheck to disable bypass\n");
 		bpc_classdef = &never_BypassCheck_classdef;
 	}
 
 	jvmti_redefine_class (jvmti, jni, BPC_CLASS_NAME, bpc_classdef);
+
+	rdexec {
+		__thread_info_done (jvmti, &info);
+	}
+}
+
+
+// ****************************************************************************
+// JVMTI EVENT: VM START
+// ****************************************************************************
+
+static void JNICALL
+jvmti_callback_vm_start (jvmtiEnv * jvmti, JNIEnv * jni) {
+	rdaprintf ("vm_start (the VM has been started)\n");
+
+	//
+	// Update flags to reflect that the VM has started, and that any
+	// JNI function can be called from now on (but not before the
+	// handler returns).
+	//
+	jvm_is_started = true;
 }
 
 
@@ -423,12 +581,18 @@ jvmti_callback_vm_init (jvmtiEnv * jvmti, JNIEnv * jni, jthread thread) {
 
 static void JNICALL
 jvmti_callback_vm_death (jvmtiEnv * jvmti, JNIEnv * jni) {
-	rdprintf ("the VM is shutting down, closing connections\n");
+	rdexec {
+		struct thread_info info = INIT_THREAD_INFO;
+		__thread_info_init (jvmti, jni, &info);
+		rdatiprefix (&info, "vm_death (the VM is shutting down)\n");
+		__thread_info_done (jvmti, &info);
+	}
 
 	//
-	// Just close all the connections.
+	// Update flags to reflect that the VM is shutting down.
 	//
-	network_fini ();
+	jvm_is_initialized = false;
+	jvm_is_started = false;
 }
 
 
@@ -476,13 +640,16 @@ __configure_from_properties (jvmtiEnv * jvmti, struct config * config) {
 	);
 
 	//
-	// Configuration summary.
+	// Configuration summary. Current thread does not exist yet.
 	//
-	rdprintf ("bypass mode: %s\n", values [bypass_index]);
-	rdprintf ("split methods: %d\n", config->split_methods);
-	rdprintf ("catch exceptions: %d\n", config->catch_exceptions);
-	rdprintf ("force superclass: %d\n", config->force_superclass);
-	rdprintf ("force interfaces: %d\n", config->force_interfaces);
+	rdexec {
+		rdaprefix ("bypass mode: %s\n", values [bypass_index]);
+		rdaprefix ("split methods: %d\n", config->split_methods);
+		rdaprefix ("catch exceptions: %d\n", config->catch_exceptions);
+		rdaprefix ("force superclass: %d\n", config->force_superclass);
+		rdaprefix ("force interfaces: %d\n", config->force_interfaces);
+		rdaprefix ("debug: %d\n", config->debug);
+	}
 }
 
 
@@ -564,12 +731,17 @@ Agent_OnLoad (JavaVM * jvm, char * options, void * reserved) {
 	__configure_from_options (options, &agent_config);
 	__configure_from_properties (jvmti, &agent_config);
 
+	jvm_is_started = false;
+	jvm_is_initialized = false;
 	agent_code_flags = __calc_code_flags (&agent_config, true);
+
+	rdaprintf ("agent loaded, initializing connections\n");
 	network_init (agent_config.server_host, agent_config.server_port);
 
 
 	// register callbacks
 	jvmtiEventCallbacks callbacks = {
+		.VMStart = &jvmti_callback_vm_start,
 		.VMInit = &jvmti_callback_vm_init,
 		.VMDeath = &jvmti_callback_vm_death,
 		.ClassFileLoadHook = &jvmti_callback_class_file_load,
@@ -580,6 +752,9 @@ Agent_OnLoad (JavaVM * jvm, char * options, void * reserved) {
 
 
 	// enable event notification
+	error = (*jvmti)->SetEventNotificationMode (jvmti, JVMTI_ENABLE, JVMTI_EVENT_VM_START, NULL);
+	check_jvmti_error (jvmti, error, "failed to enable VM START event");
+
 	error = (*jvmti)->SetEventNotificationMode (jvmti, JVMTI_ENABLE, JVMTI_EVENT_VM_INIT, NULL);
 	check_jvmti_error (jvmti, error, "failed to enable VM INIT event");
 
@@ -590,4 +765,19 @@ Agent_OnLoad (JavaVM * jvm, char * options, void * reserved) {
 	check_jvmti_error (jvmti, error, "failed to enable CLASS FILE LOAD event");
 
 	return 0;
+}
+
+
+// ****************************************************************************
+// AGENT ENTRY POINT: ON UNLOAD
+// ****************************************************************************
+
+JNIEXPORT void JNICALL VISIBLE
+Agent_OnUnload (JavaVM * jvm) {
+	rdaprintf ("agent unloaded, closing connections\n");
+
+	//
+	// Just close all the connections.
+	//
+	network_fini ();
 }
