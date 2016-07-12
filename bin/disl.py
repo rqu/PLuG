@@ -171,7 +171,7 @@ def server_parser(parser):
 	group.add_argument("-s_noexcepthandler", 
 		action="store_true",
 		default=False,
-		help="does not instrument exception handler (improves performance but does not protect from errors within instrumentation)")
+		help="does not add exception handler around snippets (improves performance but does not protect from errors within instrumentation)")
 
 	group.add_argument("-s_nodynamicbypass", 
 		action="store_true",
