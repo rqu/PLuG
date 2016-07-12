@@ -298,4 +298,14 @@ public enum Insn {
         return (insn.getOpcode() == -1);
     }
 
+    public static boolean isConstLoad (final AbstractInsnNode insn) {
+        final int opcode = insn.getOpcode ();
+        return opcode >= Opcodes.ACONST_NULL && opcode <= Opcodes.LDC;
+    }
+
+    public static boolean isScalarLoad (final AbstractInsnNode insn) {
+        final int opcode = insn.getOpcode ();
+        return opcode >= Opcodes.ILOAD && opcode <= Opcodes.ALOAD;
+    }
+
 }
