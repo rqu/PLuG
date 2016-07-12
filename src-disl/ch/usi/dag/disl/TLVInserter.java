@@ -25,16 +25,20 @@ final class TLVInserter extends ClassVisitor {
 
     //
 
-    private final Set <ThreadLocalVar> __threadLocals__;
+    private final Set <ThreadLocalVar> __threadLocals;
 
     //
 
     public TLVInserter (final ClassVisitor cv, final Set <ThreadLocalVar> tlvs) {
         super (Opcodes.ASM5, cv);
-        __threadLocals__ = tlvs;
+        __threadLocals = tlvs;
     }
 
 
+    /**
+     * Ensures that the class being instrumented is actually the {@link Thread}
+     * class.
+     */
     @Override
     public void visit (
         final int version, final int access, final String name,
@@ -45,6 +49,11 @@ final class TLVInserter extends ClassVisitor {
     }
 
 
+    /**
+     * Modifies the constructor of the {@link Thread} class to initialize the
+     * additional fields that serve as thread-local variables for the
+     * instrumentation.
+     */
     @Override
     public MethodVisitor visitMethod (
         final int access, final String name, final String desc,
@@ -62,10 +71,15 @@ final class TLVInserter extends ClassVisitor {
         }
     }
 
+
+    /**
+     * Adds fields to the {@link Thread} class to serve as thread-local
+     * variables for the instrumentation.
+     */
     @Override
     public void visitEnd () {
         // Add instance fields to the class.
-        for (final ThreadLocalVar tlv : __threadLocals__) {
+        for (final ThreadLocalVar tlv : __threadLocals) {
             super.visitField (
                 Opcodes.ACC_PUBLIC, tlv.getName (), tlv.getDescriptor (),
                 null /* no generic signature */, null /* no static value */
@@ -104,7 +118,7 @@ final class TLVInserter extends ClassVisitor {
             // The code for initialized variables has the following structure:
             //     this.value = <predefined-value> | <type-specific default>
             //
-            for (final ThreadLocalVar tlv : __threadLocals__) {
+            for (final ThreadLocalVar tlv : __threadLocals) {
                 // Load "this" on the stack, for the final PUTFIELD.
                 __loadThis ();
 
