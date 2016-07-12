@@ -44,16 +44,15 @@ public class ArgProcessor {
 
 
     public Set <StaticContextMethod> getReferencedSCMs () {
-        return __methods.stream ()
-            .flatMap (apm -> apm.getCode ().getReferencedSCMs ().stream ())
+        return __methods.stream ().unordered ()
+            .flatMap (method -> method.getCode ().getReferencedSCMs ().stream ())
             .collect (Collectors.toSet ());
     }
 
 
     public void init (final LocalVars localVars) {
-        for (final ArgProcessorMethod method : __methods) {
-            method.init (localVars);
-        }
+        __methods.stream ().unordered ()
+            .forEach (method -> method.init (localVars));
     }
 
 }
