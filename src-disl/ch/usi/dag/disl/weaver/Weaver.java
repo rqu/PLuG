@@ -2,6 +2,7 @@ package ch.usi.dag.disl.weaver;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -21,6 +22,7 @@ import ch.usi.dag.disl.annotation.Before;
 import ch.usi.dag.disl.annotation.SyntheticLocal.Initialize;
 import ch.usi.dag.disl.exception.InvalidContextUsageException;
 import ch.usi.dag.disl.localvar.SyntheticLocalVar;
+import ch.usi.dag.disl.localvar.ThreadLocalVar;
 import ch.usi.dag.disl.processor.generator.PIResolver;
 import ch.usi.dag.disl.snippet.Shadow;
 import ch.usi.dag.disl.snippet.Shadow.WeavingRegion;
@@ -29,6 +31,7 @@ import ch.usi.dag.disl.snippet.SnippetCode;
 import ch.usi.dag.disl.staticcontext.generator.SCGenerator;
 import ch.usi.dag.disl.util.AsmHelper;
 import ch.usi.dag.disl.util.AsmHelper.Insns;
+import ch.usi.dag.disl.util.CodeTransformer;
 
 // The weaver instruments byte-codes into java class.
 public class Weaver {
@@ -42,7 +45,7 @@ public class Weaver {
      */
     private static void static2Local (
         final MethodNode methodNode,
-        final List<SyntheticLocalVar> syntheticLocalVars
+        final Set <SyntheticLocalVar> syntheticLocalVars
     ) {
         final InsnList instructions = methodNode.instructions;
         final AbstractInsnNode first = instructions.getFirst ();
@@ -245,7 +248,8 @@ public class Weaver {
     public static void instrument (
         final ClassNode classNode, final MethodNode methodNode,
         final Map <Snippet, List <Shadow>> snippetShadows,
-        final List <SyntheticLocalVar> syntheticLocalVars,
+        final Set <SyntheticLocalVar> syntheticLocalVars,
+        final Set <ThreadLocalVar> threadLocalVars,
         final SCGenerator staticInfoHolder, final PIResolver piResolver
     ) throws InvalidContextUsageException {
 
@@ -260,8 +264,10 @@ public class Weaver {
             }
 
             // Instrument
-
             //
+            // TODO LB: Extract transformations for individual annotation types.
+            //
+
             // For @Before snippets, insert the snippet code just before the
             // region entry.
             //
@@ -370,6 +376,11 @@ public class Weaver {
         }
 
         static2Local(methodNode, syntheticLocalVars);
+        CodeTransformer.apply (
+            methodNode.instructions,
+            new RewriteThreadLocalVarAccessesCodeTransformer (threadLocalVars)
+        );
+
         AdvancedSorter.sort(methodNode);
     }
 

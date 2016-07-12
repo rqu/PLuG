@@ -2,11 +2,11 @@ package ch.usi.dag.disl;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -23,7 +23,6 @@ import org.objectweb.asm.tree.MethodNode;
 import ch.usi.dag.disl.classparser.DislClasses;
 import ch.usi.dag.disl.exception.DiSLException;
 import ch.usi.dag.disl.exception.DiSLInMethodException;
-import ch.usi.dag.disl.guard.GuardHelper;
 import ch.usi.dag.disl.localvar.SyntheticLocalVar;
 import ch.usi.dag.disl.localvar.ThreadLocalVar;
 import ch.usi.dag.disl.processor.generator.PIResolver;
@@ -231,47 +230,39 @@ public final class DiSL {
             return false;
         }
 
-        // *** match snippet scope ***
 
-        final List <Snippet> matchedSnippets = new LinkedList <Snippet> ();
-        for (final Snippet snippet : __dislClasses.getSnippets ()) {
-            if (snippet.getScope ().matches (className, methodName, methodDesc)) {
-                matchedSnippets.add (snippet);
-            }
-        }
+        //
+        // Find snippets with a scope matching the class and methods being
+        // instrumented. If there are no such snippets, there is nothing to
+        // instrument and we can bail out early.
+        //
+        final List <Snippet> matchingSnippets = __dislClasses.selectMatchingSnippets (
+            className, methodName, methodDesc
+        );
 
-        // if there is nothing to instrument -> quit
-        // just to be faster out
-        if (matchedSnippets.isEmpty ()) {
+        if (matchingSnippets.isEmpty ()) {
             __log.debug ("skipping unaffected method: %s.%s%s",
                 className, methodName, methodDesc);
             return false;
         }
 
-        // *** create shadows ***
 
-        // shadows mapped to snippets - for weaving
-        final Map<Snippet, List<Shadow>> snippetMarkings = new HashMap <> ();
-
-        for (final Snippet snippet : matchedSnippets) {
+        //
+        // Apply markers to class methods to receive a list of shadows which
+        // represent the individual instances of a snippet. Filter the initial
+        // list of shadows through guards and collect snippets that have
+        // at least one applicable shadow.
+        //
+        final Map<Snippet, List<Shadow>> applicableSnippets = new HashMap <> ();
+        for (final Snippet snippet : matchingSnippets) {
             __log.trace ("\tsnippet: %s.%s()",
                 snippet.getOriginClassName (), snippet.getOriginMethodName ());
 
-            // marking
-            final List <Shadow> shadows = snippet.getMarker ().mark (
-                classNode, methodNode, snippet
-            );
+            final List <Shadow> applicableShadows = snippet.selectApplicableShadows (classNode, methodNode);
+            __log.trace ("\tapplicable shadows: %d", applicableShadows.size ());
 
-            // select shadows according to snippet guard
-            final List <Shadow> selectedShadows = selectShadowsWithGuard (
-                snippet.getGuard (), shadows
-            );
-
-            __log.trace ("\tselected shadows: %d", selectedShadows.size ());
-
-            // add to map
-            if (!selectedShadows.isEmpty ()) {
-                snippetMarkings.put (snippet, selectedShadows);
+            if (!applicableShadows.isEmpty ()) {
+                applicableSnippets.put (snippet, applicableShadows);
             }
         }
 
@@ -281,27 +272,22 @@ public final class DiSL {
             className, methodName, methodDesc);
 
         // prepares SCGenerator class (computes static context)
-        final SCGenerator staticInfo = SCGenerator.computeStaticInfo (snippetMarkings);
+        final SCGenerator staticInfo = SCGenerator.computeStaticInfo (applicableSnippets);
 
-        // *** used synthetic local vars in snippets ***
+        // *** used synthetic and thread-local vars in snippets ***
 
-        __log.trace ("finding synthetic locals used by method: %s.%s%s",
+        __log.trace ("finding locals used by method: %s.%s%s",
             className, methodName, methodDesc);
 
-        // weaver needs list of synthetic locals that are actively used in
-        // selected (matched) snippets
-
-        final Set <SyntheticLocalVar> usedSLVs = new HashSet <SyntheticLocalVar> ();
-        for (final Snippet snippet : snippetMarkings.keySet ()) {
-            usedSLVs.addAll (snippet.getCode ().getReferencedSLVs ());
-        }
+        final Set <SyntheticLocalVar> usedSLVs = __collectReferencedSLVs (applicableSnippets.keySet ());
+        final Set <ThreadLocalVar> usedTLVs = __collectReferencedTLVs (applicableSnippets.keySet ());
 
         // *** prepare processors ***
 
         __log.trace ("preparing argument processors for method: %s.%s%s",
             className, methodName, methodDesc);
 
-        final PIResolver piResolver = new ProcGenerator ().compute (snippetMarkings);
+        final PIResolver piResolver = new ProcGenerator ().compute (applicableSnippets);
 
         // *** used synthetic local vars in processors ***
 
@@ -314,20 +300,20 @@ public final class DiSL {
 
         // *** weaving ***
 
-        if (snippetMarkings.size () > 0) {
+        if (applicableSnippets.size () > 0) {
             __log.debug ("found %d snippet marking(s), weaving method: %s.%s%s",
-                snippetMarkings.size (), className, methodName, methodDesc);
+                applicableSnippets.size (), className, methodName, methodDesc);
+
             Weaver.instrument (
-                classNode, methodNode, snippetMarkings,
-                new LinkedList <SyntheticLocalVar> (usedSLVs),
-                staticInfo, piResolver
+                classNode, methodNode, applicableSnippets,
+                usedSLVs, usedTLVs, staticInfo, piResolver
             );
 
             return true;
 
         } else {
             __log.debug ("found %d snippet marking(s), skipping method: %s.%s%s",
-                snippetMarkings.size (), className, methodName, methodDesc);
+                applicableSnippets.size (), className, methodName, methodDesc);
 
             return false;
         }
@@ -335,25 +321,31 @@ public final class DiSL {
 
 
     /**
-     * Selects only shadows passing the given guard.
-     *
-     * @param guard
-     *        the guard to use for filtering the {@link Shadow} instances.
-     * @param shadows
-     *        the list of {@link Shadow} instances to filter.
-     * @return A list of {@link Shadow} instances passing the guard.
+     * Collects a list of synthetic local variables that are actively
+     * used in the selected (matched) snippets.
      */
-    private List <Shadow> selectShadowsWithGuard (
-        final Method guard, final List <Shadow> shadows
+    private Set <SyntheticLocalVar> __collectReferencedSLVs (
+        final Collection <Snippet> snippets
     ) {
-        if (guard == null) {
-            return shadows;
-        }
+        //
+        // Uses LinkedHashSet to maintain iteration order.
+        //
+        return snippets.stream ().unordered ()
+            .flatMap (s -> s.getCode ().getReferencedSLVs ().stream ())
+            .collect (LinkedHashSet::new, LinkedHashSet::add, LinkedHashSet::addAll);
+    }
 
-        return shadows.stream ()
-            // potentially .parallel(), needs thread-safe static context
-            .filter (shadow -> GuardHelper.guardApplicable (guard, shadow))
-            .collect (Collectors.toList ());
+
+    /**
+     * Collects a list of thread-local variables that are actively
+     * used in the selected (matched) snippets.
+     */
+    private Set <ThreadLocalVar> __collectReferencedTLVs (
+        final Collection <Snippet> snippets
+    ) {
+        return snippets.stream ().unordered ()
+            .flatMap (s -> s.getCode ().getReferencedTLVs ().stream ())
+            .collect (Collectors.toSet ());
     }
 
 
@@ -387,21 +379,28 @@ public final class DiSL {
     private InstrumentedClass instrumentClass (
         ClassNode classNode
     ) throws DiSLException {
-        // NOTE that class can be changed without changing any method
-        // - adding thread local fields
+        //
+        // Track changed classes methods. A class can be actually changed
+        // without changing any methods, i.e., adding thread-local fields
+        // to the Thread class.
+        //
         boolean classChanged = false;
+        final Set <String> changedMethods = new HashSet <> ();
 
-        // track changed methods for code merging
-        final Set <String> changedMethods = new HashSet <String> ();
-
-        // instrument all methods in a class
+        //
+        // Instrument each method of the given class. Intercept any
+        // exceptions and propagate them upwards with the name of the
+        // method in which instrumentation failed.
+        //
         for (final MethodNode methodNode : classNode.methods) {
             boolean methodChanged = false;
 
-            // intercept all exceptions and add a method name
             try {
-                __log.trace ("processing method: %s.%s(%s)",
-                    classNode.name, methodNode.name, methodNode.desc);
+                __log.trace (
+                    "processing method: %s.%s(%s)",
+                    classNode.name, methodNode.name, methodNode.desc
+                );
+
                 methodChanged = instrumentMethod (classNode, methodNode);
 
             } catch (final DiSLException e) {
@@ -409,37 +408,29 @@ public final class DiSL {
                     classNode.name + "." + methodNode.name, e);
             }
 
-            // add method to the set of changed methods
             if (methodChanged) {
                 changedMethods.add (methodNode.name + methodNode.desc);
                 classChanged = true;
             }
         }
 
-        // instrument thread local fields
+        //
+        // If the instrumented class is the Thread class, add fields that
+        // will provide thread-local variables to the code in the snippets.
+        //
         if (Type.getInternalName (Thread.class).equals (classNode.name)) {
-            final Set <ThreadLocalVar> insertTLVs = new HashSet <ThreadLocalVar> ();
+            // get all thread locals in snippets
+            final Set <ThreadLocalVar> tlvs = __collectReferencedTLVs (__dislClasses.getSnippets ());
 
             // dynamic bypass
             if (__codeOptions.contains (CodeOption.DYNAMIC_BYPASS)) {
-                // prepare dynamic bypass thread local variable
-                final ThreadLocalVar tlv = new ThreadLocalVar (
-                    null, "bypass", Type.getType (boolean.class), false
-                );
-
-                tlv.setInitialValue (false);
-                insertTLVs.add (tlv);
+                tlvs.add (__createBypassTlv ());
             }
 
-            // get all thread locals in snippets
-            for (final Snippet snippet : __dislClasses.getSnippets ()) {
-                insertTLVs.addAll (snippet.getCode ().getReferencedTLVs ());
-            }
-
-            if (!insertTLVs.isEmpty ()) {
+            if (!tlvs.isEmpty ()) {
                 // instrument fields
                 final ClassNode cnWithFields = new ClassNode (Opcodes.ASM5);
-                classNode.accept (new TLVInserter (cnWithFields, insertTLVs));
+                classNode.accept (new TLVInserter (cnWithFields, tlvs));
 
                 // replace original code with instrumented one
                 classNode = cnWithFields;
@@ -451,6 +442,17 @@ public final class DiSL {
         return classChanged ?
             new InstrumentedClass (classNode, changedMethods) :
             null;
+    }
+
+
+    private ThreadLocalVar __createBypassTlv () {
+        // prepare dynamic bypass thread local variable
+        final ThreadLocalVar result = new ThreadLocalVar (
+            null, "bypass", Type.getType (boolean.class), false
+        );
+
+        result.setInitialValue (false);
+        return result;
     }
 
 

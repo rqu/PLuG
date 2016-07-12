@@ -116,15 +116,13 @@ public class UnprocessedCode {
         // Clone the method code so that we can transform it, then:
         //
         // - replace all RETURN instructions with a GOTO to the end of a method
-        // - rewrite accesses to thread-local variables
         //
         // Finally create an instance of processed code.
         //
         final MethodNode method = AsmHelper.cloneMethod (__method);
 
         CodeTransformer.apply (method.instructions,
-            new ReplaceReturnsWithGotoCodeTransformer (),
-            new RewriteThreadLocalVarAccessesCodeTransformer (tlvs)
+            new ReplaceReturnsWithGotoCodeTransformer ()
         );
 
         return new Code (

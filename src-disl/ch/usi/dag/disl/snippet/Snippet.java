@@ -1,15 +1,21 @@
 package ch.usi.dag.disl.snippet;
 
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
 
 import ch.usi.dag.disl.DiSL.CodeOption;
+import ch.usi.dag.disl.exception.MarkerException;
 import ch.usi.dag.disl.exception.ProcessorException;
 import ch.usi.dag.disl.exception.ReflectionException;
+import ch.usi.dag.disl.guard.GuardHelper;
 import ch.usi.dag.disl.localvar.LocalVars;
 import ch.usi.dag.disl.marker.Marker;
 import ch.usi.dag.disl.processor.ArgProcessor;
@@ -92,10 +98,37 @@ public class Snippet implements Comparable <Snippet> {
 
 
     /**
-     * @return The marker associated with the snippet.
+     * Applies the marker associated with this snippet to the given
+     * class and method, so as to provide a list of {@link Shadow}
+     * instances representing individual instances of a snippet.
+     *
+     * @throws MarkerException
      */
-    public Marker getMarker () {
-        return marker;
+    public final List <Shadow> selectApplicableShadows (
+        final ClassNode classNode, final MethodNode methodNode
+    ) throws MarkerException {
+        return __guardedShadows (marker.mark (classNode, methodNode, this));
+    }
+
+
+    /**
+     * Selects shadows passing the guard associated with this snippet.
+     *
+     * @param shadows
+     *        the list of {@link Shadow} instances to filter.
+     * @return A list of {@link Shadow} instances passing the guard.
+     */
+    private List <Shadow> __guardedShadows (
+        final List <Shadow> shadows
+    ) {
+        if (guard == null) {
+            return shadows;
+        }
+
+        return shadows.stream ()
+            // potentially .parallel(), needs thread-safe static context
+            .filter (shadow -> GuardHelper.guardApplicable (guard, shadow))
+            .collect (Collectors.toList ());
     }
 
 
