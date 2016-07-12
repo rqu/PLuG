@@ -19,6 +19,7 @@ import ch.usi.dag.disl.coderep.UnprocessedCode;
 import ch.usi.dag.disl.exception.GuardException;
 import ch.usi.dag.disl.exception.ParserException;
 import ch.usi.dag.disl.guard.GuardHelper;
+import ch.usi.dag.disl.localvar.LocalVars;
 import ch.usi.dag.disl.processor.ArgProcessor;
 import ch.usi.dag.disl.processor.ArgProcessorKind;
 import ch.usi.dag.disl.processor.ArgProcessorMethod;
@@ -35,7 +36,10 @@ class ArgProcessorParser extends AbstractParser {
     private final Map <Type, ArgProcessor> __processors = new HashMap <> ();
 
 
-    public Map <Type, ArgProcessor> getProcessors () {
+    public Map <Type, ArgProcessor> initProcessors (final LocalVars localVars) {
+        __processors.values ().stream ().unordered ()
+            .forEach (processor -> processor.init (localVars));
+
         return __processors;
     }
 

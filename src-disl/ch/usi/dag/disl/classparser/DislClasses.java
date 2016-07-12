@@ -1,6 +1,7 @@
 package ch.usi.dag.disl.classparser;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -81,10 +82,7 @@ public final class DislClasses {
             sp.getAllLocalVars (), app.getAllLocalVars ()
         );
 
-        // TODO LB: Move the loop to the ArgProcessorParser class
-        for (final ArgProcessor processor : app.getProcessors ().values()) {
-            processor.init (localVars);
-        }
+        final Map <Type, ArgProcessor> processors = app.initProcessors (localVars);
 
         // TODO LB: Consider whether we need to create the argument processor
         // invocation map now -- we basically discard the argument processors
@@ -92,7 +90,7 @@ public final class DislClasses {
 
         // TODO LB: Move the loop to the SnippetParser class
         for (final Snippet snippet : sp.getSnippets ()) {
-            snippet.init (localVars, app.getProcessors (), options);
+            snippet.init (localVars, processors, options);
         }
 
         return new DislClasses (sp);
@@ -144,4 +142,11 @@ public final class DislClasses {
         return __snippetParser.getSnippets ();
     }
 
+    public List <Snippet> selectMatchingSnippets (
+        final String className, final String methodName, final String methodDesc
+    ) {
+        return __snippetParser.getSnippets ().stream ().unordered ()
+            .filter (s -> s.getScope ().matches (className, methodName, methodDesc))
+            .collect (Collectors.toList ());
+    }
 }
