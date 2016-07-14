@@ -2,14 +2,17 @@ package ch.usi.dag.dislreserver.shadow;
 
 import java.util.Formattable;
 import java.util.Formatter;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
+
 
 public class ShadowObject implements Formattable {
 
-    final private long netRef;
-    final private long shadowId;
-    final private ShadowClass shadowClass;
+    private final long netRef;
+    private final long shadowId;
+    private final ShadowClass shadowClass;
 
-    private Object shadowState;
+    private final AtomicReference <Object> shadowState;
 
     //
 
@@ -18,26 +21,28 @@ public class ShadowObject implements Formattable {
         this.netRef = netReference;
         this.shadowId = NetReferenceHelper.get_object_id (netReference);
         this.shadowClass = shadowClass;
-        this.shadowState = null;
+        this.shadowState = new AtomicReference <> ();
     }
 
     //
 
-    public long getNetRef () {
+    @Deprecated
+    public final long getNetRef () {
         return netRef;
     }
 
-    public long getId () {
+
+    public final long getId () {
         return shadowId;
     }
 
-    public ShadowClass getShadowClass() {
 
+    public ShadowClass getShadowClass () {
         if (shadowClass != null) {
             return shadowClass;
-        } else {
 
-            if (equals(ShadowClassTable.BOOTSTRAP_CLASSLOADER)) {
+        } else {
+            if (this.equals (ShadowClassTable.BOOTSTRAP_CLASSLOADER)) {
                 throw new NullPointerException();
             }
 
@@ -45,42 +50,75 @@ public class ShadowObject implements Formattable {
         }
     }
 
-    public synchronized Object getState () {
-        return shadowState;
+    //
+
+    public final Object getState () {
+        return __getState (Object.class);
     }
 
 
-    public synchronized <T> T getState (final Class <T> type) {
-        return type.cast (shadowState);
+    public final <T> T getState (final Class <T> type) {
+        return __getState (type);
     }
 
 
-    public synchronized void setState (final Object shadowState) {
-        this.shadowState = shadowState;
+    private final <T> T __getState (final Class <T> type) {
+        return type.cast (shadowState.get ());
     }
 
-    public synchronized Object setStateIfAbsent(Object shadowState) {
 
-        Object retVal = this.shadowState;
+    public final void setState (final Object state) {
+        shadowState.set (state);
+    }
 
-        if (retVal == null) {
-            this.shadowState = shadowState;
+
+    public final Object setStateIfAbsent (final Object state) {
+        return computeStateIfAbsent (Object.class, () -> state);
+    }
+
+
+    public final <T> T setStateIfAbsent (final Class <T> type, final T state) {
+        return computeStateIfAbsent (type, () -> state);
+    }
+
+
+    public final Object computeStateIfAbsent (final Supplier <Object> supplier) {
+        return computeStateIfAbsent (Object.class, supplier);
+    }
+
+
+    public final <T> T computeStateIfAbsent (final Class <T> type, final Supplier <T> supplier) {
+        //
+        // Avoid CAS if state is already present.
+        // Otherwise compute new state and try to CAS the new state once.
+        // If that fails, return whatever was there.
+        //
+        final T existing = __getState (type);
+        if (existing != null) {
+            return existing;
         }
 
-        return retVal;
+        final T supplied = supplier.get ();
+        if (shadowState.compareAndSet (null, supplied)) {
+            return supplied;
+        }
+
+        return __getState (type);
     }
 
-    // only object id considered
-    // TODO consider also the class ID
+    //
+
     @Override
-    public int hashCode() {
+    public int hashCode () {
+        // TODO Consider also the class ID, only object ID is considered now.
         return 31 + (int) (shadowId ^ (shadowId >>> 32));
     }
 
+
     @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof ShadowObject) {
-            final ShadowObject that = (ShadowObject) obj;
+    public boolean equals (final Object object) {
+        if (object instanceof ShadowObject) {
+            final ShadowObject that = (ShadowObject) object;
             return this.netRef == that.netRef;
         }
 
@@ -94,7 +132,7 @@ public class ShadowObject implements Formattable {
         final Formatter formatter,
         final int flags, final int width, final int precision
     ) {
-        formatter.format ("%s@%x", (shadowClass != null) ? 
+        formatter.format ("%s@%x", (shadowClass != null) ?
             shadowClass.getName () : "<missing>", shadowId
         );
     }
