@@ -91,6 +91,11 @@ public final class AnalysisHandler implements RequestHandler {
             }
 
             // read argument values data according to argument types
+            //
+            // TODO LB: Consider keeping the result of getParameterTypes() in
+            // the AnalysisMethodHolder -- otherwise the method argument array
+            // is cloned on each invocation.
+            //
             final Class <?> [] paramTypes = method.getParameterTypes ();
             final Object [] args = new Object [paramTypes.length];
             

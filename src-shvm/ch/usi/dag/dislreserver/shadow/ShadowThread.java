@@ -3,38 +3,44 @@ package ch.usi.dag.dislreserver.shadow;
 import java.util.Formattable;
 import java.util.Formatter;
 
+
 // TODO ShadowTrhead should better handle if String data are not send
-//     over network - throw a runtime exception ??
+// over network - throw a runtime exception ??
 public class ShadowThread extends ShadowObject implements Formattable {
 
-    private String  name;
+    private String name;
+
     private boolean isDaemon;
 
-    public ShadowThread(long net_ref, String name, boolean isDaemon,
-            ShadowClass klass) {
-        super(net_ref, klass);
+
+    public ShadowThread (
+        long net_ref, String name, boolean isDaemon, ShadowClass klass
+    ) {
+        super (net_ref, klass);
 
         this.name = name;
         this.isDaemon = isDaemon;
     }
 
-    // TODO warn user that it will return null when the ShadowThread is not yet
-    // sent.
-    public String getName() {
+
+    // TODO warn user that it will return null when the ShadowThread is not yet sent.
+    public String getName () {
         return name;
     }
 
-    // TODO warn user that it will return false when the ShadowThread is not yet
-    // sent.
-    public boolean isDaemon() {
+
+    // TODO warn user that it will return false when the ShadowThread is not yet sent.
+    public boolean isDaemon () {
         return isDaemon;
     }
 
-    public void setName(String name) {
+
+    public void setName (String name) {
         this.name = name;
     }
 
-    public void setDaemon(boolean isDaemon) {
+
+    public void setDaemon (boolean isDaemon) {
         this.isDaemon = isDaemon;
     }
 
@@ -58,7 +64,7 @@ public class ShadowThread extends ShadowObject implements Formattable {
 
 
     @Override
-    public int hashCode() {
+    public int hashCode () {
         //
         // TODO LB: Check ShadowThread.hashCode() -- it's needed.
         //
@@ -73,13 +79,14 @@ public class ShadowThread extends ShadowObject implements Formattable {
         return super.hashCode ();
     }
 
+
     //
 
     @Override
     public void formatTo (
         final Formatter formatter,
         final int flags, final int width, final int precision
-    ) { 
+    ) {
         super.formatTo (formatter, flags, width, precision);
         formatter.format (" <%s>", (name != null) ? name : "unknown");
     }
