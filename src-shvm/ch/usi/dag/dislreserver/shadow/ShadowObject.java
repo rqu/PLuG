@@ -9,7 +9,9 @@ import java.util.function.Supplier;
 public class ShadowObject implements Formattable {
 
     private final long netRef;
+
     private final long shadowId;
+
     private final ShadowClass shadowClass;
 
     private final AtomicReference <Object> shadowState;
@@ -21,8 +23,9 @@ public class ShadowObject implements Formattable {
         this.netRef = netReference;
         this.shadowId = NetReferenceHelper.get_object_id (netReference);
         this.shadowClass = shadowClass;
-        this.shadowState = new AtomicReference <> ();
+        this.shadowState = new AtomicReference<> ();
     }
+
 
     //
 
@@ -43,12 +46,13 @@ public class ShadowObject implements Formattable {
 
         } else {
             if (this.equals (ShadowClassTable.BOOTSTRAP_CLASSLOADER)) {
-                throw new NullPointerException();
+                throw new NullPointerException ();
             }
 
             return ShadowClassTable.JAVA_LANG_CLASS;
         }
     }
+
 
     //
 
@@ -87,7 +91,8 @@ public class ShadowObject implements Formattable {
     }
 
 
-    public final <T> T computeStateIfAbsent (final Class <T> type, final Supplier <T> supplier) {
+    public final <T> T computeStateIfAbsent (
+        final Class <T> type, final Supplier <T> supplier) {
         //
         // Avoid CAS if state is already present.
         // Otherwise compute new state and try to CAS the new state once.
@@ -105,6 +110,7 @@ public class ShadowObject implements Formattable {
 
         return __getState (type);
     }
+
 
     //
 
@@ -125,6 +131,7 @@ public class ShadowObject implements Formattable {
         return false;
     }
 
+
     //
 
     @Override
@@ -132,8 +139,10 @@ public class ShadowObject implements Formattable {
         final Formatter formatter,
         final int flags, final int width, final int precision
     ) {
-        formatter.format ("%s@%x", (shadowClass != null) ?
-            shadowClass.getName () : "<missing>", shadowId
+        formatter.format (
+            "%s@%x",
+            (shadowClass != null) ? shadowClass.getName () : "<missing>",
+            shadowId
         );
     }
 

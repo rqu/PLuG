@@ -6,11 +6,15 @@ import org.objectweb.asm.Type;
 
 import ch.usi.dag.dislreserver.DiSLREServerFatalException;
 
+
 public class ShadowArrayClass extends ShadowClass {
 
     private final Type type;
+
     private final ShadowClass superClass;
+
     private final ShadowClass arrayComponentClass;
+
 
     //
 
@@ -28,140 +32,170 @@ public class ShadowArrayClass extends ShadowClass {
 
 
     @Override
-    public boolean isArray() {
+    public boolean isArray () {
         return true;
     }
 
-    public int getArrayDimensions() {
-        return type.getDimensions();
+
+    public int getArrayDimensions () {
+        return type.getDimensions ();
     }
 
+
     @Override
-    public ShadowClass getComponentType() {
+    public ShadowClass getComponentType () {
         // return arrayComponentClass;
-        throw new DiSLREServerFatalException(
-                "ShadowArrayClass.getComponentType not implemented");
+        throw new DiSLREServerFatalException ("ShadowArrayClass.getComponentType not implemented");
     }
 
-    @Override
-    public boolean isInstance(ShadowObject obj) {
-        return equals(obj.getShadowClass());
-    }
 
     @Override
-    public boolean isAssignableFrom(ShadowClass klass) {
-        return equals(klass)
-                || ((klass instanceof ShadowArrayClass) && arrayComponentClass
-                        .isAssignableFrom(klass.getComponentType()));
+    public boolean isInstance (ShadowObject obj) {
+        return equals (obj.getShadowClass ());
     }
 
+
     @Override
-    public boolean isInterface() {
+    public boolean isAssignableFrom (ShadowClass klass) {
+        return
+            equals (klass)
+            ||
+            (
+                (klass instanceof ShadowArrayClass)
+                &&
+                arrayComponentClass.isAssignableFrom (klass.getComponentType ())
+            );
+    }
+
+
+    @Override
+    public boolean isInterface () {
         return false;
     }
 
+
     @Override
-    public boolean isPrimitive() {
+    public boolean isPrimitive () {
         return false;
     }
 
+
     @Override
-    public boolean isAnnotation() {
+    public boolean isAnnotation () {
         return false;
     }
 
+
     @Override
-    public boolean isSynthetic() {
+    public boolean isSynthetic () {
         return false;
     }
 
+
     @Override
-    public boolean isEnum() {
+    public boolean isEnum () {
         return false;
     }
 
-    @Override
-    public String getName() {
-        return type.getDescriptor().replace('/', '.');
-    }
 
     @Override
-    public String getCanonicalName() {
-        return type.getClassName();
+    public String getName () {
+        return type.getDescriptor ().replace ('/', '.');
     }
 
-    @Override
-    public String[] getInterfaces() {
-        return new String[] { "java.lang.Cloneable", "java.io.Serializable" };
-    }
 
     @Override
-    public String getPackage() {
+    public String getCanonicalName () {
+        return type.getClassName ();
+    }
+
+
+    @Override
+    public String [] getInterfaces () {
+        return new String [] { "java.lang.Cloneable", "java.io.Serializable" };
+    }
+
+
+    @Override
+    public String getPackage () {
         return null;
     }
 
+
     @Override
-    public ShadowClass getSuperclass() {
+    public ShadowClass getSuperclass () {
         return superClass;
     }
 
+
     @Override
-    public FieldInfo[] getFields() {
-        return new FieldInfo[0];
+    public FieldInfo [] getFields () {
+        return new FieldInfo [0];
     }
 
+
     @Override
-    public FieldInfo getField(String fieldName) throws NoSuchFieldException {
-        throw new NoSuchFieldException(type.getClassName() + "." + fieldName);
+    public FieldInfo getField (String fieldName) throws NoSuchFieldException {
+        throw new NoSuchFieldException (type.getClassName () + "." + fieldName);
     }
 
+
     @Override
-    public MethodInfo[] getMethods() {
-        return getSuperclass().getMethods();
+    public MethodInfo [] getMethods () {
+        return getSuperclass ().getMethods ();
     }
 
-    @Override
-    public MethodInfo getMethod(String methodName, String[] argumentNames)
-            throws NoSuchMethodException {
 
-        for (MethodInfo methodInfo : superClass.getMethods()) {
-            if (methodName.equals(methodInfo.getName())
-                    && Arrays.equals(argumentNames,
-                            methodInfo.getParameterTypes())) {
+    @Override
+    public MethodInfo getMethod (String methodName, String [] argumentNames)
+    throws NoSuchMethodException {
+
+        for (MethodInfo methodInfo : superClass.getMethods ()) {
+            if (methodName.equals (methodInfo.getName ())
+                && Arrays.equals (argumentNames, methodInfo.getParameterTypes ())
+            ) {
                 return methodInfo;
             }
         }
 
-        throw new NoSuchMethodException(type.getClassName() + "." + methodName
-                + argumentNamesToString(argumentNames));
+        throw new NoSuchMethodException (
+            type.getClassName () + "." + methodName + argumentNamesToString (argumentNames)
+        );
     }
 
-    @Override
-    public String[] getDeclaredClasses() {
-        return new String[0];
-    }
 
     @Override
-    public FieldInfo[] getDeclaredFields() {
-        return new FieldInfo[0];
+    public String [] getDeclaredClasses () {
+        return new String [0];
     }
 
-    @Override
-    public FieldInfo getDeclaredField(String fieldName)
-            throws NoSuchFieldException {
-        throw new NoSuchFieldException(type.getClassName() + "." + fieldName);
-    }
 
     @Override
-    public MethodInfo[] getDeclaredMethods() {
-        return new MethodInfo[0];
+    public FieldInfo [] getDeclaredFields () {
+        return new FieldInfo [0];
     }
 
+
     @Override
-    public MethodInfo getDeclaredMethod(String methodName,
-            String[] argumentNames) throws NoSuchMethodException {
-        throw new NoSuchMethodException(type.getClassName() + "." + methodName
-                + argumentNamesToString(argumentNames));
+    public FieldInfo getDeclaredField (String fieldName)
+    throws NoSuchFieldException {
+        throw new NoSuchFieldException (type.getClassName () + "." + fieldName);
+    }
+
+
+    @Override
+    public MethodInfo [] getDeclaredMethods () {
+        return new MethodInfo [0];
+    }
+
+
+    @Override
+    public MethodInfo getDeclaredMethod (String methodName,
+        String [] argumentNames)
+    throws NoSuchMethodException {
+        throw new NoSuchMethodException (
+            type.getClassName () + "." + methodName + argumentNamesToString (argumentNames)
+        );
     }
 
 }

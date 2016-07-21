@@ -76,5 +76,5 @@ public class MethodInfo {
     public boolean isPublic () {
         return (modifiers & Opcodes.ACC_PUBLIC) != 0;
     }
-    
+
 }

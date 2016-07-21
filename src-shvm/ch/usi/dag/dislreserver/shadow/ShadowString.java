@@ -11,14 +11,15 @@ public class ShadowString extends ShadowObject {
 
 
     public ShadowString (
-        long net_ref, String value, ShadowClass klass
-    ) {
-        super (net_ref, klass);
+        long net_ref, String value, ShadowClass klass) {
+        super (
+            net_ref, klass);
         this.value = value;
     }
 
 
-    // TODO warn user that it will return null when the ShadowString is not yet sent.
+    // TODO warn user that it will return null when the ShadowString is not yet
+    // sent.
     @Override
     public String toString () {
         return value;
