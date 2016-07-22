@@ -152,7 +152,7 @@ public class ArrayShadowClass extends ShadowClass {
 
         for (final MethodInfo methodInfo : __superClass.getMethods ()) {
             if (methodName.equals (methodInfo.getName ())
-                && Arrays.equals (argumentNames, methodInfo.getParameterTypes ())
+                && Arrays.equals (argumentNames, methodInfo.getParameterDescriptors ())
             ) {
                 return methodInfo;
             }

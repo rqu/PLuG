@@ -58,17 +58,17 @@ public class MethodInfo {
     }
 
 
-    public String getReturnType () {
+    public String getReturnDescriptor () {
         return __returnType;
     }
 
 
-    public String [] getParameterTypes () {
+    public String [] getParameterDescriptors () {
         return Arrays.copyOf (__parameterTypes, __parameterTypes.length);
     }
 
 
-    public String [] getExceptionTypes () {
+    public String [] getExceptionDescriptors () {
         return Arrays.copyOf (__exceptionTypes, __exceptionTypes.length);
     }
 

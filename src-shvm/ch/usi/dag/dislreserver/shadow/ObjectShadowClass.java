@@ -241,7 +241,7 @@ class ObjectShadowClass extends ShadowClass {
     ) throws NoSuchMethodException {
         for (final MethodInfo methodInfo : public_methods) {
             if (methodName.equals (methodInfo.getName ()) &&
-                Arrays.equals (argumentNames, methodInfo.getParameterTypes ())
+                Arrays.equals (argumentNames, methodInfo.getParameterDescriptors ())
             ) {
                 return methodInfo;
             }
@@ -291,7 +291,7 @@ class ObjectShadowClass extends ShadowClass {
     ) throws NoSuchMethodException {
         for (final MethodInfo methodInfo : methods) {
             if (methodName.equals (methodInfo.getName ()) &&
-                Arrays.equals (argumentNames, methodInfo.getParameterTypes ())
+                Arrays.equals (argumentNames, methodInfo.getParameterDescriptors ())
             ) {
                 return methodInfo;
             }

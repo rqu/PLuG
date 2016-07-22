@@ -41,7 +41,7 @@ public class FieldInfo {
     }
 
 
-    public String getType () {
+    public String getDescriptor () {
         return __type;
     }
 
