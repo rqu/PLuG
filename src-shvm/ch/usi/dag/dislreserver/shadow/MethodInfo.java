@@ -1,80 +1,61 @@
 package ch.usi.dag.dislreserver.shadow;
 
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
+import java.util.List;
 
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.MethodNode;
 
 
-public class MethodInfo {
-
-    // TODO ! is this implementation of methods really working ??
+public final class MethodInfo {
 
     private final MethodNode __methodNode;
 
-    private final int __modifiers;
+    //
 
-    private final String __name;
-
-    private final String __returnType;
-
-    private final String [] __parameterTypes;
-
-    private final String [] __exceptionTypes;
-
-
-    public MethodInfo (final MethodNode methodNode) {
+    MethodInfo (final MethodNode methodNode) {
         __methodNode = methodNode;
-        __name = methodNode.name;
-        __modifiers = methodNode.access;
-        __returnType = methodNode.desc.substring (methodNode.desc.indexOf (')') + 1);
-
-        final Type [] parameters = Type.getArgumentTypes (methodNode.desc);
-        final int size = parameters.length;
-        __parameterTypes = new String [size];
-
-        for (int i = 0; i < size; i++) {
-            __parameterTypes [i] = parameters [i].getDescriptor ();
-        }
-
-        // to have "checked" array :(
-        __exceptionTypes = methodNode.exceptions.toArray (new String [0]);
     }
 
-
-    public MethodNode getMethodNode () {
-        return __methodNode;
-    }
-
+    //
 
     public String getName () {
-        return __name;
+        return __methodNode.name;
     }
 
 
     public int getModifiers () {
-        return __modifiers;
+        return __methodNode.access;
+    }
+
+
+    public String getDescriptor () {
+        return __methodNode.desc;
     }
 
 
     public String getReturnDescriptor () {
-        return __returnType;
+        return Type.getReturnType (__methodNode.desc).getDescriptor ();
     }
 
 
     public String [] getParameterDescriptors () {
-        return Arrays.copyOf (__parameterTypes, __parameterTypes.length);
+        return Arrays.stream (
+            Type.getArgumentTypes (__methodNode.desc)
+        ).map (Type::getDescriptor).toArray (String []::new);
     }
 
 
     public String [] getExceptionDescriptors () {
-        return Arrays.copyOf (__exceptionTypes, __exceptionTypes.length);
+        final List <String> exceptions = __methodNode.exceptions;
+        return exceptions.toArray (new String [exceptions.size ()]);
     }
 
+    //
 
-    public boolean isPublic () {
-        return (__modifiers & Opcodes.ACC_PUBLIC) != 0;
+    public boolean isPublic() {
+        return Modifier.isPublic (getModifiers ());
     }
 
 }
