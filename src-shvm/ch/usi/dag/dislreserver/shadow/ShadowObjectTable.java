@@ -5,9 +5,15 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import ch.usi.dag.dislreserver.DiSLREServerFatalException;
+import ch.usi.dag.dislreserver.util.Logging;
+import ch.usi.dag.util.logging.Logger;
 
 
 public class ShadowObjectTable {
+
+    private static final Logger __log = Logging.getPackageInstance ();
+
+    //
 
     private static final int INITIAL_TABLE_SIZE = 10_000_000;
 
@@ -16,18 +22,21 @@ public class ShadowObjectTable {
 
     //
 
-    public static void register (final ShadowObject newObj, final boolean debug) {
+    public static void register (final ShadowObject newObj) {
         if (newObj == null) {
-            throw new DiSLREServerFatalException ("Attempting to register a null as a shadow object");
+            __log.warn ("attempting to register a null shadow object");
+            return;
         }
+
+        //
 
         final long objID = newObj.getId ();
         final ShadowObject exist = shadowObjects.putIfAbsent (objID, newObj);
 
         if (exist != null) {
             if (newObj.getId () == exist.getId ()) {
-                if (debug) {
-                    System.out.println ("Re-register a shadow object.");
+                if (__log.traceIsLoggable ()) {
+                    __log.trace ("re-registering shadow object %x", objID);
                 }
 
                 if (newObj.equals (exist)) {
@@ -98,10 +107,10 @@ public class ShadowObjectTable {
             ShadowObject tmp = null;
 
             if ("java.lang.String".equals (klass.getName ())) {
-                tmp = new ShadowString (net_ref, null, klass);
+                tmp = new ShadowString (net_ref, klass);
 
             } else if (isAssignableFromThread (klass)) {
-                tmp = new ShadowThread (net_ref, null, false, klass);
+                tmp = new ShadowThread (net_ref, klass);
 
             } else {
                 tmp = new ShadowObject (net_ref, klass);
@@ -137,4 +146,33 @@ public class ShadowObjectTable {
             }
         };
     }
+
+
+    // TODO LB: Make this interface per-shadow-world instead of static.
+
+    public static void registerShadowThread (
+        final long netReference, final String name, final boolean isDaemon
+    ) {
+        final int shadowClassId = NetReferenceHelper.get_class_id (netReference);
+        final ShadowClass shadowClass = ShadowClassTable.get (shadowClassId);
+        final ShadowThread shadowThread = new ShadowThread (
+            netReference, shadowClass, name, isDaemon
+        );
+
+        register (shadowThread);
+    }
+
+
+    public static void registerShadowString (
+        final long netReference, final String value
+    ) {
+        final int shadowClassId = NetReferenceHelper.get_class_id (netReference);
+        final ShadowClass shadowClass = ShadowClassTable.get (shadowClassId);
+        final ShadowString shadowString = new ShadowString (
+            netReference, shadowClass, value
+        );
+
+        register (shadowString);
+    }
+
 }

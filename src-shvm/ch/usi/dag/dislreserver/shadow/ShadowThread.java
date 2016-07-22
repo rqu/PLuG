@@ -4,20 +4,29 @@ import java.util.Formattable;
 import java.util.Formatter;
 
 
-// TODO ShadowTrhead should better handle if String data are not send
-// over network - throw a runtime exception ??
-public class ShadowThread extends ShadowObject implements Formattable {
+// TODO Make it clear that extra data have not yet been sent over the network.
+//
+// Consider returning an Optional (if we can distinguish that the data has
+// not been set) or keep the data in a separate info class that can be swapped
+// atomically.
+//
+public final class ShadowThread extends ShadowObject implements Formattable {
 
     private String __name;
 
     private boolean __isDaemon;
 
+    //
 
-    public ShadowThread (
-        final long netReference, final String name,
-        final boolean isDaemon, final ShadowClass klass
+    ShadowThread (final long netReference, final ShadowClass shadowClass) {
+        super (netReference, shadowClass);
+    }
+
+    ShadowThread (
+        final long netReference, final ShadowClass shadowClass,
+        final String name, final boolean isDaemon
     ) {
-        super (netReference, klass);
+        super (netReference, shadowClass);
 
         __name = name;
         __isDaemon = isDaemon;
@@ -36,20 +45,22 @@ public class ShadowThread extends ShadowObject implements Formattable {
     }
 
 
-    public void setName (final String name) {
+    void setName (final String name) {
         __name = name;
     }
 
 
-    public void setDaemon (final boolean isDaemon) {
+    void setDaemon (final boolean isDaemon) {
         __isDaemon = isDaemon;
     }
 
+    //
 
     @Override
     public boolean equals (final Object object) {
         //
         // TODO LB: Why do we need to check thread name or other fields?
+        // Comparing the (unique) net reference should be enough.
         //
         if (super.equals (object)) {
             if (object instanceof ShadowThread) {

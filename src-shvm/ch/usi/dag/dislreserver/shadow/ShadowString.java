@@ -1,34 +1,45 @@
 package ch.usi.dag.dislreserver.shadow;
 
 import java.util.Formatter;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 // TODO ShadowString should better handle if String data are not send
 // over network - throw a runtime exception ??
-public class ShadowString extends ShadowObject {
+public final class ShadowString extends ShadowObject {
 
-    private String __value;
+    private final AtomicReference <String> __value;
 
+    //
 
-    public ShadowString (
-        final long netReference, final String value, final ShadowClass klass
+    ShadowString (
+        final long netReference, final ShadowClass shadowClass
     ) {
-        super (netReference, klass);
-        __value = value;
+        this (netReference, shadowClass, null);
     }
 
+    ShadowString (
+        final long netReference, final ShadowClass shadowClass,
+        final String value
+    ) {
+        super (netReference, shadowClass);
+        __value = new AtomicReference <> (value);
+    }
+
+    //
 
     // TODO warn user that it will return null when the ShadowString is not yet sent.
     @Override
     public String toString () {
-        return __value;
+        return __value.get ();
     }
 
 
     void setValue (final String value) {
-        __value = value;
+        __value.updateAndGet (v -> value);
     }
 
+    //
 
     @Override
     public boolean equals (final Object obj) {

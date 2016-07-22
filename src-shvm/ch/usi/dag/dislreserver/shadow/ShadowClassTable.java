@@ -102,7 +102,7 @@ public class ShadowClassTable {
         final ShadowClass exist = shadowClasses.putIfAbsent (classID, klass);
 
         if (exist == null) {
-            ShadowObjectTable.register (klass, debug);
+            ShadowObjectTable.register (klass);
 
         } else if (!exist.equals (klass)) {
             throw new DiSLREServerFatalException ("Duplicated class ID");
