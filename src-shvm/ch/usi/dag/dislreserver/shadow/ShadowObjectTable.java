@@ -87,7 +87,7 @@ public class ShadowObjectTable {
 
 
     public static ShadowObject get (final long net_ref) {
-        final long objID = NetReferenceHelper.get_object_id (net_ref);
+        final long objID = NetReferenceHelper.getObjectId (net_ref);
         if (objID == 0) {
             // reserved ID for null
             return null;
@@ -103,7 +103,7 @@ public class ShadowObjectTable {
 
         } else {
             // Only common shadow object will be generated here
-            final ShadowClass klass = ShadowClassTable.get (NetReferenceHelper.get_class_id (net_ref));
+            final ShadowClass klass = ShadowClassTable.get (NetReferenceHelper.getClassId (net_ref));
             ShadowObject tmp = null;
 
             if ("java.lang.String".equals (klass.getName ())) {
@@ -153,7 +153,7 @@ public class ShadowObjectTable {
     public static void registerShadowThread (
         final long netReference, final String name, final boolean isDaemon
     ) {
-        final int shadowClassId = NetReferenceHelper.get_class_id (netReference);
+        final int shadowClassId = NetReferenceHelper.getClassId (netReference);
         final ShadowClass shadowClass = ShadowClassTable.get (shadowClassId);
         final ShadowThread shadowThread = new ShadowThread (
             netReference, shadowClass, name, isDaemon
@@ -166,7 +166,7 @@ public class ShadowObjectTable {
     public static void registerShadowString (
         final long netReference, final String value
     ) {
-        final int shadowClassId = NetReferenceHelper.get_class_id (netReference);
+        final int shadowClassId = NetReferenceHelper.getClassId (netReference);
         final ShadowClass shadowClass = ShadowClassTable.get (shadowClassId);
         final ShadowString shadowString = new ShadowString (
             netReference, shadowClass, value

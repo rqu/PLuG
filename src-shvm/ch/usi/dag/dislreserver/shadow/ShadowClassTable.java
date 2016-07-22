@@ -98,7 +98,7 @@ public class ShadowClassTable {
             klass = new PrimitiveShadowClass (net_ref, loader, t);
         }
 
-        final int classID = NetReferenceHelper.get_class_id (net_ref);
+        final int classID = NetReferenceHelper.getClassId (net_ref);
         final ShadowClass exist = shadowClasses.putIfAbsent (classID, klass);
 
         if (exist == null) {
@@ -133,7 +133,7 @@ public class ShadowClassTable {
 
     public static void freeShadowObject (final ShadowObject obj) {
         if (NetReferenceHelper.isClassInstance (obj.getNetRef ())) {
-            final int classID = NetReferenceHelper.get_class_id (obj.getNetRef ());
+            final int classID = NetReferenceHelper.getClassId (obj.getNetRef ());
             shadowClasses.remove (classID);
 
         } else if (classLoaderMap.keySet ().contains (obj)) {

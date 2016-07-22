@@ -1,62 +1,62 @@
 package ch.usi.dag.dislreserver.shadow;
 
-public class NetReferenceHelper {
-    // ************* special bit mask handling methods **********
+final class NetReferenceHelper {
 
-    // NOTE names of the methods are unusual for reason
-    // you can find almost identical methods in agent
-
-    // should be in sync with net_reference functions on the client
-
-    // format of net reference looks like this
-    // HIGHEST (1 bit spec, 23 bits class id, 40 bits object id)
-    // bit field not used because there is no guarantee of alignment
-
+    /**
+     * 40-bit object (instance) identifier starting at bit 0.
+     */
     private static final short OBJECT_ID_POS = 0;
+    private static final long OBJECT_ID_MASK = (1L << 40) - 1;
 
+    /**
+     * 22-bit class identifier starting at bit 40.
+     */
     private static final short CLASS_ID_POS = 40;
+    private static final long CLASS_ID_MASK = (1L << 22) - 1;
 
-    private static final short SPEC_POS = 63;
-
+    /**
+     * 1-bit class instance flag at bit 62.
+     */
     private static final short CBIT_POS = 62;
+    private static final long CBIT_MASK = (1L << 1) - 1;
 
-    private static final long OBJECT_ID_MASK = 0xFFFFFFFFFFL;
+    /**
+     * 1-bit special flag at bit 63.
+     */
+    private static final short SPEC_POS = 63;
+    private static final long SPEC_MASK = (1L << 1) - 1;
 
-    private static final long CLASS_ID_MASK = 0x3FFFFFL;
+    //
 
-    private static final long SPEC_MASK = 0x1L;
-
-    private static final long CBIT_MASK = 0x1L;
-
-
-    // get bits from "from" with pattern "bit_mask"
-    // lowest bit starting at position "low_start" (from 0)
-    private static long get_bits (long from, long bit_mask, short low_start) {
-        // shift it
-        long bits_shifted = from >> low_start;
-
-        // mask it
-        return bits_shifted & bit_mask;
+    static long getObjectId (final long netReference) {
+        return __bits (netReference, OBJECT_ID_POS, OBJECT_ID_MASK);
     }
 
 
-    public static long get_object_id (long net_ref) {
-        return get_bits (net_ref, OBJECT_ID_MASK, OBJECT_ID_POS);
+    static int getClassId (final long netReference) {
+        return (int) __bits (netReference, CLASS_ID_POS, CLASS_ID_MASK);
     }
 
 
-    public static int get_class_id (long net_ref) {
-        return (int) get_bits (net_ref, CLASS_ID_MASK, CLASS_ID_POS);
+    static boolean isClassInstance (final long netReference) {
+        return __bits (netReference, CBIT_POS, CBIT_MASK) != 0;
     }
 
 
-    public static short get_spec (long net_ref) {
-        return (short) get_bits (net_ref, SPEC_MASK, SPEC_POS);
+    static boolean isSpecial (final long netReference) {
+        return __bits (netReference, SPEC_POS, SPEC_MASK) != 0;
     }
 
+    //
 
-    public static boolean isClassInstance (long net_ref) {
-        return get_bits (net_ref, CBIT_MASK, CBIT_POS) != 0;
+    /**
+     * Returns bits from the given {@code long} value shifted to the right
+     * by a given amount and masked using the given mask.
+     */
+    private static long __bits (
+        final long value, final short shift, final long mask
+    ) {
+        return (value >> shift) & mask;
     }
 
 }

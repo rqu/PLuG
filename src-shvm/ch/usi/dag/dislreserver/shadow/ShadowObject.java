@@ -31,7 +31,7 @@ public class ShadowObject implements Formattable {
 
 
     public final long getId () {
-        return NetReferenceHelper.get_object_id (__netReference);
+        return NetReferenceHelper.getObjectId (__netReference);
     }
 
 

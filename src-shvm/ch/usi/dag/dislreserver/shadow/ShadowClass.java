@@ -22,7 +22,7 @@ public abstract class ShadowClass extends ShadowObject {
     // No need to expose the interface to user
     // getId() should be sufficient
     protected final int getClassId () {
-        return NetReferenceHelper.get_class_id (getNetRef ());
+        return NetReferenceHelper.getClassId (getNetRef ());
     }
 
 
