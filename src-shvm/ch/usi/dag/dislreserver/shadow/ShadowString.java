@@ -7,27 +7,26 @@ import java.util.Formatter;
 // over network - throw a runtime exception ??
 public class ShadowString extends ShadowObject {
 
-    private String value;
+    private String __value;
 
 
     public ShadowString (
-        long net_ref, String value, ShadowClass klass) {
-        super (
-            net_ref, klass);
-        this.value = value;
+        final long netReference, final String value, final ShadowClass klass
+    ) {
+        super (netReference, klass);
+        __value = value;
     }
 
 
-    // TODO warn user that it will return null when the ShadowString is not yet
-    // sent.
+    // TODO warn user that it will return null when the ShadowString is not yet sent.
     @Override
     public String toString () {
-        return value;
+        return __value;
     }
 
 
-    void setValue (String value) {
-        this.value = value;
+    void setValue (final String value) {
+        __value = value;
     }
 
 
@@ -37,8 +36,8 @@ public class ShadowString extends ShadowObject {
         if (super.equals (obj)) {
             if (obj instanceof ShadowString) {
                 final ShadowString that = (ShadowString) obj;
-                if (this.value != null) {
-                    return this.value.equals (that.value);
+                if (__value != null) {
+                    return __value.equals (that.__value);
                 }
             }
         }
@@ -70,9 +69,8 @@ public class ShadowString extends ShadowObject {
         final int flags, final int width, final int precision
     ) {
         super.formatTo (formatter, flags, width, precision);
-
-        if (value != null) {
-            formatter.format (" <%s>", value);
+        if (__value != null) {
+            formatter.format (" <%s>", __value);
         }
     }
 

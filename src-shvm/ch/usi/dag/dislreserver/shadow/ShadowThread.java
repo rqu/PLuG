@@ -8,40 +8,41 @@ import java.util.Formatter;
 // over network - throw a runtime exception ??
 public class ShadowThread extends ShadowObject implements Formattable {
 
-    private String name;
+    private String __name;
 
-    private boolean isDaemon;
+    private boolean __isDaemon;
 
 
     public ShadowThread (
-        long net_ref, String name, boolean isDaemon, ShadowClass klass
+        final long netReference, final String name,
+        final boolean isDaemon, final ShadowClass klass
     ) {
-        super (net_ref, klass);
+        super (netReference, klass);
 
-        this.name = name;
-        this.isDaemon = isDaemon;
+        __name = name;
+        __isDaemon = isDaemon;
     }
 
 
     // TODO warn user that it will return null when the ShadowThread is not yet sent.
     public String getName () {
-        return name;
+        return __name;
     }
 
 
     // TODO warn user that it will return false when the ShadowThread is not yet sent.
     public boolean isDaemon () {
-        return isDaemon;
+        return __isDaemon;
     }
 
 
-    public void setName (String name) {
-        this.name = name;
+    public void setName (final String name) {
+        __name = name;
     }
 
 
-    public void setDaemon (boolean isDaemon) {
-        this.isDaemon = isDaemon;
+    public void setDaemon (final boolean isDaemon) {
+        __isDaemon = isDaemon;
     }
 
 
@@ -53,8 +54,8 @@ public class ShadowThread extends ShadowObject implements Formattable {
         if (super.equals (object)) {
             if (object instanceof ShadowThread) {
                 final ShadowThread that = (ShadowThread) object;
-                if (this.name != null && this.name.equals (that.name)) {
-                    return this.isDaemon == that.isDaemon;
+                if (__name != null && __name.equals (that.__name)) {
+                    return __isDaemon == that.__isDaemon;
                 }
             }
         }
@@ -88,7 +89,7 @@ public class ShadowThread extends ShadowObject implements Formattable {
         final int flags, final int width, final int precision
     ) {
         super.formatTo (formatter, flags, width, precision);
-        formatter.format (" <%s>", (name != null) ? name : "unknown");
+        formatter.format (" <%s>", (__name != null) ? __name : "unknown");
     }
 
 }

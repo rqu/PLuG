@@ -5,14 +5,18 @@ import org.objectweb.asm.Type;
 
 public class PrimitiveShadowClass extends ShadowClass {
 
-    private Type t;
+    private final Type __type;
 
+    //
 
-    PrimitiveShadowClass (long net_ref, ShadowObject classLoader, Type t) {
-        super (net_ref, classLoader);
-        this.t = t;
+    PrimitiveShadowClass (
+        final long netReference, final ShadowObject classLoader, final Type type
+    ) {
+        super (netReference, classLoader);
+        __type = type;
     }
 
+    //
 
     @Override
     public boolean isArray () {
@@ -27,13 +31,13 @@ public class PrimitiveShadowClass extends ShadowClass {
 
 
     @Override
-    public boolean isInstance (ShadowObject obj) {
+    public boolean isInstance (final ShadowObject obj) {
         return false;
     }
 
 
     @Override
-    public boolean isAssignableFrom (ShadowClass klass) {
+    public boolean isAssignableFrom (final ShadowClass klass) {
         return equals (klass);
     }
 
@@ -70,7 +74,7 @@ public class PrimitiveShadowClass extends ShadowClass {
 
     @Override
     public String getName () {
-        return t.getClassName ();
+        return __type.getClassName ();
     }
 
 
@@ -105,8 +109,8 @@ public class PrimitiveShadowClass extends ShadowClass {
 
 
     @Override
-    public FieldInfo getField (String fieldName) throws NoSuchFieldException {
-        throw new NoSuchFieldException (t.getClassName () + "." + fieldName);
+    public FieldInfo getField (final String fieldName) throws NoSuchFieldException {
+        throw new NoSuchFieldException (__type.getClassName () + "." + fieldName);
     }
 
 
@@ -118,10 +122,10 @@ public class PrimitiveShadowClass extends ShadowClass {
 
     @Override
     public MethodInfo getMethod (
-        String methodName, String [] argumentNames
+        final String methodName, final String [] argumentNames
     ) throws NoSuchMethodException {
         throw new NoSuchMethodException (
-            t.getClassName () + "." + methodName + argumentNamesToString (argumentNames)
+            __type.getClassName () + "." + methodName + argumentNamesToString (argumentNames)
         );
     }
 
@@ -139,9 +143,8 @@ public class PrimitiveShadowClass extends ShadowClass {
 
 
     @Override
-    public FieldInfo getDeclaredField (String fieldName)
-    throws NoSuchFieldException {
-        throw new NoSuchFieldException (t.getClassName () + "." + fieldName);
+    public FieldInfo getDeclaredField (final String fieldName) throws NoSuchFieldException {
+        throw new NoSuchFieldException (__type.getClassName () + "." + fieldName);
     }
 
 
@@ -153,10 +156,10 @@ public class PrimitiveShadowClass extends ShadowClass {
 
     @Override
     public MethodInfo getDeclaredMethod (
-        String methodName, String [] argumentNames
+        final String methodName, final String [] argumentNames
     ) throws NoSuchMethodException {
         throw new NoSuchMethodException (
-            t.getClassName () + "." + methodName + argumentNamesToString (argumentNames)
+            __type.getClassName () + "." + methodName + argumentNamesToString (argumentNames)
         );
     }
 

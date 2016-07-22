@@ -8,41 +8,36 @@ import java.util.function.Supplier;
 
 public class ShadowObject implements Formattable {
 
-    private final long netRef;
+    private final long __netReference;
 
-    private final long shadowId;
+    private final ShadowClass __shadowClass;
 
-    private final ShadowClass shadowClass;
-
-    private final AtomicReference <Object> shadowState;
+    private final AtomicReference <Object> __shadowState;
 
     //
 
-
     ShadowObject (final long netReference, final ShadowClass shadowClass) {
-        this.netRef = netReference;
-        this.shadowId = NetReferenceHelper.get_object_id (netReference);
-        this.shadowClass = shadowClass;
-        this.shadowState = new AtomicReference<> ();
+        __netReference = netReference;
+        __shadowClass = shadowClass;
+        __shadowState = new AtomicReference <> ();
     }
-
 
     //
 
     @Deprecated
     public final long getNetRef () {
-        return netRef;
+        return __netReference;
     }
 
 
     public final long getId () {
-        return shadowId;
+        return NetReferenceHelper.get_object_id (__netReference);
     }
 
 
     public ShadowClass getShadowClass () {
-        if (shadowClass != null) {
-            return shadowClass;
+        if (__shadowClass != null) {
+            return __shadowClass;
 
         } else {
             if (this.equals (ShadowClassTable.BOOTSTRAP_CLASSLOADER)) {
@@ -67,12 +62,12 @@ public class ShadowObject implements Formattable {
 
 
     private final <T> T __getState (final Class <T> type) {
-        return type.cast (shadowState.get ());
+        return type.cast (__shadowState.get ());
     }
 
 
     public final void setState (final Object state) {
-        shadowState.set (state);
+        __shadowState.set (state);
     }
 
 
@@ -92,7 +87,8 @@ public class ShadowObject implements Formattable {
 
 
     public final <T> T computeStateIfAbsent (
-        final Class <T> type, final Supplier <T> supplier) {
+        final Class <T> type, final Supplier <T> supplier
+    ) {
         //
         // Avoid CAS if state is already present.
         // Otherwise compute new state and try to CAS the new state once.
@@ -104,7 +100,7 @@ public class ShadowObject implements Formattable {
         }
 
         final T supplied = supplier.get ();
-        if (shadowState.compareAndSet (null, supplied)) {
+        if (__shadowState.compareAndSet (null, supplied)) {
             return supplied;
         }
 
@@ -117,7 +113,7 @@ public class ShadowObject implements Formattable {
     @Override
     public int hashCode () {
         // TODO Consider also the class ID, only object ID is considered now.
-        return 31 + (int) (shadowId ^ (shadowId >>> 32));
+        return 31 + (int) (getId () ^ (getId () >>> 32));
     }
 
 
@@ -125,7 +121,7 @@ public class ShadowObject implements Formattable {
     public boolean equals (final Object object) {
         if (object instanceof ShadowObject) {
             final ShadowObject that = (ShadowObject) object;
-            return this.netRef == that.netRef;
+            return __netReference == that.__netReference;
         }
 
         return false;
@@ -141,8 +137,8 @@ public class ShadowObject implements Formattable {
     ) {
         formatter.format (
             "%s@%x",
-            (shadowClass != null) ? shadowClass.getName () : "<missing>",
-            shadowId
+            (__shadowClass != null) ? __shadowClass.getName () : "<missing>",
+            getId ()
         );
     }
 

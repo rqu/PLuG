@@ -12,17 +12,17 @@ public class ShadowObjectTable {
     private static final int INITIAL_TABLE_SIZE = 10_000_000;
 
     private static ConcurrentHashMap <Long, ShadowObject>
-        shadowObjects = new ConcurrentHashMap <Long, ShadowObject> (INITIAL_TABLE_SIZE);
+        shadowObjects = new ConcurrentHashMap <> (INITIAL_TABLE_SIZE);
 
     //
 
-    public static void register (ShadowObject newObj, boolean debug) {
+    public static void register (final ShadowObject newObj, final boolean debug) {
         if (newObj == null) {
             throw new DiSLREServerFatalException ("Attempting to register a null as a shadow object");
         }
 
-        long objID = newObj.getId ();
-        ShadowObject exist = shadowObjects.putIfAbsent (objID, newObj);
+        final long objID = newObj.getId ();
+        final ShadowObject exist = shadowObjects.putIfAbsent (objID, newObj);
 
         if (exist != null) {
             if (newObj.getId () == exist.getId ()) {
@@ -36,8 +36,8 @@ public class ShadowObjectTable {
 
                 if (newObj instanceof ShadowString) {
                     if (exist instanceof ShadowString) {
-                        ShadowString existShadowString = (ShadowString) exist;
-                        ShadowString newShadowString = (ShadowString) newObj;
+                        final ShadowString existShadowString = (ShadowString) exist;
+                        final ShadowString newShadowString = (ShadowString) newObj;
 
                         if (existShadowString.toString () == null) {
                             existShadowString.setValue (newShadowString.toString ());
@@ -47,8 +47,8 @@ public class ShadowObjectTable {
 
                 } else if (newObj instanceof ShadowThread) {
                     if (exist instanceof ShadowThread) {
-                        ShadowThread existShadowThread = (ShadowThread) exist;
-                        ShadowThread newShadowThread = (ShadowThread) newObj;
+                        final ShadowThread existShadowThread = (ShadowThread) exist;
+                        final ShadowThread newShadowThread = (ShadowThread) newObj;
 
                         if (existShadowThread.getName () == null) {
                             existShadowThread.setName (newShadowThread.getName ());
@@ -77,8 +77,8 @@ public class ShadowObjectTable {
     }
 
 
-    public static ShadowObject get (long net_ref) {
-        long objID = NetReferenceHelper.get_object_id (net_ref);
+    public static ShadowObject get (final long net_ref) {
+        final long objID = NetReferenceHelper.get_object_id (net_ref);
         if (objID == 0) {
             // reserved ID for null
             return null;
@@ -94,7 +94,7 @@ public class ShadowObjectTable {
 
         } else {
             // Only common shadow object will be generated here
-            ShadowClass klass = ShadowClassTable.get (NetReferenceHelper.get_class_id (net_ref));
+            final ShadowClass klass = ShadowClassTable.get (NetReferenceHelper.get_class_id (net_ref));
             ShadowObject tmp = null;
 
             if ("java.lang.String".equals (klass.getName ())) {
@@ -116,7 +116,7 @@ public class ShadowObjectTable {
     }
 
 
-    public static void freeShadowObject (ShadowObject obj) {
+    public static void freeShadowObject (final ShadowObject obj) {
         shadowObjects.remove (obj.getId ());
         ShadowClassTable.freeShadowObject (obj);
     }

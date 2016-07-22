@@ -23,15 +23,15 @@ public class ShadowClassTable {
         BOOTSTRAP_CLASSLOADER = new ShadowObject (0, null);
         JAVA_LANG_CLASS = null;
 
-        classLoaderMap = new ConcurrentHashMap <ShadowObject, ConcurrentHashMap <String, byte []>> (INITIAL_TABLE_SIZE);
-        shadowClasses = new ConcurrentHashMap <Integer, ShadowClass> (INITIAL_TABLE_SIZE);
+        classLoaderMap = new ConcurrentHashMap <> (INITIAL_TABLE_SIZE);
+        shadowClasses = new ConcurrentHashMap <> (INITIAL_TABLE_SIZE);
 
         classLoaderMap.put (BOOTSTRAP_CLASSLOADER, new ConcurrentHashMap <String, byte []> ());
     }
 
 
     public static void load (
-        ShadowObject loader, String className, byte [] classCode, boolean debug
+        ShadowObject loader, final String className, final byte [] classCode, final boolean debug
     ) {
         ConcurrentHashMap <String, byte []> classNameMap;
         if (loader == null) {
@@ -41,7 +41,7 @@ public class ShadowClassTable {
 
         classNameMap = classLoaderMap.get (loader);
         if (classNameMap == null) {
-            ConcurrentHashMap <String, byte []> tmp = new ConcurrentHashMap <String, byte []> ();
+            final ConcurrentHashMap <String, byte []> tmp = new ConcurrentHashMap <String, byte []> ();
             if ((classNameMap = classLoaderMap.putIfAbsent (loader, tmp)) == null) {
                 classNameMap = tmp;
             }
@@ -56,15 +56,15 @@ public class ShadowClassTable {
 
 
     public static ShadowClass newInstance (
-        long net_ref, ShadowClass superClass, ShadowObject loader,
-        String classSignature, String classGenericStr, boolean debug
+        final long net_ref, final ShadowClass superClass, ShadowObject loader,
+        final String classSignature, final String classGenericStr, final boolean debug
     ) {
         if (!NetReferenceHelper.isClassInstance (net_ref)) {
             throw new DiSLREServerFatalException ("Unknown class instance");
         }
 
         ShadowClass klass = null;
-        Type t = Type.getType (classSignature);
+        final Type t = Type.getType (classSignature);
 
         if (t.getSort () == Type.ARRAY) {
             // TODO unknown array component type
@@ -83,7 +83,7 @@ public class ShadowClassTable {
                 throw new DiSLREServerFatalException ("Unknown class loader");
             }
 
-            byte [] classCode = classNameMap.get (t.getClassName ());
+            final byte [] classCode = classNameMap.get (t.getClassName ());
             if (classCode == null) {
                 throw new DiSLREServerFatalException (
                     "Class "+ t.getClassName () + " has not been loaded"
@@ -98,8 +98,8 @@ public class ShadowClassTable {
             klass = new PrimitiveShadowClass (net_ref, loader, t);
         }
 
-        int classID = NetReferenceHelper.get_class_id (net_ref);
-        ShadowClass exist = shadowClasses.putIfAbsent (classID, klass);
+        final int classID = NetReferenceHelper.get_class_id (net_ref);
+        final ShadowClass exist = shadowClasses.putIfAbsent (classID, klass);
 
         if (exist == null) {
             ShadowObjectTable.register (klass, debug);
@@ -116,13 +116,13 @@ public class ShadowClassTable {
     }
 
 
-    public static ShadowClass get (int classID) {
+    public static ShadowClass get (final int classID) {
         if (classID == 0) {
             // reserved ID for java/lang/Class
             return null;
         }
 
-        ShadowClass klass = shadowClasses.get (classID);
+        final ShadowClass klass = shadowClasses.get (classID);
         if (klass == null) {
             throw new DiSLREServerFatalException ("Unknown class instance");
         }
@@ -131,9 +131,9 @@ public class ShadowClassTable {
     }
 
 
-    public static void freeShadowObject (ShadowObject obj) {
+    public static void freeShadowObject (final ShadowObject obj) {
         if (NetReferenceHelper.isClassInstance (obj.getNetRef ())) {
-            int classID = NetReferenceHelper.get_class_id (obj.getNetRef ());
+            final int classID = NetReferenceHelper.get_class_id (obj.getNetRef ());
             shadowClasses.remove (classID);
 
         } else if (classLoaderMap.keySet ().contains (obj)) {

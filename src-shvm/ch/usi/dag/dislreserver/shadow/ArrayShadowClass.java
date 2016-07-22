@@ -9,25 +9,25 @@ import ch.usi.dag.dislreserver.DiSLREServerFatalException;
 
 public class ArrayShadowClass extends ShadowClass {
 
-    private final Type type;
+    private final Type __type;
 
-    private final ShadowClass superClass;
+    private final ShadowClass __superClass;
 
-    private final ShadowClass arrayComponentClass;
+    private final ShadowClass __componentClass;
 
 
     //
 
     ArrayShadowClass (
         final long netReference, final ShadowObject classLoader,
-        final ShadowClass superClass, final ShadowClass arrayComponentClass,
+        final ShadowClass superClass, final ShadowClass componentClass,
         final Type type
     ) {
         super (netReference, classLoader);
 
-        this.type = type;
-        this.superClass = superClass;
-        this.arrayComponentClass = arrayComponentClass;
+        __type = type;
+        __superClass = superClass;
+        __componentClass = componentClass;
     }
 
 
@@ -38,7 +38,7 @@ public class ArrayShadowClass extends ShadowClass {
 
 
     public int getArrayDimensions () {
-        return type.getDimensions ();
+        return __type.getDimensions ();
     }
 
 
@@ -50,20 +50,20 @@ public class ArrayShadowClass extends ShadowClass {
 
 
     @Override
-    public boolean isInstance (ShadowObject obj) {
+    public boolean isInstance (final ShadowObject obj) {
         return equals (obj.getShadowClass ());
     }
 
 
     @Override
-    public boolean isAssignableFrom (ShadowClass klass) {
+    public boolean isAssignableFrom (final ShadowClass klass) {
         return
             equals (klass)
             ||
             (
                 (klass instanceof ArrayShadowClass)
                 &&
-                arrayComponentClass.isAssignableFrom (klass.getComponentType ())
+                __componentClass.isAssignableFrom (klass.getComponentType ())
             );
     }
 
@@ -100,13 +100,13 @@ public class ArrayShadowClass extends ShadowClass {
 
     @Override
     public String getName () {
-        return type.getDescriptor ().replace ('/', '.');
+        return __type.getDescriptor ().replace ('/', '.');
     }
 
 
     @Override
     public String getCanonicalName () {
-        return type.getClassName ();
+        return __type.getClassName ();
     }
 
 
@@ -124,7 +124,7 @@ public class ArrayShadowClass extends ShadowClass {
 
     @Override
     public ShadowClass getSuperclass () {
-        return superClass;
+        return __superClass;
     }
 
 
@@ -135,8 +135,8 @@ public class ArrayShadowClass extends ShadowClass {
 
 
     @Override
-    public FieldInfo getField (String fieldName) throws NoSuchFieldException {
-        throw new NoSuchFieldException (type.getClassName () + "." + fieldName);
+    public FieldInfo getField (final String fieldName) throws NoSuchFieldException {
+        throw new NoSuchFieldException (__type.getClassName () + "." + fieldName);
     }
 
 
@@ -147,10 +147,10 @@ public class ArrayShadowClass extends ShadowClass {
 
 
     @Override
-    public MethodInfo getMethod (String methodName, String [] argumentNames)
+    public MethodInfo getMethod (final String methodName, final String [] argumentNames)
     throws NoSuchMethodException {
 
-        for (MethodInfo methodInfo : superClass.getMethods ()) {
+        for (final MethodInfo methodInfo : __superClass.getMethods ()) {
             if (methodName.equals (methodInfo.getName ())
                 && Arrays.equals (argumentNames, methodInfo.getParameterTypes ())
             ) {
@@ -159,7 +159,7 @@ public class ArrayShadowClass extends ShadowClass {
         }
 
         throw new NoSuchMethodException (
-            type.getClassName () + "." + methodName + argumentNamesToString (argumentNames)
+            __type.getClassName () + "." + methodName + argumentNamesToString (argumentNames)
         );
     }
 
@@ -177,9 +177,9 @@ public class ArrayShadowClass extends ShadowClass {
 
 
     @Override
-    public FieldInfo getDeclaredField (String fieldName)
+    public FieldInfo getDeclaredField (final String fieldName)
     throws NoSuchFieldException {
-        throw new NoSuchFieldException (type.getClassName () + "." + fieldName);
+        throw new NoSuchFieldException (__type.getClassName () + "." + fieldName);
     }
 
 
@@ -190,11 +190,11 @@ public class ArrayShadowClass extends ShadowClass {
 
 
     @Override
-    public MethodInfo getDeclaredMethod (String methodName,
-        String [] argumentNames)
+    public MethodInfo getDeclaredMethod (final String methodName,
+        final String [] argumentNames)
     throws NoSuchMethodException {
         throw new NoSuchMethodException (
-            type.getClassName () + "." + methodName + argumentNamesToString (argumentNames)
+            __type.getClassName () + "." + methodName + argumentNamesToString (argumentNames)
         );
     }
 

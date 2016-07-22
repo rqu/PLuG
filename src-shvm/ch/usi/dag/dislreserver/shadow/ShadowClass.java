@@ -5,10 +5,7 @@ import java.util.Formatter;
 
 public abstract class ShadowClass extends ShadowObject {
 
-    private final int classId;
-
-    private final ShadowObject classLoader;
-
+    private final ShadowObject __classLoader;
 
     //
 
@@ -16,9 +13,7 @@ public abstract class ShadowClass extends ShadowObject {
         final long netReference, final ShadowObject classLoader
     ) {
         super (netReference, null);
-
-        this.classId = NetReferenceHelper.get_class_id (netReference);
-        this.classLoader = classLoader;
+        __classLoader = classLoader;
     }
 
     //
@@ -27,12 +22,12 @@ public abstract class ShadowClass extends ShadowObject {
     // No need to expose the interface to user
     // getId() should be sufficient
     protected final int getClassId () {
-        return classId;
+        return NetReferenceHelper.get_class_id (getNetRef ());
     }
 
 
     public final ShadowObject getShadowClassLoader () {
-        return classLoader;
+        return __classLoader;
     }
 
 
@@ -140,26 +135,26 @@ public abstract class ShadowClass extends ShadowObject {
 
 
     public MethodInfo getMethod (
-        String methodName, ShadowClass [] arguments
+        final String methodName, final ShadowClass [] arguments
     ) throws NoSuchMethodException {
         return getMethod (methodName, classesToStrings (arguments));
     }
 
 
     public MethodInfo getDeclaredMethod (
-        String methodName, ShadowClass [] arguments
+        final String methodName, final ShadowClass [] arguments
     ) throws NoSuchMethodException {
         return getDeclaredMethod (methodName, classesToStrings (arguments));
     }
 
 
-    protected static String [] classesToStrings (ShadowClass [] arguments) {
+    protected static String [] classesToStrings (final ShadowClass [] arguments) {
         if (arguments == null) {
             return new String [0];
         }
 
-        int size = arguments.length;
-        String [] argumentNames = new String [size];
+        final int size = arguments.length;
+        final String [] argumentNames = new String [size];
 
         for (int i = 0; i < size; i++) {
             argumentNames [i] = arguments [i].getName ();
@@ -169,8 +164,8 @@ public abstract class ShadowClass extends ShadowObject {
     }
 
 
-    protected static String argumentNamesToString (String [] argumentNames) {
-        StringBuilder buf = new StringBuilder ();
+    protected static String argumentNamesToString (final String [] argumentNames) {
+        final StringBuilder buf = new StringBuilder ();
         buf.append ("(");
 
         if (argumentNames != null) {

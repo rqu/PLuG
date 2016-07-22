@@ -8,45 +8,46 @@ public class FieldInfo {
 
     // TODO ! is this implementation of methods really working ??
 
-    private FieldNode fieldNode;
+    private final FieldNode __fieldNode;
 
-    private int modifiers;
+    private final int __modifiers;
 
-    private String name;
+    private final String __name;
 
-    private String type;
+    private final String __type;
 
+    //
 
-    public FieldInfo (FieldNode fieldNode) {
-        this.fieldNode = fieldNode;
-        name = fieldNode.name;
-        type = fieldNode.desc;
-        modifiers = fieldNode.access;
+    public FieldInfo (final FieldNode fieldNode) {
+        __fieldNode = fieldNode;
+        __name = fieldNode.name;
+        __type = fieldNode.desc;
+        __modifiers = fieldNode.access;
     }
 
 
     public FieldNode getFieldNode () {
-        return fieldNode;
+        return __fieldNode;
     }
 
 
     public String getName () {
-        return name;
+        return __name;
     }
 
 
     public int getModifiers () {
-        return modifiers;
+        return __modifiers;
     }
 
 
     public String getType () {
-        return type;
+        return __type;
     }
 
 
     public boolean isPublic () {
-        return (modifiers & Opcodes.ACC_PUBLIC) != 0;
+        return (__modifiers & Opcodes.ACC_PUBLIC) != 0;
     }
 
 }

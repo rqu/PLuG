@@ -19,22 +19,23 @@ class ObjectShadowClass extends ShadowClass {
 
     // TODO ! is this implementation of methods really working ??
 
-    private ShadowClass superClass;
+    private final ShadowClass __superClass;
 
-    private ClassNode classNode;
+    private ClassNode __classNode;
 
-    private int access;
+    private int __access;
 
-    private String name;
+    private String __name;
 
 
     ObjectShadowClass (
-        long net_ref, String classSignature, ShadowObject classLoader,
-        ShadowClass superClass, byte [] classCode
+        final long netReference, final String classSignature,
+        final ShadowObject classLoader, final ShadowClass superClass,
+        final byte [] classCode
     ) {
-        super (net_ref, classLoader);
+        super (netReference, classLoader);
 
-        this.superClass = superClass;
+        __superClass = superClass;
         if (classCode == null || classCode.length == 0) {
             throw new DiSLREServerFatalException (
                 "Creating class info for "+ classSignature + " with no code provided"
@@ -56,18 +57,18 @@ class ObjectShadowClass extends ShadowClass {
     private List <String> innerclasses;
 
 
-    private void initializeClassInfo (byte [] classCode) {
-        ClassReader classReader = new ClassReader (classCode);
-        classNode = new ClassNode (Opcodes.ASM4);
-        classReader.accept (classNode, ClassReader.SKIP_DEBUG | ClassReader.EXPAND_FRAMES);
+    private void initializeClassInfo (final byte [] classCode) {
+        final ClassReader classReader = new ClassReader (classCode);
+        __classNode = new ClassNode (Opcodes.ASM4);
+        classReader.accept (__classNode, ClassReader.SKIP_DEBUG | ClassReader.EXPAND_FRAMES);
 
-        access = classNode.access;
-        name = classNode.name.replace ('/', '.');
+        __access = __classNode.access;
+        __name = __classNode.name.replace ('/', '.');
 
-        methods = new ArrayList <MethodInfo> (classNode.methods.size ());
+        methods = new ArrayList <MethodInfo> (__classNode.methods.size ());
         public_methods = new LinkedList <MethodInfo> ();
-        for (MethodNode methodNode : classNode.methods) {
-            MethodInfo methodInfo = new MethodInfo (methodNode);
+        for (final MethodNode methodNode : __classNode.methods) {
+            final MethodInfo methodInfo = new MethodInfo (methodNode);
             methods.add (methodInfo);
 
             if (methodInfo.isPublic ()) {
@@ -75,10 +76,10 @@ class ObjectShadowClass extends ShadowClass {
             }
         }
 
-        fields = new ArrayList <FieldInfo> (classNode.fields.size ());
+        fields = new ArrayList <FieldInfo> (__classNode.fields.size ());
         public_fields = new LinkedList <FieldInfo> ();
-        for (FieldNode fieldNode : classNode.fields) {
-            FieldInfo fieldInfo = new FieldInfo (fieldNode);
+        for (final FieldNode fieldNode : __classNode.fields) {
+            final FieldInfo fieldInfo = new FieldInfo (fieldNode);
             fields.add (fieldInfo);
 
             if (fieldInfo.isPublic ()) {
@@ -87,17 +88,17 @@ class ObjectShadowClass extends ShadowClass {
         }
 
         if (getSuperclass () != null) {
-            for (MethodInfo methodInfo : getSuperclass ().getMethods ()) {
+            for (final MethodInfo methodInfo : getSuperclass ().getMethods ()) {
                 public_methods.add (methodInfo);
             }
 
-            for (FieldInfo fieldInfo : getSuperclass ().getFields ()) {
+            for (final FieldInfo fieldInfo : getSuperclass ().getFields ()) {
                 public_fields.add (fieldInfo);
             }
         }
 
-        innerclasses = new ArrayList <String> (classNode.innerClasses.size ());
-        for (InnerClassNode innerClassNode : classNode.innerClasses) {
+        innerclasses = new ArrayList <String> (__classNode.innerClasses.size ());
+        for (final InnerClassNode innerClassNode : __classNode.innerClasses) {
             innerclasses.add (innerClassNode.name);
         }
     }
@@ -116,14 +117,14 @@ class ObjectShadowClass extends ShadowClass {
 
 
     @Override
-    public boolean isInstance (ShadowObject obj) {
+    public boolean isInstance (final ShadowObject obj) {
         // return equals(obj.getSClass());
         throw new DiSLREServerFatalException ("ShadowCommonClass.isInstance not implemented");
     }
 
 
     @Override
-    public boolean isAssignableFrom (ShadowClass klass) {
+    public boolean isAssignableFrom (final ShadowClass klass) {
         // while (klass != null) {
         //
         // if (klass.equals(this)) {
@@ -140,7 +141,7 @@ class ObjectShadowClass extends ShadowClass {
 
     @Override
     public boolean isInterface () {
-        return (access & Opcodes.ACC_INTERFACE) != 0;
+        return (__access & Opcodes.ACC_INTERFACE) != 0;
     }
 
 
@@ -152,25 +153,25 @@ class ObjectShadowClass extends ShadowClass {
 
     @Override
     public boolean isAnnotation () {
-        return (access & Opcodes.ACC_ANNOTATION) != 0;
+        return (__access & Opcodes.ACC_ANNOTATION) != 0;
     }
 
 
     @Override
     public boolean isSynthetic () {
-        return (access & Opcodes.ACC_SYNTHETIC) != 0;
+        return (__access & Opcodes.ACC_SYNTHETIC) != 0;
     }
 
 
     @Override
     public boolean isEnum () {
-        return (access & Opcodes.ACC_ENUM) != 0;
+        return (__access & Opcodes.ACC_ENUM) != 0;
     }
 
 
     @Override
     public String getName () {
-        return name;
+        return __name;
     }
 
 
@@ -182,15 +183,15 @@ class ObjectShadowClass extends ShadowClass {
 
     @Override
     public String [] getInterfaces () {
-        return classNode.interfaces.toArray (new String [0]);
+        return __classNode.interfaces.toArray (new String [0]);
     }
 
 
     @Override
     public String getPackage () {
-        int i = name.lastIndexOf ('.');
+        final int i = __name.lastIndexOf ('.');
         if (i != -1) {
-            return name.substring (0, i);
+            return __name.substring (0, i);
 
         } else {
             return null;
@@ -200,41 +201,45 @@ class ObjectShadowClass extends ShadowClass {
 
     @Override
     public ShadowClass getSuperclass () {
-        return superClass;
+        return __superClass;
     }
 
 
+    @Override
     public FieldInfo [] getFields () {
         // to have "checked" array :(
         return public_fields.toArray (new FieldInfo [0]);
     }
 
 
-    public FieldInfo getField (String fieldName) throws NoSuchFieldException {
-        for (FieldInfo fieldInfo : fields) {
+    @Override
+    public FieldInfo getField (final String fieldName) throws NoSuchFieldException {
+        for (final FieldInfo fieldInfo : fields) {
             if (fieldInfo.isPublic () && fieldInfo.getName ().equals (fieldName)) {
                 return fieldInfo;
             }
         }
 
         if (getSuperclass () == null) {
-            throw new NoSuchFieldException (name + "." + fieldName);
+            throw new NoSuchFieldException (__name + "." + fieldName);
         }
 
         return getSuperclass ().getField (fieldName);
     }
 
 
+    @Override
     public MethodInfo [] getMethods () {
         // to have "checked" array :(
         return public_methods.toArray (new MethodInfo [0]);
     }
 
 
+    @Override
     public MethodInfo getMethod (
-        String methodName, String [] argumentNames
+        final String methodName, final String [] argumentNames
     ) throws NoSuchMethodException {
-        for (MethodInfo methodInfo : public_methods) {
+        for (final MethodInfo methodInfo : public_methods) {
             if (methodName.equals (methodInfo.getName ()) &&
                 Arrays.equals (argumentNames, methodInfo.getParameterTypes ())
             ) {
@@ -243,43 +248,48 @@ class ObjectShadowClass extends ShadowClass {
         }
 
         throw new NoSuchMethodException (
-            name + "." + methodName + argumentNamesToString (argumentNames)
+            __name + "." + methodName + argumentNamesToString (argumentNames)
         );
     }
 
 
+    @Override
     public FieldInfo [] getDeclaredFields () {
         return fields.toArray (new FieldInfo [0]);
     }
 
 
-    public FieldInfo getDeclaredField (String fieldName)
+    @Override
+    public FieldInfo getDeclaredField (final String fieldName)
     throws NoSuchFieldException {
 
-        for (FieldInfo fieldInfo : fields) {
+        for (final FieldInfo fieldInfo : fields) {
             if (fieldInfo.getName ().equals (fieldName)) {
                 return fieldInfo;
             }
         }
 
-        throw new NoSuchFieldException (name + "." + fieldName);
+        throw new NoSuchFieldException (__name + "." + fieldName);
     }
 
 
+    @Override
     public MethodInfo [] getDeclaredMethods () {
         return methods.toArray (new MethodInfo [methods.size ()]);
     }
 
 
+    @Override
     public String [] getDeclaredClasses () {
         return innerclasses.toArray (new String [innerclasses.size ()]);
     }
 
 
+    @Override
     public MethodInfo getDeclaredMethod (
-        String methodName, String [] argumentNames
+        final String methodName, final String [] argumentNames
     ) throws NoSuchMethodException {
-        for (MethodInfo methodInfo : methods) {
+        for (final MethodInfo methodInfo : methods) {
             if (methodName.equals (methodInfo.getName ()) &&
                 Arrays.equals (argumentNames, methodInfo.getParameterTypes ())
             ) {
@@ -288,7 +298,7 @@ class ObjectShadowClass extends ShadowClass {
         }
 
         throw new NoSuchMethodException (
-            name + "." + methodName + argumentNamesToString (argumentNames)
+            __name + "." + methodName + argumentNamesToString (argumentNames)
         );
     }
 
