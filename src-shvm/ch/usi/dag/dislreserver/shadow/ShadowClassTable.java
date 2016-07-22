@@ -68,7 +68,7 @@ public class ShadowClassTable {
 
         if (t.getSort () == Type.ARRAY) {
             // TODO unknown array component type
-            klass = new ShadowArrayClass (net_ref, loader, superClass, null, t);
+            klass = new ArrayShadowClass (net_ref, loader, superClass, null, t);
 
         } else if (t.getSort () == Type.OBJECT) {
             ConcurrentHashMap <String, byte []> classNameMap;
@@ -90,12 +90,12 @@ public class ShadowClassTable {
                 );
             }
 
-            klass = new ShadowCommonClass (
+            klass = new ObjectShadowClass (
                 net_ref, classSignature, loader, superClass, classCode
             );
 
         } else {
-            klass = new ShadowPrimitiveClass (net_ref, loader, t);
+            klass = new PrimitiveShadowClass (net_ref, loader, t);
         }
 
         int classID = NetReferenceHelper.get_class_id (net_ref);

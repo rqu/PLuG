@@ -7,7 +7,7 @@ import org.objectweb.asm.Type;
 import ch.usi.dag.dislreserver.DiSLREServerFatalException;
 
 
-public class ShadowArrayClass extends ShadowClass {
+public class ArrayShadowClass extends ShadowClass {
 
     private final Type type;
 
@@ -18,7 +18,7 @@ public class ShadowArrayClass extends ShadowClass {
 
     //
 
-    ShadowArrayClass (
+    ArrayShadowClass (
         final long netReference, final ShadowObject classLoader,
         final ShadowClass superClass, final ShadowClass arrayComponentClass,
         final Type type
@@ -45,7 +45,7 @@ public class ShadowArrayClass extends ShadowClass {
     @Override
     public ShadowClass getComponentType () {
         // return arrayComponentClass;
-        throw new DiSLREServerFatalException ("ShadowArrayClass.getComponentType not implemented");
+        throw new DiSLREServerFatalException ("ArrayShadowClass.getComponentType not implemented");
     }
 
 
@@ -61,7 +61,7 @@ public class ShadowArrayClass extends ShadowClass {
             equals (klass)
             ||
             (
-                (klass instanceof ShadowArrayClass)
+                (klass instanceof ArrayShadowClass)
                 &&
                 arrayComponentClass.isAssignableFrom (klass.getComponentType ())
             );

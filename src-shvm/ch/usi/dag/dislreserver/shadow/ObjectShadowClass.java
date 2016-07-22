@@ -15,7 +15,7 @@ import org.objectweb.asm.tree.MethodNode;
 import ch.usi.dag.dislreserver.DiSLREServerFatalException;
 
 
-class ShadowCommonClass extends ShadowClass {
+class ObjectShadowClass extends ShadowClass {
 
     // TODO ! is this implementation of methods really working ??
 
@@ -28,7 +28,7 @@ class ShadowCommonClass extends ShadowClass {
     private String name;
 
 
-    ShadowCommonClass (
+    ObjectShadowClass (
         long net_ref, String classSignature, ShadowObject classLoader,
         ShadowClass superClass, byte [] classCode
     ) {
