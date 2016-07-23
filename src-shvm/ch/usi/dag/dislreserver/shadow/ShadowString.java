@@ -34,43 +34,22 @@ public final class ShadowString extends ShadowObject {
         return __value.get ();
     }
 
-
-    void setValue (final String value) {
-        __value.updateAndGet (v -> value);
-    }
-
     //
 
     @Override
-    public boolean equals (final Object obj) {
-        // FIXME LB: This needs a comment!
-        if (super.equals (obj)) {
-            if (obj instanceof ShadowString) {
-                final ShadowString that = (ShadowString) obj;
-                if (__value != null) {
-                    return __value.equals (that.__value);
-                }
+    protected void _updateFrom (final ShadowObject object) {
+        //
+        // If the value of this string has not yet been initialized,
+        // update it from the other shadow string. The other string
+        // is expected to have the same net reference.
+        //
+        if (__value.get () == null) {
+            if (object instanceof ShadowString) {
+                final ShadowString other = (ShadowString) object;
+                __value.updateAndGet (v -> other.__value.get ());
             }
         }
-
-        return false;
     }
-
-
-    @Override
-    public int hashCode () {
-        //
-        // If two shadow strings are considered equal by the above equals()
-        // method, then they certainly have the same hash code, because it
-        // is derived from objectId (which in turn is derived from object tag,
-        // a.k.a. net reference) that is ensured to be equal by the call to
-        // super.equals().
-        //
-        // If they are not equal, nobody cares about the hash code.
-        //
-        return super.hashCode ();
-    }
-
 
     //
 
@@ -80,8 +59,10 @@ public final class ShadowString extends ShadowObject {
         final int flags, final int width, final int precision
     ) {
         super.formatTo (formatter, flags, width, precision);
-        if (__value != null) {
-            formatter.format (" <%s>", __value);
+
+        final String value = __value.get ();
+        if (value != null) {
+            formatter.format (" <%s>", value);
         }
     }
 

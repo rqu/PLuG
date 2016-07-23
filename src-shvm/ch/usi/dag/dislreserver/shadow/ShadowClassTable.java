@@ -6,9 +6,15 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.objectweb.asm.Type;
 
 import ch.usi.dag.dislreserver.DiSLREServerFatalException;
+import ch.usi.dag.dislreserver.util.Logging;
+import ch.usi.dag.util.logging.Logger;
 
 
-public class ShadowClassTable {
+public final class ShadowClassTable {
+
+    private static final Logger __log = Logging.getPackageInstance ();
+
+    //
 
     private static final int INITIAL_TABLE_SIZE = 10000;
 
@@ -109,6 +115,7 @@ public class ShadowClassTable {
 
         if (JAVA_LANG_CLASS.get () == null && __JAVA_LANG_CLASS_TYPE__.equals (type)) {
             JAVA_LANG_CLASS.compareAndSet (null, result);
+            __log.trace ("initialized JAVA_LANG_CLASS");
         }
 
         return result;

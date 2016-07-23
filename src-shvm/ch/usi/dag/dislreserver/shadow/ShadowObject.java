@@ -5,6 +5,8 @@ import java.util.Formatter;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
+import ch.usi.dag.dislreserver.DiSLREServerFatalException;
+
 
 public class ShadowObject implements Formattable {
 
@@ -122,6 +124,12 @@ public class ShadowObject implements Formattable {
 
     @Override
     public boolean equals (final Object object) {
+        //
+        // The equality of shadow objects should be based purely on
+        // the equality of the net reference. The value of some special
+        // shadow objects can be updated lazily, so we should not really
+        // compare the values.
+        //
         if (object instanceof ShadowObject) {
             final ShadowObject that = (ShadowObject) object;
             return __netReference == that.__netReference;
@@ -130,6 +138,36 @@ public class ShadowObject implements Formattable {
         return false;
     }
 
+    //
+
+    final void updateFrom (final ShadowObject other) {
+        //
+        // When updating value from another shadow object, the net reference
+        // of this and the other object must be the same.
+        //
+        if (__netReference != other.__netReference) {
+            throw new DiSLREServerFatalException (String.format (
+                "attempting to update object 0x%x using object 0x%x",
+                __netReference, other.__netReference
+            ));
+        }
+
+        _updateFrom (other);
+    }
+
+
+    /**
+     * This method is intended to be override by the subclasses to implement
+     * updating of a shadow object's state. The caller of this method guarantees
+     * that the net reference of the object to update from will be the same
+     * as the net reference of this shadow object.
+     *
+     * @param object
+     *        the {@link ShadowObject} instance to update from.
+     */
+    protected void _updateFrom (final ShadowObject object) {
+        // do nothing
+    }
 
     //
 

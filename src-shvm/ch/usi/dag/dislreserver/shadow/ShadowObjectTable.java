@@ -9,7 +9,7 @@ import ch.usi.dag.dislreserver.util.Logging;
 import ch.usi.dag.util.logging.Logger;
 
 
-public class ShadowObjectTable {
+public final class ShadowObjectTable {
 
     private static final Logger __log = Logging.getPackageInstance ();
 
@@ -17,58 +17,27 @@ public class ShadowObjectTable {
 
     private static final int INITIAL_TABLE_SIZE = 10_000_000;
 
-    private static ConcurrentHashMap <Long, ShadowObject>
+    private static final ConcurrentHashMap <Long, ShadowObject>
         shadowObjects = new ConcurrentHashMap <> (INITIAL_TABLE_SIZE);
 
     //
 
-    public static void register (final ShadowObject newObj) {
-        if (newObj == null) {
+    public static void register (final ShadowObject object) {
+        if (object == null) {
             __log.warn ("attempting to register a null shadow object");
             return;
         }
 
         //
 
-        final long objID = newObj.getId ();
-        final ShadowObject exist = shadowObjects.putIfAbsent (objID, newObj);
-
-        if (exist != null) {
-            if (newObj.getId () == exist.getId ()) {
-                if (__log.traceIsLoggable ()) {
-                    __log.trace ("re-registering shadow object %x", objID);
-                }
-
-                if (newObj.equals (exist)) {
-                    return;
-                }
-
-                if (newObj instanceof ShadowString) {
-                    if (exist instanceof ShadowString) {
-                        final ShadowString existShadowString = (ShadowString) exist;
-                        final ShadowString newShadowString = (ShadowString) newObj;
-
-                        if (existShadowString.toString () == null) {
-                            existShadowString.setValue (newShadowString.toString ());
-                            return;
-                        }
-                    }
-
-                } else if (newObj instanceof ShadowThread) {
-                    if (exist instanceof ShadowThread) {
-                        final ShadowThread existShadowThread = (ShadowThread) exist;
-                        final ShadowThread newShadowThread = (ShadowThread) newObj;
-
-                        if (existShadowThread.getName () == null) {
-                            existShadowThread.setName (newShadowThread.getName ());
-                            existShadowThread.setDaemon (newShadowThread.isDaemon ());
-                            return;
-                        }
-                    }
-                }
+        final long objectId = object.getId ();
+        final ShadowObject existing = shadowObjects.putIfAbsent (objectId, object);
+        if (existing != null) {
+            if (__log.traceIsLoggable ()) {
+                __log.trace ("updating shadow object 0x%x", objectId);
             }
 
-            throw new DiSLREServerFatalException ("Duplicated net reference");
+            existing.updateFrom (object);
         }
     }
 
@@ -86,41 +55,63 @@ public class ShadowObjectTable {
     }
 
 
-    public static ShadowObject get (final long net_ref) {
-        final long objID = NetReferenceHelper.getObjectId (net_ref);
-        if (objID == 0) {
-            // reserved ID for null
+    public static ShadowObject get (final long netReference) {
+        final long objectId = NetReferenceHelper.getObjectId (netReference);
+        if (objectId == 0) {
+            // reserved for null
             return null;
         }
 
-        ShadowObject retVal = shadowObjects.get (objID);
+        final ShadowObject retVal = shadowObjects.get (objectId);
         if (retVal != null) {
             return retVal;
         }
 
-        if (NetReferenceHelper.isClassInstance (objID)) {
+        //
+        // The corresponding shadow object was not found, so we create it.
+        // Only "normal" shadow objects will be generated here, not those
+        // representing instances of the Class class.
+        //
+        if (!NetReferenceHelper.isClassInstance (netReference)) {
+            return shadowObjects.computeIfAbsent (
+                objectId, key -> __createShadowObject (netReference)
+            );
+        } else {
             throw new DiSLREServerFatalException ("Unknown class instance");
+        }
+    }
+
+
+    private static ShadowObject __createShadowObject (
+        final long netReference
+    ) {
+        final ShadowClass shadowClass = ShadowClassTable.get (
+            NetReferenceHelper.getClassId (netReference)
+        );
+
+        if ("java.lang.String".equals (shadowClass.getName ())) {
+            if (__log.traceIsLoggable ()) {
+                final long objectId = NetReferenceHelper.getObjectId (netReference);
+                __log.trace ("creating uninitialized ShadowString for 0x%x", objectId);
+            }
+
+            return new ShadowString (netReference, shadowClass);
+
+        } else if (isAssignableFromThread (shadowClass)) {
+            if (__log.traceIsLoggable ()) {
+                final long objectId = NetReferenceHelper.getObjectId (netReference);
+                __log.trace ("creating uninitialized ShadowThread for 0x%x", objectId);
+            }
+
+            return new ShadowThread (netReference, shadowClass);
 
         } else {
-            // Only common shadow object will be generated here
-            final ShadowClass klass = ShadowClassTable.get (NetReferenceHelper.getClassId (net_ref));
-            ShadowObject tmp = null;
-
-            if ("java.lang.String".equals (klass.getName ())) {
-                tmp = new ShadowString (net_ref, klass);
-
-            } else if (isAssignableFromThread (klass)) {
-                tmp = new ShadowThread (net_ref, klass);
-
-            } else {
-                tmp = new ShadowObject (net_ref, klass);
+            if (__log.traceIsLoggable ()) {
+                final long objectId = NetReferenceHelper.getObjectId (netReference);
+                __log.trace ("creating ShadowObject for 0x%x", objectId);
             }
 
-            if ((retVal = shadowObjects.putIfAbsent (objID, tmp)) == null) {
-                retVal = tmp;
-            }
-
-            return retVal;
+            return new ShadowObject (netReference, shadowClass);
         }
     }
 
