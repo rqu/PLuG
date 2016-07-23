@@ -10,6 +10,11 @@ public class ShadowObject implements Formattable {
 
     private final long __netReference;
 
+    /**
+     * The {@link ShadowClass} of this object. If {@code null}, then this object
+     * represents an instance of the {@link Class} class, or (in a singular
+     * case) the bootstrap class loader.
+     */
     private final ShadowClass __shadowClass;
 
     private final AtomicReference <Object> __shadowState;
@@ -24,8 +29,7 @@ public class ShadowObject implements Formattable {
 
     //
 
-    @Deprecated
-    public final long getNetRef () {
+    final long getNetRef () {
         return __netReference;
     }
 
@@ -44,10 +48,9 @@ public class ShadowObject implements Formattable {
                 throw new NullPointerException ();
             }
 
-            return ShadowClassTable.JAVA_LANG_CLASS;
+            return ShadowClassTable.JAVA_LANG_CLASS.get ();
         }
     }
-
 
     //
 

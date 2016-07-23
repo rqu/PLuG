@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.InnerClassNode;
@@ -29,7 +30,7 @@ class ObjectShadowClass extends ShadowClass {
 
 
     ObjectShadowClass (
-        final long netReference, final String classSignature,
+        final long netReference, final Type type,
         final ShadowObject classLoader, final ShadowClass superClass,
         final byte [] classCode
     ) {
@@ -38,7 +39,7 @@ class ObjectShadowClass extends ShadowClass {
         __superClass = superClass;
         if (classCode == null || classCode.length == 0) {
             throw new DiSLREServerFatalException (
-                "Creating class info for "+ classSignature + " with no code provided"
+                "Creating class info for "+ type + " with no code provided"
             );
         }
 
