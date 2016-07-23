@@ -87,10 +87,6 @@ public abstract class DiSLREServer {
             //
             __log.error ("error accepting a connection: %s", ioe.getMessage ());
         }
-
-        //
-
-        __log.debug ("server shutting down");
     }
 
 
