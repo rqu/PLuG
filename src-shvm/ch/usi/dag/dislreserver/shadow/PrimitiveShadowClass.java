@@ -3,14 +3,15 @@ package ch.usi.dag.dislreserver.shadow;
 import org.objectweb.asm.Type;
 
 
-public class PrimitiveShadowClass extends ShadowClass {
+final class PrimitiveShadowClass extends ShadowClass {
 
     private final Type __type;
 
     //
 
     PrimitiveShadowClass (
-        final long netReference, final ShadowObject classLoader, final Type type
+        final long netReference, final Type type,
+        final ShadowObject classLoader
     ) {
         super (netReference, classLoader);
         __type = type;

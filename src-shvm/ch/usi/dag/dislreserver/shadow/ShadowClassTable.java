@@ -73,6 +73,7 @@ public final class ShadowClassTable {
         }
     }
 
+    //
 
     static ShadowClass newInstance (
         final long classNetReference, final Type type,
@@ -92,7 +93,8 @@ public final class ShadowClassTable {
         ShadowClass result = shadowClasses.get (classId);
         if (result == null) {
             result = __createShadowClass (
-                classNetReference, type, superClass, classLoader
+                classNetReference, type, superClass,
+                classLoader
             );
 
             final ShadowClass previous = shadowClasses.putIfAbsent (classId, result);
@@ -133,12 +135,12 @@ public final class ShadowClassTable {
         //
         if (type.getSort () < Type.ARRAY) {
             // Primitive type should return null as classloader.
-            return new PrimitiveShadowClass (netReference, classLoader, type);
+            return new PrimitiveShadowClass (netReference, type, classLoader);
 
         } else if (type.getSort () == Type.ARRAY) {
             // TODO unknown array component type
             // Array types have the same class loader as their component type.
-            return new ArrayShadowClass (netReference, classLoader, superClass, null, type);
+            return new ArrayShadowClass (netReference, type, classLoader, superClass, null);
 
         } else if (type.getSort () == Type.OBJECT) {
             if (classLoader == null) {

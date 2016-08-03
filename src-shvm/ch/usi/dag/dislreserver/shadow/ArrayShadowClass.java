@@ -7,7 +7,7 @@ import org.objectweb.asm.Type;
 import ch.usi.dag.dislreserver.DiSLREServerFatalException;
 
 
-public class ArrayShadowClass extends ShadowClass {
+final class ArrayShadowClass extends ShadowClass {
 
     private final Type __type;
 
@@ -19,9 +19,9 @@ public class ArrayShadowClass extends ShadowClass {
     //
 
     ArrayShadowClass (
-        final long netReference, final ShadowObject classLoader,
-        final ShadowClass superClass, final ShadowClass componentClass,
-        final Type type
+        final long netReference, final Type type,
+        final ShadowObject classLoader, final ShadowClass superClass,
+        final ShadowClass componentClass
     ) {
         super (netReference, classLoader);
 
