@@ -24,17 +24,16 @@ final class ObjectShadowClass extends ShadowClass {
 
     private ClassNode __classNode;
 
-    private int __access;
-
     private String __name;
 
+    //
 
     ObjectShadowClass (
         final long netReference, final Type type,
         final ShadowObject classLoader, final ShadowClass superClass,
         final byte [] classCode
     ) {
-        super (netReference, classLoader);
+        super (netReference, type, classLoader);
 
         __superClass = superClass;
         if (classCode == null || classCode.length == 0) {
@@ -63,7 +62,6 @@ final class ObjectShadowClass extends ShadowClass {
         __classNode = new ClassNode (Opcodes.ASM4);
         classReader.accept (__classNode, ClassReader.SKIP_DEBUG | ClassReader.EXPAND_FRAMES);
 
-        __access = __classNode.access;
         __name = __classNode.name.replace ('/', '.');
 
         methods = new ArrayList <MethodInfo> (__classNode.methods.size ());
@@ -105,80 +103,41 @@ final class ObjectShadowClass extends ShadowClass {
     }
 
 
-    @Override
-    public boolean isArray () {
-        return false;
-    }
-
+	//
 
     @Override
-    public ShadowClass getComponentType () {
-        return null;
-    }
-
-
-    @Override
-    public boolean isInstance (final ShadowObject obj) {
-        // return equals(obj.getSClass());
-        throw new DiSLREServerFatalException ("ShadowCommonClass.isInstance not implemented");
+    public boolean isInstance (final ShadowObject object) {
+        // return equals(obj.getShadowClass());
+        throw new UnsupportedOperationException ("not yet implemented");
     }
 
 
     @Override
     public boolean isAssignableFrom (final ShadowClass klass) {
         // while (klass != null) {
+        //     if (klass.equals(this)) {
+        //         return true;
+        //     }
         //
-        // if (klass.equals(this)) {
-        // return true;
-        // }
-        //
-        // klass = klass.getSuperclass();
+        //     klass = klass.getSuperclass();
         // }
         //
         // return false;
-        throw new DiSLREServerFatalException ("ShadowCommonClass.isAssignableFrom not implemented");
+        throw new UnsupportedOperationException ("not yet implemented");
     }
 
+	//
 
     @Override
-    public boolean isInterface () {
-        return (__access & Opcodes.ACC_INTERFACE) != 0;
+    public int getModifiers () {
+        return __classNode.access;
     }
 
+	//
 
     @Override
-    public boolean isPrimitive () {
-        return false;
-    }
-
-
-    @Override
-    public boolean isAnnotation () {
-        return (__access & Opcodes.ACC_ANNOTATION) != 0;
-    }
-
-
-    @Override
-    public boolean isSynthetic () {
-        return (__access & Opcodes.ACC_SYNTHETIC) != 0;
-    }
-
-
-    @Override
-    public boolean isEnum () {
-        return (__access & Opcodes.ACC_ENUM) != 0;
-    }
-
-
-    @Override
-    public String getName () {
-        return __name;
-    }
-
-
-    @Override
-    public String getCanonicalName () {
-        throw new DiSLREServerFatalException ("ShadowCommonClass.getCanonicalName not implemented");
+    public ShadowClass getSuperclass () {
+        return __superClass;
     }
 
 
@@ -187,24 +146,7 @@ final class ObjectShadowClass extends ShadowClass {
         return __classNode.interfaces.toArray (new String [0]);
     }
 
-
-    @Override
-    public String getPackage () {
-        final int i = __name.lastIndexOf ('.');
-        if (i != -1) {
-            return __name.substring (0, i);
-
-        } else {
-            return null;
-        }
-    }
-
-
-    @Override
-    public ShadowClass getSuperclass () {
-        return __superClass;
-    }
-
+	//
 
     @Override
     public FieldInfo [] getFields () {
@@ -249,7 +191,7 @@ final class ObjectShadowClass extends ShadowClass {
         }
 
         throw new NoSuchMethodException (
-            __name + "." + methodName + argumentNamesToString (argumentNames)
+            __name + "." + methodName + _descriptorsToString (argumentNames)
         );
     }
 
@@ -279,13 +221,6 @@ final class ObjectShadowClass extends ShadowClass {
         return methods.toArray (new MethodInfo [methods.size ()]);
     }
 
-
-    @Override
-    public String [] getDeclaredClasses () {
-        return innerclasses.toArray (new String [innerclasses.size ()]);
-    }
-
-
     @Override
     public MethodInfo getDeclaredMethod (
         final String methodName, final String [] argumentNames
@@ -299,8 +234,15 @@ final class ObjectShadowClass extends ShadowClass {
         }
 
         throw new NoSuchMethodException (
-            __name + "." + methodName + argumentNamesToString (argumentNames)
+            __name + "." + methodName + _descriptorsToString (argumentNames)
         );
+    }
+
+	//
+
+    @Override
+    public String [] getDeclaredClasses () {
+        return innerclasses.toArray (new String [innerclasses.size ()]);
     }
 
 }

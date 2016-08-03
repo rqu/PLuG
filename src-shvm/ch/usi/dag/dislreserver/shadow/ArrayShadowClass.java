@@ -1,20 +1,16 @@
 package ch.usi.dag.dislreserver.shadow;
 
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 
 import org.objectweb.asm.Type;
 
-import ch.usi.dag.dislreserver.DiSLREServerFatalException;
-
 
 final class ArrayShadowClass extends ShadowClass {
-
-    private final Type __type;
 
     private final ShadowClass __superClass;
 
     private final ShadowClass __componentClass;
-
 
     //
 
@@ -23,104 +19,71 @@ final class ArrayShadowClass extends ShadowClass {
         final ShadowObject classLoader, final ShadowClass superClass,
         final ShadowClass componentClass
     ) {
-        super (netReference, classLoader);
+        super (netReference, type, classLoader);
 
-        __type = type;
         __superClass = superClass;
         __componentClass = componentClass;
     }
 
+	//
 
-    @Override
-    public boolean isArray () {
-        return true;
-    }
-
-
-    public int getArrayDimensions () {
-        return __type.getDimensions ();
+    public int getDimensionCount () {
+        return _type ().getDimensions ();
     }
 
 
     @Override
     public ShadowClass getComponentType () {
-        // return arrayComponentClass;
-        throw new DiSLREServerFatalException ("ArrayShadowClass.getComponentType not implemented");
+        if (__componentClass != null) {
+            return __componentClass;
+        }
+
+        throw new UnsupportedOperationException ("not yet implemented");
+    }
+
+    //
+
+    /**
+     * @see Class#isInstance(Object)
+     */
+    @Override
+    public boolean isInstance (final ShadowObject object) {
+        return equals (object.getShadowClass ());
     }
 
 
+    /**
+     * @see Class#isAssignableFrom(Class)
+     */
     @Override
-    public boolean isInstance (final ShadowObject obj) {
-        return equals (obj.getShadowClass ());
-    }
+    public boolean isAssignableFrom (final ShadowClass other) {
+        if (this.equals (other)) {
+            return true;
+        }
 
+        if (other instanceof ArrayShadowClass) {
+            // This is needed until we properly implement componentType.
+            if (__componentClass == null) {
+                throw new UnsupportedOperationException ("component type comparison not implemented yet");
+            }
 
-    @Override
-    public boolean isAssignableFrom (final ShadowClass klass) {
-        return
-            equals (klass)
-            ||
-            (
-                (klass instanceof ArrayShadowClass)
-                &&
-                __componentClass.isAssignableFrom (klass.getComponentType ())
-            );
-    }
+            return __componentClass.isAssignableFrom (other.getComponentType ());
+        }
 
-
-    @Override
-    public boolean isInterface () {
         return false;
     }
 
+	//
 
     @Override
-    public boolean isPrimitive () {
-        return false;
+    public int getModifiers () {
+        // Array classes are ABSTRACT and FINAL, privacy depends on the
+        // privacy of the component type. Until we get valid component type,
+        // we will make the array classes public.
+        return Modifier.ABSTRACT | Modifier.FINAL | Modifier.PUBLIC;
     }
 
-
-    @Override
-    public boolean isAnnotation () {
-        return false;
-    }
-
-
-    @Override
-    public boolean isSynthetic () {
-        return false;
-    }
-
-
-    @Override
-    public boolean isEnum () {
-        return false;
-    }
-
-
-    @Override
-    public String getName () {
-        return __type.getDescriptor ().replace ('/', '.');
-    }
-
-
-    @Override
-    public String getCanonicalName () {
-        return __type.getClassName ();
-    }
-
-
-    @Override
-    public String [] getInterfaces () {
-        return new String [] { "java.lang.Cloneable", "java.io.Serializable" };
-    }
-
-
-    @Override
-    public String getPackage () {
-        return null;
-    }
-
+    //
 
     @Override
     public ShadowClass getSuperclass () {
@@ -129,22 +92,38 @@ final class ArrayShadowClass extends ShadowClass {
 
 
     @Override
+    public String [] getInterfaces () {
+        return new String [] { "java.lang.Cloneable", "java.io.Serializable" };
+    }
+
+    //
+
+    @Override
+    public FieldInfo getField (final String fieldName) throws NoSuchFieldException {
+        throw new NoSuchFieldException (getCanonicalName () + "." + fieldName);
+    }
+
+
+    @Override
     public FieldInfo [] getFields () {
         return new FieldInfo [0];
     }
 
+    //
 
     @Override
-    public FieldInfo getField (final String fieldName) throws NoSuchFieldException {
-        throw new NoSuchFieldException (__type.getClassName () + "." + fieldName);
+    public FieldInfo getDeclaredField (final String fieldName)
+    throws NoSuchFieldException {
+        throw new NoSuchFieldException (getCanonicalName () + "." + fieldName);
     }
 
 
     @Override
-    public MethodInfo [] getMethods () {
-        return getSuperclass ().getMethods ();
+    public FieldInfo [] getDeclaredFields () {
+        return new FieldInfo [0];
     }
 
+    //
 
     @Override
     public MethodInfo getMethod (final String methodName, final String [] argumentNames)
@@ -159,27 +138,25 @@ final class ArrayShadowClass extends ShadowClass {
         }
 
         throw new NoSuchMethodException (
-            __type.getClassName () + "." + methodName + argumentNamesToString (argumentNames)
+            getCanonicalName () + "." + methodName + _descriptorsToString (argumentNames)
         );
     }
 
 
     @Override
-    public String [] getDeclaredClasses () {
-        return new String [0];
+    public MethodInfo [] getMethods () {
+        return getSuperclass ().getMethods ();
     }
 
+    //
 
     @Override
-    public FieldInfo [] getDeclaredFields () {
-        return new FieldInfo [0];
-    }
-
-
-    @Override
-    public FieldInfo getDeclaredField (final String fieldName)
-    throws NoSuchFieldException {
-        throw new NoSuchFieldException (__type.getClassName () + "." + fieldName);
+    public MethodInfo getDeclaredMethod (final String methodName,
+        final String [] argumentNames)
+    throws NoSuchMethodException {
+        throw new NoSuchMethodException (
+            getCanonicalName () + "." + methodName + _descriptorsToString (argumentNames)
+        );
     }
 
 
@@ -188,14 +165,11 @@ final class ArrayShadowClass extends ShadowClass {
         return new MethodInfo [0];
     }
 
+    //
 
     @Override
-    public MethodInfo getDeclaredMethod (final String methodName,
-        final String [] argumentNames)
-    throws NoSuchMethodException {
-        throw new NoSuchMethodException (
-            __type.getClassName () + "." + methodName + argumentNamesToString (argumentNames)
-        );
+    public String [] getDeclaredClasses () {
+        return new String [0];
     }
 
 }

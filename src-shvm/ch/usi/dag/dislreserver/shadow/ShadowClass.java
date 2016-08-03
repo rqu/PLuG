@@ -1,82 +1,53 @@
 package ch.usi.dag.dislreserver.shadow;
 
+import java.util.Arrays;
 import java.util.Formatter;
+
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
 
 public abstract class ShadowClass extends ShadowObject {
+
+    /**
+     * The type (class) represented by this shadow class.
+     */
+    private final Type __type;
 
     private final ShadowObject __classLoader;
 
     //
 
     protected ShadowClass (
-        final long netReference, final ShadowObject classLoader
+        final long netReference, final Type type,
+        final ShadowObject classLoader
     ) {
-        super (netReference, null);
+        super (netReference, null /* indicates Class instance */);
+
+        __type = type;
         __classLoader = classLoader;
     }
 
     //
 
-
-    // No need to expose the interface to user
-    // getId() should be sufficient
-    protected final int getClassId () {
+    // No need to expose the interface to user. getId() should be sufficient
+    protected final int _classId () {
         return NetReferenceHelper.getClassId (getNetRef ());
     }
 
 
-    public final ShadowObject getShadowClassLoader () {
-        return __classLoader;
+    protected final Type _type () {
+        return __type;
     }
-
-
-    public abstract boolean isArray ();
-
-
-    public abstract ShadowClass getComponentType ();
-
-
-    public abstract boolean isInstance (ShadowObject obj);
-
-
-    public abstract boolean isAssignableFrom (ShadowClass klass);
-
-
-    public abstract boolean isInterface ();
-
-
-    public abstract boolean isPrimitive ();
-
-
-    public abstract boolean isAnnotation ();
-
-
-    public abstract boolean isSynthetic ();
-
-
-    public abstract boolean isEnum ();
-
-
-    public abstract String getName ();
-
-
-    public abstract String getCanonicalName ();
-
-
-    public abstract String [] getInterfaces ();
-
-
-    public abstract String getPackage ();
-
-
-    public abstract ShadowClass getSuperclass ();
-
 
     //
 
     @Override
     public boolean equals (final Object object) {
+        //
+        // Two shadow classes are considered equal if they represent the
+        // same class and have been loaded by the same class loader.
+        //
         if (object instanceof ShadowClass) {
             final ShadowClass that = (ShadowClass) object;
             if (this.getName ().equals (that.getName ())) {
@@ -98,38 +69,131 @@ public abstract class ShadowClass extends ShadowObject {
         return super.hashCode ();
     }
 
+    //
+
+    public final ShadowObject getShadowClassLoader () {
+        //
+        // Should return null for primitive types or for classes
+        // loaded by the bootstrap classloader.
+        //
+        return __classLoader;
+    }
+
+	//
+
+    public String getName () {
+        return __type.getInternalName ().replace ('/', '.');
+    }
+
+
+    public String getSimpleName () {
+        return __simpleName (__type.getClassName ());
+    }
+
+
+    private static String __simpleName (final String name) {
+        // If '.' is not found, index is -1 => +1 adjustment gives index 0
+        return name.substring (name.lastIndexOf ('.') + 1);
+    }
+
+
+    public String getCanonicalName () {
+        return __type.getClassName ();
+    }
+
+
+    public String getPackage () {
+        final String name = getCanonicalName ();
+        final int lastIndex = name.lastIndexOf ('.');
+
+        // Class.getPackage() returns null for array/primitive classes
+        return (lastIndex >= 0) ? name.substring (0, lastIndex) : null;
+    }
+
+	//
+
+    public boolean isPrimitive () {
+        // We rely on the ordering of sorts in ASM Type.
+        return __type.getSort () < Type.ARRAY;
+    }
+
+    public boolean isArray () {
+        return __type.getSort () == Type.ARRAY;
+    };
 
     //
 
-    public abstract FieldInfo [] getFields ();
+    public ShadowClass getComponentType () {
+        return null;
+    }
 
+
+    public String getComponentDescriptor () {
+        return null;
+    }
+
+	//
+
+    public abstract boolean isInstance (ShadowObject obj);
+
+
+    public abstract boolean isAssignableFrom (ShadowClass klass);
+
+	//
+
+    public abstract int getModifiers ();
+
+
+    public boolean isInterface () {
+        return __hasModifier (Opcodes.ACC_INTERFACE);
+    }
+
+
+    public boolean isAnnotation () {
+        return __hasModifier (Opcodes.ACC_ANNOTATION);
+    }
+
+
+    public boolean isSynthetic () {
+        return __hasModifier (Opcodes.ACC_SYNTHETIC);
+    }
+
+
+    public boolean isEnum () {
+        return __hasModifier (Opcodes.ACC_ENUM);
+    }
+
+
+    private boolean __hasModifier (final int flag) {
+        return (getModifiers () & flag) != 0;
+    }
+
+	//
+
+    public abstract ShadowClass getSuperclass ();
+
+
+    public abstract String [] getInterfaces ();
+
+    //
 
     public abstract FieldInfo getField (String fieldName)
     throws NoSuchFieldException;
 
 
-    public abstract MethodInfo [] getMethods ();
+    public abstract FieldInfo [] getFields ();
 
-
-    public abstract MethodInfo getMethod (
-        String methodName, String [] argumentNames
-    ) throws NoSuchMethodException;
-
-
-    public abstract String [] getDeclaredClasses ();
-
-
-    public abstract FieldInfo [] getDeclaredFields ();
-
+	//
 
     public abstract FieldInfo getDeclaredField (String fieldName)
     throws NoSuchFieldException;
 
 
-    public abstract MethodInfo [] getDeclaredMethods ();
+    public abstract FieldInfo [] getDeclaredFields ();
 
+	//
 
-    public abstract MethodInfo getDeclaredMethod (
+    public abstract MethodInfo getMethod (
         String methodName, String [] argumentNames
     ) throws NoSuchMethodException;
 
@@ -137,51 +201,59 @@ public abstract class ShadowClass extends ShadowObject {
     public MethodInfo getMethod (
         final String methodName, final ShadowClass [] arguments
     ) throws NoSuchMethodException {
-        return getMethod (methodName, classesToStrings (arguments));
+        return getMethod (methodName, __toDescriptors (arguments));
     }
+
+
+    public abstract MethodInfo [] getMethods ();
+
+	//
+
+    public abstract MethodInfo getDeclaredMethod (
+        String methodName, String [] argumentNames
+    ) throws NoSuchMethodException;
 
 
     public MethodInfo getDeclaredMethod (
-        final String methodName, final ShadowClass [] arguments
+        final String methodName, final ShadowClass ... arguments
     ) throws NoSuchMethodException {
-        return getDeclaredMethod (methodName, classesToStrings (arguments));
+        return getDeclaredMethod (methodName, __toDescriptors (arguments));
     }
 
 
-    protected static String [] classesToStrings (final ShadowClass [] arguments) {
-        if (arguments == null) {
+    public abstract MethodInfo [] getDeclaredMethods ();
+
+	//
+
+    public abstract String [] getDeclaredClasses ();
+
+	//
+
+    private static String [] __toDescriptors (final ShadowClass [] types) {
+        if (types == null) {
             return new String [0];
         }
 
-        final int size = arguments.length;
-        final String [] argumentNames = new String [size];
-
-        for (int i = 0; i < size; i++) {
-            argumentNames [i] = arguments [i].getName ();
-        }
-
-        return argumentNames;
+        return Arrays.stream (types).map (ShadowClass::getName).toArray (String []::new);
     }
 
 
-    protected static String argumentNamesToString (final String [] argumentNames) {
+    protected static String _descriptorsToString (final String [] descriptors) {
         final StringBuilder buf = new StringBuilder ();
         buf.append ("(");
 
-        if (argumentNames != null) {
-            for (int i = 0; i < argumentNames.length; i++) {
-                if (i > 0) {
-                    buf.append (", ");
-                }
-
-                buf.append (argumentNames [i]);
+        if (descriptors != null) {
+            String delimiter = "";
+            for (final String descriptor : descriptors) {
+                buf.append (delimiter);
+                buf.append (descriptor);
+                delimiter = ", ";
             }
         }
 
         buf.append (")");
         return buf.toString ();
     }
-
 
     //
 

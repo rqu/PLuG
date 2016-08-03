@@ -1,87 +1,65 @@
 package ch.usi.dag.dislreserver.shadow;
 
+import java.lang.reflect.Modifier;
+
 import org.objectweb.asm.Type;
 
 
 final class PrimitiveShadowClass extends ShadowClass {
 
-    private final Type __type;
-
-    //
-
     PrimitiveShadowClass (
         final long netReference, final Type type,
         final ShadowObject classLoader
     ) {
-        super (netReference, classLoader);
-        __type = type;
+        super (netReference, type, classLoader);
     }
 
     //
 
     @Override
-    public boolean isArray () {
+    public int getModifiers () {
+        // Primitive type classes are ABSTRACT, FINAL, and PUBLIC.
+        return Modifier.ABSTRACT | Modifier.FINAL | Modifier.PUBLIC;
+    }
+
+    //
+
+    /**
+     * @see Class#isInstance(Object)
+     */
+    @Override
+    public boolean isInstance (final ShadowObject object) {
         return false;
     }
 
 
+    /**
+     * @see Class#isAssignableFrom(Class)
+     */
     @Override
-    public ShadowClass getComponentType () {
-        return null;
+    public boolean isAssignableFrom (final ShadowClass other) {
+        return this.equals (other);
     }
 
+    //
 
-    @Override
-    public boolean isInstance (final ShadowObject obj) {
-        return false;
-    }
-
-
-    @Override
-    public boolean isAssignableFrom (final ShadowClass klass) {
-        return equals (klass);
-    }
-
-
-    @Override
-    public boolean isInterface () {
-        return false;
-    }
-
-
-    @Override
-    public boolean isPrimitive () {
-        return true;
-    }
-
-
-    @Override
-    public boolean isAnnotation () {
-        return false;
-    }
-
-
-    @Override
-    public boolean isSynthetic () {
-        return false;
-    }
-
-
-    @Override
-    public boolean isEnum () {
-        return false;
-    }
-
-
+    /**
+     * @see Class#getName()
+     */
     @Override
     public String getName () {
-        return __type.getClassName ();
+        // Avoid Type.getInternalName() -- returns null for primitive types.
+        return getCanonicalName ();
     }
 
+	//
 
+    /**
+     * @see Class#getSuperclass()
+     */
     @Override
-    public String getCanonicalName () {
-        return getName ();
+    public ShadowClass getSuperclass () {
+        return null;
     }
 
 
@@ -90,16 +68,11 @@ final class PrimitiveShadowClass extends ShadowClass {
         return new String [0];
     }
 
+    //
 
     @Override
-    public String getPackage () {
-        return null;
-    }
-
-
-    @Override
-    public ShadowClass getSuperclass () {
-        return null;
+    public FieldInfo getField (final String fieldName) throws NoSuchFieldException {
+        throw new NoSuchFieldException (getCanonicalName () + "." + fieldName);
     }
 
 
@@ -108,12 +81,20 @@ final class PrimitiveShadowClass extends ShadowClass {
         return new FieldInfo [0];
     }
 
+    //
 
     @Override
-    public FieldInfo getField (final String fieldName) throws NoSuchFieldException {
-        throw new NoSuchFieldException (__type.getClassName () + "." + fieldName);
+    public FieldInfo getDeclaredField (final String fieldName) throws NoSuchFieldException {
+        throw new NoSuchFieldException (getCanonicalName () + "." + fieldName);
     }
 
+
+    @Override
+    public FieldInfo [] getDeclaredFields () {
+        return new FieldInfo [0];
+    }
+
+    //
 
     @Override
     public MethodInfo [] getMethods () {
@@ -126,28 +107,11 @@ final class PrimitiveShadowClass extends ShadowClass {
         final String methodName, final String [] argumentNames
     ) throws NoSuchMethodException {
         throw new NoSuchMethodException (
-            __type.getClassName () + "." + methodName + argumentNamesToString (argumentNames)
+            getCanonicalName () + "." + methodName + _descriptorsToString (argumentNames)
         );
     }
 
-
-    @Override
-    public String [] getDeclaredClasses () {
-        return new String [0];
-    }
-
-
-    @Override
-    public FieldInfo [] getDeclaredFields () {
-        return new FieldInfo [0];
-    }
-
-
-    @Override
-    public FieldInfo getDeclaredField (final String fieldName) throws NoSuchFieldException {
-        throw new NoSuchFieldException (__type.getClassName () + "." + fieldName);
-    }
-
+    //
 
     @Override
     public MethodInfo [] getDeclaredMethods () {
@@ -160,8 +124,15 @@ final class PrimitiveShadowClass extends ShadowClass {
         final String methodName, final String [] argumentNames
     ) throws NoSuchMethodException {
         throw new NoSuchMethodException (
-            __type.getClassName () + "." + methodName + argumentNamesToString (argumentNames)
+            getCanonicalName () + "." + methodName + _descriptorsToString (argumentNames)
         );
+    }
+
+    //
+
+    @Override
+    public String [] getDeclaredClasses () {
+        return new String [0];
     }
 
 }
