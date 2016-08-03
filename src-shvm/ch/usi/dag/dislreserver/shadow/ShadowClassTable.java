@@ -16,7 +16,7 @@ public final class ShadowClassTable {
 
     //
 
-    private static final int INITIAL_TABLE_SIZE = 10000;
+    private static final int __INITIAL_SIZE__ = 10000;
 
     //
 
@@ -28,9 +28,9 @@ public final class ShadowClassTable {
 
     //
 
-    private static ConcurrentHashMap <Integer, ShadowClass> shadowClasses;
+    private static final ConcurrentHashMap <Integer, ShadowClass> shadowClasses;
 
-    private static ConcurrentHashMap <ShadowObject, ConcurrentHashMap <String, byte []>> classLoaderMap;
+    private static final ConcurrentHashMap <ShadowObject, ConcurrentHashMap <String, byte []>> classLoaderMap;
 
     //
 
@@ -38,9 +38,9 @@ public final class ShadowClassTable {
         JAVA_LANG_CLASS = new AtomicReference <> ();
         __JAVA_LANG_CLASS_TYPE__ = Type.getType (Class.class);
 
-        shadowClasses = new ConcurrentHashMap <> (INITIAL_TABLE_SIZE);
+        shadowClasses = new ConcurrentHashMap <> (__INITIAL_SIZE__);
 
-        classLoaderMap = new ConcurrentHashMap <> (INITIAL_TABLE_SIZE);
+        classLoaderMap = new ConcurrentHashMap <> (__INITIAL_SIZE__);
 
         BOOTSTRAP_CLASSLOADER = new ShadowObject (0, null);
         classLoaderMap.put (BOOTSTRAP_CLASSLOADER, new ConcurrentHashMap <> ());
@@ -49,7 +49,8 @@ public final class ShadowClassTable {
     //
 
     public static void load (
-        ShadowObject loader, final String className, final byte [] classCode, final boolean debug
+        ShadowObject loader, final String className,
+        final byte [] classCode, final boolean debug
     ) {
         ConcurrentHashMap <String, byte []> classNameMap;
         if (loader == null) {
@@ -59,7 +60,7 @@ public final class ShadowClassTable {
 
         classNameMap = classLoaderMap.get (loader);
         if (classNameMap == null) {
-            final ConcurrentHashMap <String, byte []> tmp = new ConcurrentHashMap <String, byte []> ();
+            final ConcurrentHashMap <String, byte []> tmp = new ConcurrentHashMap <> ();
             if ((classNameMap = classLoaderMap.putIfAbsent (loader, tmp)) == null) {
                 classNameMap = tmp;
             }
@@ -167,30 +168,31 @@ public final class ShadowClassTable {
     }
 
 
-    public static ShadowClass get (final int classId) {
+    static ShadowClass get (final int classId) {
         if (classId == 0) {
-            // reserved ID for java/lang/Class
+            // reserved for java.lang.Class
             return null;
         }
 
-        final ShadowClass klass = shadowClasses.get (classId);
-        if (klass == null) {
-            throw new DiSLREServerFatalException (String.format (
-                "Unknown Class<> instance: 0x%x", classId
-            ));
+        final ShadowClass result = shadowClasses.get (classId);
+        if (result != null) {
+            return result;
         }
 
-        return klass;
+        throw new DiSLREServerFatalException (String.format (
+            "Unknown Class<> instance: 0x%x", classId
+        ));
     }
 
 
-    public static void freeShadowObject (final ShadowObject obj) {
-        if (NetReferenceHelper.isClassInstance (obj.getNetRef ())) {
-            final int classId = NetReferenceHelper.getClassId (obj.getNetRef ());
+    static void freeShadowObject (final ShadowObject object) {
+        final long netReference = object.getNetRef ();
+        if (NetReferenceHelper.isClassInstance (netReference)) {
+            final int classId = NetReferenceHelper.getClassId (netReference);
             shadowClasses.remove (classId);
 
-        } else if (classLoaderMap.containsKey (obj)) {
-            classLoaderMap.remove (obj);
+        } else if (classLoaderMap.containsKey (object)) {
+            classLoaderMap.remove (object);
         }
     }
 
