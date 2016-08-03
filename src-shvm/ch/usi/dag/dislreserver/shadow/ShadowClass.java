@@ -102,16 +102,22 @@ public abstract class ShadowClass extends ShadowObject {
     }
 
 
+    /**
+     * @see Class#getPackage()
+     */
     public String getPackage () {
         final String name = getCanonicalName ();
         final int lastIndex = name.lastIndexOf ('.');
 
-        // Class.getPackage() returns null for array/primitive classes
+        // Return null for array/primitive classes or default package.
         return (lastIndex >= 0) ? name.substring (0, lastIndex) : null;
     }
 
 	//
 
+    /**
+     * @see Class#isPrimitive()
+     */
     public boolean isPrimitive () {
         // We rely on the ordering of sorts in ASM Type.
         return __type.getSort () < Type.ARRAY;
@@ -124,11 +130,13 @@ public abstract class ShadowClass extends ShadowObject {
     //
 
     public ShadowClass getComponentType () {
+        // By default, a class has no component type.
         return null;
     }
 
 
     public String getComponentDescriptor () {
+        // By default, a class has no component type descriptor.
         return null;
     }
 
@@ -172,8 +180,9 @@ public abstract class ShadowClass extends ShadowObject {
 
     public abstract ShadowClass getSuperclass ();
 
+    public abstract ShadowClass [] getInterfaces ();
 
-    public abstract String [] getInterfaces ();
+    public abstract String [] getInterfaceDescriptors ();
 
     //
 
@@ -225,7 +234,18 @@ public abstract class ShadowClass extends ShadowObject {
 
 	//
 
-    public abstract String [] getDeclaredClasses ();
+    /**
+     * Returns type descriptors corresponding to declared inner classes, or an
+     * empty array if this class does not declare any inner classes.
+     *
+     * @return an array of inner class type descriptors
+     *
+     * @see Class#getDeclaredClasses()
+     */
+    public String [] getDeclaredClassDescriptors () {
+        // By default, a class declares no inner classes.
+        return new String [0];
+    }
 
 	//
 

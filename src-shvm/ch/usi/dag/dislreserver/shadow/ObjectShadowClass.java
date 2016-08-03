@@ -105,6 +105,9 @@ final class ObjectShadowClass extends ShadowClass {
 
 	//
 
+    /**
+     * @see Class#isInstance(Object)
+     */
     @Override
     public boolean isInstance (final ShadowObject object) {
         // return equals(obj.getShadowClass());
@@ -112,14 +115,17 @@ final class ObjectShadowClass extends ShadowClass {
     }
 
 
+    /**
+     * @see Class#isAssignableFrom(Class)
+     */
     @Override
-    public boolean isAssignableFrom (final ShadowClass klass) {
-        // while (klass != null) {
-        //     if (klass.equals(this)) {
+    public boolean isAssignableFrom (final ShadowClass other) {
+        // while (other != null) {
+        //     if (other.equals(this)) {
         //         return true;
         //     }
         //
-        //     klass = klass.getSuperclass();
+        //     other = other.getSuperclass();
         // }
         //
         // return false;
@@ -135,6 +141,9 @@ final class ObjectShadowClass extends ShadowClass {
 
 	//
 
+    /**
+     * @see Class#getSuperclass()
+     */
     @Override
     public ShadowClass getSuperclass () {
         return __superClass;
@@ -142,8 +151,15 @@ final class ObjectShadowClass extends ShadowClass {
 
 
     @Override
-    public String [] getInterfaces () {
-        return __classNode.interfaces.toArray (new String [0]);
+    public ShadowClass [] getInterfaces () {
+        throw new UnsupportedOperationException ("not yet implemented");
+    }
+
+
+    @Override
+    public String [] getInterfaceDescriptors () {
+        final List <String> interfaces = __classNode.interfaces;
+        return interfaces.toArray (new String [interfaces.size ()]);
     }
 
 	//
@@ -241,8 +257,10 @@ final class ObjectShadowClass extends ShadowClass {
 	//
 
     @Override
-    public String [] getDeclaredClasses () {
-        return innerclasses.toArray (new String [innerclasses.size ()]);
-    }
+    public String [] getDeclaredClassDescriptors () {
+        return __classNode.innerClasses.stream ().unordered ()
+            .map (icn -> Type.getObjectType (icn.name).getDescriptor ())
+            .toArray (String []::new);
+   }
 
 }

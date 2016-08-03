@@ -1,5 +1,6 @@
 package ch.usi.dag.dislreserver.shadow;
 
+import java.io.Serializable;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 
@@ -39,6 +40,12 @@ final class ArrayShadowClass extends ShadowClass {
         }
 
         throw new UnsupportedOperationException ("not yet implemented");
+    }
+
+
+    @Override
+    public String getComponentDescriptor () {
+        return _type ().getElementType ().getDescriptor ();
     }
 
     //
@@ -92,8 +99,17 @@ final class ArrayShadowClass extends ShadowClass {
 
 
     @Override
-    public String [] getInterfaces () {
-        return new String [] { "java.lang.Cloneable", "java.io.Serializable" };
+    public ShadowClass [] getInterfaces () {
+        throw new UnsupportedOperationException ("not yet implemented");
+    }
+
+
+    @Override
+    public String [] getInterfaceDescriptors () {
+        return new String [] {
+            Type.getType (Cloneable.class).getDescriptor (),
+            Type.getType (Serializable.class).getDescriptor ()
+        };
     }
 
     //
@@ -163,13 +179,6 @@ final class ArrayShadowClass extends ShadowClass {
     @Override
     public MethodInfo [] getDeclaredMethods () {
         return new MethodInfo [0];
-    }
-
-    //
-
-    @Override
-    public String [] getDeclaredClasses () {
-        return new String [0];
     }
 
 }

@@ -64,7 +64,13 @@ final class PrimitiveShadowClass extends ShadowClass {
 
 
     @Override
-    public String [] getInterfaces () {
+    public ShadowClass [] getInterfaces () {
+        return new ShadowClass [0];
+    }
+
+
+    @Override
+    public String [] getInterfaceDescriptors () {
         return new String [0];
     }
 
@@ -126,13 +132,6 @@ final class PrimitiveShadowClass extends ShadowClass {
         throw new NoSuchMethodException (
             getCanonicalName () + "." + methodName + _descriptorsToString (argumentNames)
         );
-    }
-
-    //
-
-    @Override
-    public String [] getDeclaredClasses () {
-        return new String [0];
     }
 
 }
