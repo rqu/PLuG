@@ -1,6 +1,7 @@
 package ch.usi.dag.dislreserver.shadow;
 
 import java.lang.reflect.Modifier;
+import java.util.stream.Stream;
 
 import org.objectweb.asm.Type;
 
@@ -18,7 +19,9 @@ final class PrimitiveShadowClass extends ShadowClass {
 
     @Override
     public int getModifiers () {
+        //
         // Primitive type classes are ABSTRACT, FINAL, and PUBLIC.
+        //
         return Modifier.ABSTRACT | Modifier.FINAL | Modifier.PUBLIC;
     }
 
@@ -52,7 +55,7 @@ final class PrimitiveShadowClass extends ShadowClass {
         return getCanonicalName ();
     }
 
-	//
+    //
 
     /**
      * @see Class#getSuperclass()
@@ -77,61 +80,16 @@ final class PrimitiveShadowClass extends ShadowClass {
     //
 
     @Override
-    public FieldInfo getField (final String fieldName) throws NoSuchFieldException {
-        throw new NoSuchFieldException (getCanonicalName () + "." + fieldName);
+    protected Stream <FieldInfo> _declaredFields () {
+        // Primitive types have no declared fields.
+        return Stream.empty ();
     }
 
 
     @Override
-    public FieldInfo [] getFields () {
-        return new FieldInfo [0];
-    }
-
-    //
-
-    @Override
-    public FieldInfo getDeclaredField (final String fieldName) throws NoSuchFieldException {
-        throw new NoSuchFieldException (getCanonicalName () + "." + fieldName);
-    }
-
-
-    @Override
-    public FieldInfo [] getDeclaredFields () {
-        return new FieldInfo [0];
-    }
-
-    //
-
-    @Override
-    public MethodInfo [] getMethods () {
-        return new MethodInfo [0];
-    }
-
-
-    @Override
-    public MethodInfo getMethod (
-        final String methodName, final String [] argumentNames
-    ) throws NoSuchMethodException {
-        throw new NoSuchMethodException (
-            getCanonicalName () + "." + methodName + _descriptorsToString (argumentNames)
-        );
-    }
-
-    //
-
-    @Override
-    public MethodInfo [] getDeclaredMethods () {
-        return new MethodInfo [0];
-    }
-
-
-    @Override
-    public MethodInfo getDeclaredMethod (
-        final String methodName, final String [] argumentNames
-    ) throws NoSuchMethodException {
-        throw new NoSuchMethodException (
-            getCanonicalName () + "." + methodName + _descriptorsToString (argumentNames)
-        );
+    protected Stream <MethodInfo> _declaredMethods () {
+        // Primitive types have no declared methods.
+        return Stream.empty ();
     }
 
 }

@@ -7,6 +7,7 @@ import org.objectweb.asm.Type;
 
 import ch.usi.dag.dislreserver.DiSLREServerFatalException;
 import ch.usi.dag.dislreserver.util.Logging;
+import ch.usi.dag.util.asm.ClassNodeHelper;
 import ch.usi.dag.util.logging.Logger;
 
 
@@ -154,14 +155,15 @@ public final class ShadowClassTable {
             }
 
             final byte [] classCode = classNameMap.get (type.getClassName ());
-            if (classCode == null) {
+            if (classCode == null || classCode.length == 0) {
                 throw new DiSLREServerFatalException (
-                    "Class "+ type.getClassName () + " has not been loaded"
+                    "No bytecode provided for class "+ type.getClassName ()
                 );
             }
 
             return new ObjectShadowClass (
-                netReference, type, classLoader, superClass, classCode
+                netReference, type, classLoader, superClass,
+                ClassNodeHelper.OUTLINE.unmarshal (classCode)
             );
 
         } else {

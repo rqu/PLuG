@@ -1,7 +1,15 @@
 package ch.usi.dag.dislreserver.shadow;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Formatter;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
@@ -14,6 +22,10 @@ public abstract class ShadowClass extends ShadowObject {
      */
     private final Type __type;
 
+    /**
+     * The class loader that loaded the class represented by this shadow class.
+     * Will be {@code null} for primitive types (including {@code void}).
+     */
     private final ShadowObject __classLoader;
 
     //
@@ -44,16 +56,26 @@ public abstract class ShadowClass extends ShadowObject {
 
     @Override
     public boolean equals (final Object object) {
+        if (object instanceof ShadowClass) {
+            return __equals ((ShadowClass) object);
+        }
+
+        return false;
+    }
+
+    private boolean __equals (final ShadowClass other) {
         //
         // Two shadow classes are considered equal if they represent the
-        // same class and have been loaded by the same class loader.
+        // same type and have been loaded by the same class loader.
         //
-        if (object instanceof ShadowClass) {
-            final ShadowClass that = (ShadowClass) object;
-            if (this.getName ().equals (that.getName ())) {
-                return this.getShadowClassLoader ().equals (
-                    that.getShadowClassLoader ()
-                );
+        if (this.__type.equals (other.__type)) {
+            final ShadowObject thisClassLoader = this.getShadowClassLoader ();
+            final ShadowObject otherClassLoader = other.getShadowClassLoader ();
+
+            if (thisClassLoader != null) {
+                return thisClassLoader.equals (otherClassLoader);
+            } else {
+                return thisClassLoader == otherClassLoader;
             }
         }
 
@@ -74,7 +96,7 @@ public abstract class ShadowClass extends ShadowObject {
     public final ShadowObject getShadowClassLoader () {
         //
         // Should return null for primitive types or for classes
-        // loaded by the bootstrap classloader.
+        // loaded by the bootstrap class loader.
         //
         return __classLoader;
     }
@@ -87,7 +109,7 @@ public abstract class ShadowClass extends ShadowObject {
 
 
     public String getSimpleName () {
-        return __simpleName (__type.getClassName ());
+        return __simpleName (getCanonicalName ());
     }
 
 
@@ -98,7 +120,7 @@ public abstract class ShadowClass extends ShadowObject {
 
 
     public String getCanonicalName () {
-        return __type.getClassName ();
+        return __type.getClassName ().replace ('$',  '.');
     }
 
 
@@ -186,51 +208,176 @@ public abstract class ShadowClass extends ShadowObject {
 
     //
 
-    public abstract FieldInfo getField (String fieldName)
-    throws NoSuchFieldException;
-
-
-    public abstract FieldInfo [] getFields ();
-
-	//
-
-    public abstract FieldInfo getDeclaredField (String fieldName)
-    throws NoSuchFieldException;
-
-
-    public abstract FieldInfo [] getDeclaredFields ();
-
-	//
-
-    public abstract MethodInfo getMethod (
-        String methodName, String [] argumentNames
-    ) throws NoSuchMethodException;
-
-
-    public MethodInfo getMethod (
-        final String methodName, final ShadowClass [] arguments
-    ) throws NoSuchMethodException {
-        return getMethod (methodName, __toDescriptors (arguments));
+    public FieldInfo getDeclaredField (final String name) throws NoSuchFieldException {
+        // Look among declared fields and throw an exception if it's not there.
+        return __findField (name, _declaredFields ().unordered ()).orElseThrow (
+            () -> new NoSuchFieldException (getCanonicalName () + "." + name)
+        );
     }
 
 
-    public abstract MethodInfo [] getMethods ();
+    public FieldInfo [] getDeclaredFields () {
+        return _declaredFields ().toArray (FieldInfo []::new);
+    }
+
+    //
+
+    public FieldInfo getField (final String fieldName) throws NoSuchFieldException {
+        // Look among public declared fields, try the super class if not found.
+        final Optional <FieldInfo> result = __findField (
+            fieldName, __publicFields (_declaredFields ().unordered ())
+        );
+
+        if (result.isPresent ()) {
+            return result.get ();
+        }
+
+        if (getSuperclass () == null) {
+            throw new NoSuchFieldException (getCanonicalName () + "." + fieldName);
+        }
+
+        return getSuperclass ().getField (fieldName);
+    }
+
+
+    public FieldInfo [] getFields () {
+        // Collect all public fields along the inheritance hierarchy.
+        return __fieldsToArray (_collectPublicFields (new ArrayList <> ()));
+    }
+
+    private static FieldInfo [] __fieldsToArray (final List <FieldInfo> fields) {
+        return fields.toArray (new FieldInfo [fields.size ()]);
+    }
+
+
+    protected final List <FieldInfo> _collectPublicFields (final List <FieldInfo> result) {
+        result.addAll (
+            __publicFields (_declaredFields ()).collect (Collectors.toList ())
+        );
+
+        if (getSuperclass () != null) {
+            getSuperclass ()._collectPublicFields (result);
+        }
+
+        return result;
+    };
 
 	//
 
-    public abstract MethodInfo getDeclaredMethod (
-        String methodName, String [] argumentNames
-    ) throws NoSuchMethodException;
+    protected abstract Stream <FieldInfo> _declaredFields ();
+
+
+    private Stream <FieldInfo> __publicFields (final Stream <FieldInfo> fields) {
+        return fields.filter (fi -> fi.isPublic ());
+    }
+
+
+    private Optional <FieldInfo> __findField (final String fieldName, final Stream <FieldInfo> fields) {
+        return fields.filter (fi -> fi.getName ().equals (fieldName)).findAny ();
+    }
+
+    //
+
+    public MethodInfo getDeclaredMethod (
+        final String methodName, final String [] paramDescriptors
+    ) throws NoSuchMethodException {
+        // Look among declared methods and throw an exception if it's not there.
+        return __findMethod (
+            methodName, paramDescriptors, _declaredMethods ().unordered ()
+        ).orElseThrow (() -> new NoSuchMethodException (
+            getCanonicalName () + "." + methodName + _descriptorsToString (paramDescriptors)
+        ));
+    }
 
 
     public MethodInfo getDeclaredMethod (
-        final String methodName, final ShadowClass ... arguments
+        final String methodName, final ShadowClass [] paramTypes
     ) throws NoSuchMethodException {
-        return getDeclaredMethod (methodName, __toDescriptors (arguments));
+        return getDeclaredMethod (methodName, __toDescriptors (paramTypes));
     }
 
 
-    public abstract MethodInfo [] getDeclaredMethods ();
+    public MethodInfo [] getDeclaredMethods () {
+        return __withoutInitializers (_declaredMethods ()).toArray (MethodInfo []::new);
+    }
+
+	//
+
+    public MethodInfo getMethod (
+        final String methodName, final String [] paramDescriptors
+    ) throws NoSuchMethodException {
+        // Look among public declared methods, try the super class if not found.
+        final Optional <MethodInfo> result = __findMethod (
+            methodName, paramDescriptors,
+            __publicMethods (__withoutInitializers (_declaredMethods ().unordered ()))
+        );
+
+        if (result.isPresent ()) {
+            return result.get ();
+        }
+
+        if (getSuperclass () == null) {
+            throw new NoSuchMethodException (
+                getCanonicalName () + "." + methodName + _descriptorsToString (paramDescriptors)
+            );
+        }
+
+        return getSuperclass ().getMethod (methodName, paramDescriptors);
+    }
+
+
+    public MethodInfo getMethod (
+        final String methodName, final ShadowClass [] paramTypes
+    ) throws NoSuchMethodException {
+        return getMethod (methodName, __toDescriptors (paramTypes));
+    }
+
+
+    public MethodInfo [] getMethods () {
+        // Collect all methods along the inheritance hierarchy.
+        return _methodsToArray (_collectPublicMethods (new HashSet <> ()));
+    }
+
+
+    private static MethodInfo [] _methodsToArray (final Collection <MethodInfo> methods) {
+        return methods.toArray (new MethodInfo [methods.size ()]);
+    }
+
+
+    protected final Set <MethodInfo> _collectPublicMethods (final Set <MethodInfo> result) {
+        result.addAll (
+            __publicMethods (__withoutInitializers (_declaredMethods ()))
+                .collect (Collectors.toSet ())
+        );
+
+        if (getSuperclass () != null) {
+            getSuperclass ()._collectPublicMethods (result);
+        }
+
+        return result;
+    };
+
+    //
+
+    protected abstract Stream <MethodInfo> _declaredMethods ();
+
+
+    private Stream <MethodInfo> __withoutInitializers (final Stream <MethodInfo> methods) {
+        return methods.filter (mi-> !mi.isConstructor () && !mi.isClassInitializer ());
+    }
+
+
+    private Stream <MethodInfo> __publicMethods (final Stream <MethodInfo> methods) {
+        return methods.filter (mi-> mi.isPublic ());
+    }
+
+
+    private Optional <MethodInfo> __findMethod (
+        final String name, final String [] paramDescriptors,
+        final Stream <MethodInfo> methods
+    ) {
+        return methods.filter (mi -> mi.matches (name,  paramDescriptors)).findAny ();
+    }
 
 	//
 
@@ -259,20 +406,9 @@ public abstract class ShadowClass extends ShadowObject {
 
 
     protected static String _descriptorsToString (final String [] descriptors) {
-        final StringBuilder buf = new StringBuilder ();
-        buf.append ("(");
-
-        if (descriptors != null) {
-            String delimiter = "";
-            for (final String descriptor : descriptors) {
-                buf.append (delimiter);
-                buf.append (descriptor);
-                delimiter = ", ";
-            }
-        }
-
-        buf.append (")");
-        return buf.toString ();
+        return Arrays.stream (descriptors).collect (
+            Collectors.joining (", ",  "(",  ")")
+        );
     }
 
     //

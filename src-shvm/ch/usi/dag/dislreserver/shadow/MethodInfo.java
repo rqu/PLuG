@@ -20,6 +20,39 @@ public final class MethodInfo {
 
     //
 
+    @Override
+    public int hashCode () {
+        return
+            (this.getName ().hashCode () & 0xFFFF0000)
+            |
+            (this.getDescriptor ().hashCode () & 0x0000FFFF);
+    }
+
+
+    @Override
+    public boolean equals (final Object object) {
+        if (object instanceof MethodInfo) {
+            final MethodInfo other = (MethodInfo) object;
+            return
+                this.getName ().equals (other.getName ())
+                &&
+                this.getDescriptor ().equals (other.getDescriptor ());
+        }
+
+        return false;
+    }
+
+    //
+
+    boolean matches (final String name, final String [] paramDescriptors) {
+        return
+            this.getName ().equals (name)
+            &&
+            Arrays.equals (paramDescriptors, this.getParameterDescriptors ());
+    }
+
+    //
+
     public String getName () {
         return __methodNode.name;
     }
@@ -56,6 +89,16 @@ public final class MethodInfo {
 
     public boolean isPublic() {
         return Modifier.isPublic (getModifiers ());
+    }
+
+
+    public boolean isConstructor () {
+        return "<init>".equals (__methodNode.name);
+    }
+
+
+    public boolean isClassInitializer () {
+        return "<clinit>".equals (__methodNode.name);
     }
 
 }

@@ -2,7 +2,7 @@ package ch.usi.dag.dislreserver.shadow;
 
 import java.io.Serializable;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
+import java.util.stream.Stream;
 
 import org.objectweb.asm.Type;
 
@@ -26,7 +26,7 @@ final class ArrayShadowClass extends ShadowClass {
         __componentClass = componentClass;
     }
 
-	//
+    //
 
     public int getDimensionCount () {
         return _type ().getDimensions ();
@@ -80,13 +80,17 @@ final class ArrayShadowClass extends ShadowClass {
         return false;
     }
 
-	//
+    //
 
     @Override
     public int getModifiers () {
-        // Array classes are ABSTRACT and FINAL, privacy depends on the
-        // privacy of the component type. Until we get valid component type,
-        // we will make the array classes public.
+        //
+        // Array classes are ABSTRACT and FINAL, but the access modifier is
+        // derived from the component type. We make the array classes public
+        // until we have a valid component type.
+        //
+        // FIXME Return access modifier based on the component type.
+        //
         return Modifier.ABSTRACT | Modifier.FINAL | Modifier.PUBLIC;
     }
 
@@ -115,70 +119,16 @@ final class ArrayShadowClass extends ShadowClass {
     //
 
     @Override
-    public FieldInfo getField (final String fieldName) throws NoSuchFieldException {
-        throw new NoSuchFieldException (getCanonicalName () + "." + fieldName);
+    protected Stream <FieldInfo> _declaredFields () {
+        // Array types have no declared fields.
+        return Stream.empty ();
     }
 
 
     @Override
-    public FieldInfo [] getFields () {
-        return new FieldInfo [0];
-    }
-
-    //
-
-    @Override
-    public FieldInfo getDeclaredField (final String fieldName)
-    throws NoSuchFieldException {
-        throw new NoSuchFieldException (getCanonicalName () + "." + fieldName);
-    }
-
-
-    @Override
-    public FieldInfo [] getDeclaredFields () {
-        return new FieldInfo [0];
-    }
-
-    //
-
-    @Override
-    public MethodInfo getMethod (final String methodName, final String [] argumentNames)
-    throws NoSuchMethodException {
-
-        for (final MethodInfo methodInfo : __superClass.getMethods ()) {
-            if (methodName.equals (methodInfo.getName ())
-                && Arrays.equals (argumentNames, methodInfo.getParameterDescriptors ())
-            ) {
-                return methodInfo;
-            }
-        }
-
-        throw new NoSuchMethodException (
-            getCanonicalName () + "." + methodName + _descriptorsToString (argumentNames)
-        );
-    }
-
-
-    @Override
-    public MethodInfo [] getMethods () {
-        return getSuperclass ().getMethods ();
-    }
-
-    //
-
-    @Override
-    public MethodInfo getDeclaredMethod (final String methodName,
-        final String [] argumentNames)
-    throws NoSuchMethodException {
-        throw new NoSuchMethodException (
-            getCanonicalName () + "." + methodName + _descriptorsToString (argumentNames)
-        );
-    }
-
-
-    @Override
-    public MethodInfo [] getDeclaredMethods () {
-        return new MethodInfo [0];
+    protected Stream <MethodInfo> _declaredMethods () {
+        // Array types have no declared methods.
+        return Stream.empty ();
     }
 
 }
