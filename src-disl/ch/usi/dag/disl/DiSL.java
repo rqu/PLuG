@@ -33,9 +33,9 @@ import ch.usi.dag.disl.scope.Scope;
 import ch.usi.dag.disl.snippet.Shadow;
 import ch.usi.dag.disl.snippet.Snippet;
 import ch.usi.dag.disl.staticcontext.generator.SCGenerator;
-import ch.usi.dag.disl.util.ClassNodeHelper;
 import ch.usi.dag.disl.util.Logging;
 import ch.usi.dag.disl.weaver.Weaver;
+import ch.usi.dag.util.asm.ClassNodeHelper;
 import ch.usi.dag.util.logging.Logger;
 
 

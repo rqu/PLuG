@@ -1,4 +1,4 @@
-package ch.usi.dag.disl.util;
+package ch.usi.dag.util.asm;
 
 import java.io.IOException;
 import java.io.InputStream;

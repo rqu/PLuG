@@ -13,7 +13,7 @@ import org.objectweb.asm.Type;
 import ch.usi.dag.disl.Reflection.Class;
 import ch.usi.dag.disl.Reflection.ClassLoader;
 import ch.usi.dag.disl.Reflection.MissingClassException;
-import ch.usi.dag.disl.util.ClassNodeHelper;
+import ch.usi.dag.util.asm.ClassNodeHelper;
 
 
 /**
