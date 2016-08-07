@@ -432,6 +432,7 @@
 	<target name="compile-util" depends="-init">
 		<mkdir dir="${build.util}"/>
 		<javac destdir="${build.util}" srcdir="${src.util}" debug="true">
+			<classpath refid="asm.classpath"/>
 			<classpath refid="log4j.classpath"/>
 		</javac>
 
