@@ -106,8 +106,7 @@ public class ArrayShadowClassTest extends ShadowClassTestBase {
     }
 
 
-    @Override
-    @Theory
+    @Override @Theory
     public void isSyntheticMatchesReflection (@ParametersSuppliedBy (ArrayTypeSupplier.class) final Class <?> type) {
         super.isSyntheticMatchesReflection (type);
     }
