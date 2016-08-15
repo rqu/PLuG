@@ -21,6 +21,14 @@ public final class ShadowClassTable {
 
     //
 
+    /**
+     * Represents a bootstrap class loader. In the observed VM, the bootstrap
+     * class loader loads classes for which the call to
+     * {@link Class#getClassLoader()} returns {@code null}. Because here we need
+     * to be able to associate classes with the bootstrap class loader, we need
+     * a special object to use as a key into a map that returns a map of class
+     * names to class code.
+     */
     static final ShadowObject BOOTSTRAP_CLASSLOADER;
 
     static final AtomicReference <ShadowClass> JAVA_LANG_CLASS;
@@ -131,8 +139,8 @@ public final class ShadowClassTable {
         final ShadowClass superClass, ShadowObject classLoader
     ) {
         //
-        // Assumes that the sort of primitive types is lexicographically
-        // before the sort of arrays and subsequently objects.
+        // Assumes that the sorts of primitive types in ASM Type precede the
+        // sort of array, which itself precedes the sort of object.
         //
         if (type.getSort () < Type.ARRAY) {
             // Primitive type should return null as classloader.

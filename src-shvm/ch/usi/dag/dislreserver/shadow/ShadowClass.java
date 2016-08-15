@@ -98,6 +98,13 @@ public abstract class ShadowClass extends ShadowObject {
         // Should return null for primitive types or for classes
         // loaded by the bootstrap class loader.
         //
+        // TODO LB: Consider exposing a reference for the bootstrap class loader.
+        //
+        // This would diverge from the behavior of Java reflection API, but it
+        // would potentially allow an analysis to attach state to a shadow
+        // object representing the bootstrap class loader. Not sure if it is
+        // necessary though.
+        //
         return __classLoader;
     }
 
@@ -164,10 +171,16 @@ public abstract class ShadowClass extends ShadowObject {
 
 	//
 
-    public abstract boolean isInstance (ShadowObject obj);
+    public abstract boolean isInstance (ShadowObject object);
 
 
-    public abstract boolean isAssignableFrom (ShadowClass klass);
+    /**
+     * @throws NullPointerException
+     *         if the specified {@link ShadowClass} parameter is {@code null}
+     *
+     * @see Class#isAssignableFrom(Class)
+     */
+    public abstract boolean isAssignableFrom (ShadowClass other);
 
 	//
 

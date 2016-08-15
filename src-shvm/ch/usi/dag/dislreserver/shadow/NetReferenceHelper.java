@@ -21,7 +21,7 @@ final class NetReferenceHelper {
     private static final long CBIT_MASK = (1L << 1) - 1;
 
     /**
-     * 1-bit special flag at bit 63.
+     * 1-bit special flag at bit 63 (used internally in the agent).
      */
     private static final short SPEC_POS = 63;
     private static final long SPEC_MASK = (1L << 1) - 1;

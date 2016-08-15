@@ -22,7 +22,7 @@ public final class ShadowObjectTable {
 
     //
 
-    public static void register (final ShadowObject object) {
+    static void register (final ShadowObject object) {
         if (object == null) {
             __log.warn ("attempting to register a null shadow object");
             return;
@@ -62,9 +62,9 @@ public final class ShadowObjectTable {
             return null;
         }
 
-        final ShadowObject retVal = shadowObjects.get (objectId);
-        if (retVal != null) {
-            return retVal;
+        final ShadowObject existing = shadowObjects.get (objectId);
+        if (existing != null) {
+            return existing;
         }
 
         //
@@ -116,14 +116,12 @@ public final class ShadowObjectTable {
     }
 
 
-    public static void freeShadowObject (final ShadowObject obj) {
-        shadowObjects.remove (obj.getId ());
-        ShadowClassTable.freeShadowObject (obj);
+    public static void freeShadowObject (final ShadowObject object) {
+        shadowObjects.remove (object.getId ());
+        ShadowClassTable.freeShadowObject (object);
     }
 
-
-    // TODO: find a more elegant way to allow users to traverse the shadow
-    // object table
+    //TODO: find a more elegant way to allow users to traverse the shadow object table
     public static Iterator <Entry <Long, ShadowObject>> getIterator () {
         return shadowObjects.entrySet ().iterator ();
     }

@@ -98,6 +98,7 @@ final class ArrayShadowClass extends ShadowClass {
 
     @Override
     public ShadowClass getSuperclass () {
+        // Array types (should) have Object as the super class.
         return __superClass;
     }
 
@@ -110,6 +111,7 @@ final class ArrayShadowClass extends ShadowClass {
 
     @Override
     public String [] getInterfaceDescriptors () {
+        // Array types implement Cloneable and Serializable interfaces.
         return new String [] {
             Type.getType (Cloneable.class).getDescriptor (),
             Type.getType (Serializable.class).getDescriptor ()

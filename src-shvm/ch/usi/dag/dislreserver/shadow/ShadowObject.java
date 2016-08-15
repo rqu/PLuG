@@ -46,6 +46,11 @@ public class ShadowObject implements Formattable {
             return __shadowClass;
 
         } else {
+            //
+            // FIXME LB: Consider not exposing the BOOTSTRAP_CLASSLOADER reference to the user.
+            //
+            // Then there should be no need for this hackery.
+            //
             if (this.equals (ShadowClassTable.BOOTSTRAP_CLASSLOADER)) {
                 throw new NullPointerException ();
             }
@@ -166,7 +171,7 @@ public class ShadowObject implements Formattable {
      *        the {@link ShadowObject} instance to update from.
      */
     protected void _updateFrom (final ShadowObject object) {
-        // do nothing
+        // By default do nothing.
     }
 
     //

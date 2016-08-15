@@ -9,8 +9,7 @@ import org.objectweb.asm.Type;
 final class PrimitiveShadowClass extends ShadowClass {
 
     PrimitiveShadowClass (
-        final long netReference, final Type type,
-        final ShadowObject classLoader
+        final long netReference, final Type type, final ShadowObject classLoader
     ) {
         super (netReference, type, classLoader);
     }
@@ -62,18 +61,21 @@ final class PrimitiveShadowClass extends ShadowClass {
      */
     @Override
     public ShadowClass getSuperclass () {
+        // Primitive types have no superclass.
         return null;
     }
 
 
     @Override
     public ShadowClass [] getInterfaces () {
+        // Primitive types implement no interfaces.
         return new ShadowClass [0];
     }
 
 
     @Override
     public String [] getInterfaceDescriptors () {
+        // Primitive types implement no interfaces.
         return new String [0];
     }
 
