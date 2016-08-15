@@ -73,14 +73,22 @@ public final class ShadowObjectTable {
         // representing instances of the Class class.
         //
         if (!NetReferenceHelper.isClassInstance (netReference)) {
-            return shadowObjects.computeIfAbsent (
-                objectId, key -> __createShadowObject (netReference)
-            );
+            return shadowObjects.computeIfAbsent (objectId, oid -> {
+                final ShadowObject result = __createShadowObject (netReference);
+                if (__log.traceIsLoggable ()) {
+                    __log.trace ("creating %s for 0x%x", result.getClass ().getSimpleName (), oid);
+                }
+
+                return result;
+            });
+
         } else {
             throw new DiSLREServerFatalException ("Unknown class instance");
         }
     }
 
+
+    private static final String __STRING_CLASS_NAME__ = String.class.getName ();
 
     private static ShadowObject __createShadowObject (
         final long netReference
@@ -89,28 +97,13 @@ public final class ShadowObjectTable {
             NetReferenceHelper.getClassId (netReference)
         );
 
-        if ("java.lang.String".equals (shadowClass.getName ())) {
-            if (__log.traceIsLoggable ()) {
-                final long objectId = NetReferenceHelper.getObjectId (netReference);
-                __log.trace ("creating uninitialized ShadowString for 0x%x", objectId);
-            }
-
+        if (__STRING_CLASS_NAME__.equals (shadowClass.getName ())) {
             return new ShadowString (netReference, shadowClass);
 
         } else if (isAssignableFromThread (shadowClass)) {
-            if (__log.traceIsLoggable ()) {
-                final long objectId = NetReferenceHelper.getObjectId (netReference);
-                __log.trace ("creating uninitialized ShadowThread for 0x%x", objectId);
-            }
-
             return new ShadowThread (netReference, shadowClass);
 
         } else {
-            if (__log.traceIsLoggable ()) {
-                final long objectId = NetReferenceHelper.getObjectId (netReference);
-                __log.trace ("creating ShadowObject for 0x%x", objectId);
-            }
-
             return new ShadowObject (netReference, shadowClass);
         }
     }
