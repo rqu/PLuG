@@ -122,25 +122,40 @@ public class ShadowObject implements Formattable {
 
     @Override
     public int hashCode () {
-        // TODO Consider also the class ID, only object ID is considered now.
-        return 31 + (int) (getId () ^ (getId () >>> 32));
+        //
+        // The part of net reference that identifies object instances is global and
+        // 40 bits long, so just using the lower 32 bits of the object identifier
+        // should be fine.
+        //
+        // If we were numbering objects per class, we would also need to take the
+        // class identifier into account to get a better hash code.
+        //
+        return (int) getId ();
     }
 
 
     @Override
     public boolean equals (final Object object) {
+        if (this == object) {
+            return true;
+        }
+
+        if (object instanceof ShadowObject) {
+            return __equals ((ShadowObject) object);
+        }
+
+        return false;
+    }
+
+
+    private boolean __equals (final ShadowObject other) {
         //
         // The equality of shadow objects should be based purely on
         // the equality of the net reference. The value of some special
         // shadow objects can be updated lazily, so we should not really
         // compare the values.
         //
-        if (object instanceof ShadowObject) {
-            final ShadowObject that = (ShadowObject) object;
-            return __netReference == that.__netReference;
-        }
-
-        return false;
+        return this.__netReference == other.__netReference;
     }
 
     //
@@ -150,14 +165,15 @@ public class ShadowObject implements Formattable {
         // When updating value from another shadow object, the net reference
         // of this and the other object must be the same.
         //
-        if (__netReference != other.__netReference) {
+        if (this.__equals (other)) {
+            _updateFrom (other);
+
+        } else {
             throw new DiSLREServerFatalException (String.format (
                 "attempting to update object 0x%x using object 0x%x",
                 __netReference, other.__netReference
             ));
         }
-
-        _updateFrom (other);
     }
 
 
