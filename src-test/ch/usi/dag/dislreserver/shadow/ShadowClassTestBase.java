@@ -14,14 +14,13 @@ import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.experimental.theories.PotentialAssignment;
-import org.junit.experimental.theories.Theory;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 
 import ch.usi.dag.util.asm.ClassNodeHelper;
 
 
-public abstract class ShadowClassTestBase {
+abstract class ShadowClassTestBase {
 
     protected static List <PotentialAssignment> _createClassAssignments (
         final Class <?> [] types
@@ -36,64 +35,63 @@ public abstract class ShadowClassTestBase {
 
     //
 
-    public void getNameMatchesReflection (final Class <?> type) {
+    void getNameMatchesReflection (final Class <?> type) {
         final ShadowClass shadowType = _createShadowClass (type);
         Assert.assertEquals (type.getName (), shadowType.getName ());
     }
 
 
-    public void getSimpleNameMatchesReflection (final Class <?> type) {
+    void getSimpleNameMatchesReflection (final Class <?> type) {
         final ShadowClass shadowType = _createShadowClass (type);
         Assert.assertEquals (type.getSimpleName (), shadowType.getSimpleName ());
     }
 
 
-    public void getCanonicalNameMatchesReflection (final Class <?> type) {
+    void getCanonicalNameMatchesReflection (final Class <?> type) {
         final ShadowClass shadowType = _createShadowClass (type);
         Assert.assertEquals (type.getCanonicalName (), shadowType.getCanonicalName ());
     }
 
     //
 
-    public void isPrimitiveMatchesReflection (final Class <?> type) {
+    void isPrimitiveMatchesReflection (final Class <?> type) {
         final ShadowClass shadowType = _createShadowClass (type);
         Assert.assertEquals (type.isPrimitive (), shadowType.isPrimitive ());
     }
 
 
-    public void isArrayMatchesReflection (final Class <?> type) {
+    void isArrayMatchesReflection (final Class <?> type) {
         final ShadowClass shadowType = _createShadowClass (type);
         Assert.assertEquals (type.isArray (), shadowType.isArray ());
     }
 
 
-    public void isEnumMatchesReflection (final Class <?> type) {
+    void isEnumMatchesReflection (final Class <?> type) {
         final ShadowClass shadowType = _createShadowClass (type);
         Assert.assertEquals (type.isEnum (), shadowType.isEnum ());
     }
 
 
-    public void isInterfaceMatchesReflection (final Class <?> type) {
+    void isInterfaceMatchesReflection (final Class <?> type) {
         final ShadowClass shadowType = _createShadowClass (type);
         Assert.assertEquals (type.isInterface (), shadowType.isInterface ());
     }
 
 
-    public void isAnnotationMatchesReflection (final Class <?> type) {
+    void isAnnotationMatchesReflection (final Class <?> type) {
         final ShadowClass shadowType = _createShadowClass (type);
         Assert.assertEquals (type.isAnnotation (), shadowType.isAnnotation ());
     }
 
 
-    public void isSyntheticMatchesReflection (final Class <?> type) {
+    void isSyntheticMatchesReflection (final Class <?> type) {
         final ShadowClass shadowType = _createShadowClass (type);
         Assert.assertEquals (type.isSynthetic (), shadowType.isSynthetic ());
     }
 
     //
 
-    @Theory
-    public void getModifiersMatchesReflection (final Class <?> type) {
+    void getModifiersMatchesReflection (final Class <?> type) {
         //
         // Testing modifiers on normal classes seems problematic, because some
         // of the modifiers reported by reflection are not written in the class
@@ -108,7 +106,7 @@ public abstract class ShadowClassTestBase {
 
     //
 
-    public void isInstanceOnSelfMatchesReflection (final Class <?> type) {
+    void isInstanceOnSelfMatchesReflection (final Class <?> type) {
         final ShadowClass shadowType = _createShadowClass (type);
         Assert.assertEquals (
             type.isInstance (type),
@@ -117,7 +115,7 @@ public abstract class ShadowClassTestBase {
     }
 
 
-    public void isAssignableOnSelfMatchesReflection (final Class <?> type) {
+    void isAssignableOnSelfMatchesReflection (final Class <?> type) {
         final ShadowClass shadowType = _createShadowClass (type);
         Assert.assertEquals (
             type.isAssignableFrom (type),
@@ -127,7 +125,7 @@ public abstract class ShadowClassTestBase {
 
     //
 
-    public void getInterfaceDescriptorsMatchesReflection (final Class <?> type) {
+    void getInterfaceDescriptorsMatchesReflection (final Class <?> type) {
         final ShadowClass shadowType = _createShadowClass (type);
 
         Assert.assertArrayEquals (
@@ -142,7 +140,7 @@ public abstract class ShadowClassTestBase {
 
     //
 
-    public void getDeclaredFieldsMatchesReflection (final Class <?> type) {
+    void getDeclaredFieldsMatchesReflection (final Class <?> type) {
         final ShadowClass shadowType = _createShadowClass (type);
         __assertFieldArraysEqual (
             type.getDeclaredFields (), shadowType.getDeclaredFields ()
@@ -150,7 +148,7 @@ public abstract class ShadowClassTestBase {
     }
 
 
-    public void getFieldsMatchesReflection (final Class <?> type) {
+    void getFieldsMatchesReflection (final Class <?> type) {
         final ShadowClass shadowType = _createShadowClass (type);
         __assertFieldArraysEqual (type.getFields (), shadowType.getFields ());
     }
@@ -178,7 +176,7 @@ public abstract class ShadowClassTestBase {
 
     //
 
-    public void getDeclaredMethodsMatchesReflection (final Class <?> type) {
+    void getDeclaredMethodsMatchesReflection (final Class <?> type) {
         final ShadowClass shadowType = _createShadowClass (type);
         __assertMethodArraysEqual (
             type.getDeclaredMethods (), shadowType.getDeclaredMethods ()
@@ -186,7 +184,7 @@ public abstract class ShadowClassTestBase {
     }
 
 
-    public void getMethodsMatchesReflection (final Class <?> type) {
+    void getMethodsMatchesReflection (final Class <?> type) {
         final ShadowClass shadowType = _createShadowClass (type);
         __assertMethodArraysEqual (type.getMethods (), shadowType.getMethods ());
     }
