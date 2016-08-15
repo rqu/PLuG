@@ -56,6 +56,10 @@ public abstract class ShadowClass extends ShadowObject {
 
     @Override
     public boolean equals (final Object object) {
+        if (this == object) {
+            return true;
+        }
+
         if (object instanceof ShadowClass) {
             return __equals ((ShadowClass) object);
         }
@@ -63,37 +67,42 @@ public abstract class ShadowClass extends ShadowObject {
         return false;
     }
 
+
     private boolean __equals (final ShadowClass other) {
         //
         // Two shadow classes are considered equal if they represent the
         // same type and have been loaded by the same class loader.
         //
         if (this.__type.equals (other.__type)) {
-            final ShadowObject thisClassLoader = this.getShadowClassLoader ();
-            final ShadowObject otherClassLoader = other.getShadowClassLoader ();
-
-            if (thisClassLoader != null) {
-                return thisClassLoader.equals (otherClassLoader);
+            if (this.__classLoader != null) {
+                return this.__classLoader.equals (other.__classLoader);
             } else {
-                return thisClassLoader == otherClassLoader;
+                return this.__classLoader == other.__classLoader;
             }
         }
 
         return false;
     }
 
+	//
 
     @Override
     public int hashCode () {
         //
-        // TODO LB: Check ShadowClass.hashCode() -- it's needed.
+        // Use the 22 bits of the class identifier padded with 10 bits of the
+        // class loader object identifier.
         //
-        return super.hashCode ();
+        return (_classId () << 22) ^ (int) (__classLoaderId () & ((1 << 10) - 1));
+    }
+
+
+    private final long __classLoaderId () {
+        return (__classLoader != null) ? __classLoader.getId () : 0;
     }
 
     //
 
-    public final ShadowObject getShadowClassLoader () {
+    ShadowObject getClassLoader () {
         //
         // Should return null for primitive types or for classes
         // loaded by the bootstrap class loader.
