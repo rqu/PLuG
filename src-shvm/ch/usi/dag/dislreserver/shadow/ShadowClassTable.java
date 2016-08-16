@@ -57,29 +57,26 @@ public final class ShadowClassTable {
 
     //
 
-    public static void load (
-        ShadowObject loader, final String className,
-        final byte [] classCode, final boolean debug
+    public static void loadClass (
+        final String classInternalName, final long classLoaderNetReference,
+        final byte [] classCode
     ) {
-        ConcurrentHashMap <String, byte []> classNameMap;
-        if (loader == null) {
-            // bootstrap loader
-            loader = BOOTSTRAP_CLASSLOADER;
-        }
+        final ConcurrentHashMap <String, byte []> classNameMap = classLoaderMap.computeIfAbsent (
+            __safeClassLoader (ShadowObjectTable.get (classLoaderNetReference)),
+            cl -> new ConcurrentHashMap <> ()
+        );
 
-        classNameMap = classLoaderMap.get (loader);
-        if (classNameMap == null) {
-            final ConcurrentHashMap <String, byte []> tmp = new ConcurrentHashMap <> ();
-            if ((classNameMap = classLoaderMap.putIfAbsent (loader, tmp)) == null) {
-                classNameMap = tmp;
+        // TODO LB: Consider using Type directly as the key.
+        final String className = classInternalName.replace ('/', '.');
+        if (classNameMap.putIfAbsent (className, classCode) != null) {
+            if (__log.debugIsLoggable ()) {
+                __log.debug ("reloading/redefining %s", classInternalName);
             }
         }
+    }
 
-        if (classNameMap.putIfAbsent (className.replace ('/', '.'), classCode) != null) {
-            if (debug) {
-                System.out.println ("DiSL-RE: Reloading/Redefining class "+ className);
-            }
-        }
+    private static ShadowObject __safeClassLoader (final ShadowObject classLoader) {
+        return (classLoader != null) ? classLoader : BOOTSTRAP_CLASSLOADER;
     }
 
     //
@@ -162,6 +159,7 @@ public final class ShadowClassTable {
                 throw new DiSLREServerFatalException ("Unknown class loader");
             }
 
+            // TODO LB: Consider using Type directly as the key.
             final byte [] classCode = classNameMap.get (type.getClassName ());
             if (classCode == null || classCode.length == 0) {
                 throw new DiSLREServerFatalException (

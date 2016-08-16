@@ -7,33 +7,35 @@ import java.io.IOException;
 import ch.usi.dag.dislreserver.DiSLREServerException;
 import ch.usi.dag.dislreserver.reqdispatch.RequestHandler;
 import ch.usi.dag.dislreserver.shadow.ShadowClassTable;
-import ch.usi.dag.dislreserver.shadow.ShadowObject;
-import ch.usi.dag.dislreserver.shadow.ShadowObjectTable;
 
 
 public class NewClassHandler implements RequestHandler {
 
-    public void handle (DataInputStream is, DataOutputStream os, boolean debug)
-    throws DiSLREServerException {
+    @Override
+    public void handle (
+        final DataInputStream is, final DataOutputStream os, final boolean debug
+    ) throws DiSLREServerException {
 
         try {
-            String className = is.readUTF ();
-            long oid = is.readLong ();
-            ShadowObject classLoader = ShadowObjectTable.get (oid);
-            int classCodeLength = is.readInt ();
-            byte [] classCode = new byte [classCodeLength];
+            final String classInternalName = is.readUTF ();
+            final long classLoaderNetReference = is.readLong ();
+            final int classCodeLength = is.readInt ();
+            final byte [] classCode = new byte [classCodeLength];
             is.readFully (classCode);
 
-            ShadowClassTable.load (classLoader, className, classCode, debug);
-            
-        } catch (IOException e) {
+            ShadowClassTable.loadClass (
+                classInternalName, classLoaderNetReference, classCode
+            );
+
+        } catch (final IOException e) {
             throw new DiSLREServerException (e);
         }
     }
 
 
+    @Override
     public void exit () {
-
+        // do nothing
     }
 
 }
