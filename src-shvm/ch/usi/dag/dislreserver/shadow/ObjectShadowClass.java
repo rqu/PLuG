@@ -33,26 +33,84 @@ final class ObjectShadowClass extends ShadowClass {
      */
     @Override
     public boolean isInstance (final ShadowObject object) {
-        // return equals(obj.getShadowClass());
-        throw new UnsupportedOperationException ("not yet implemented");
+        if (object == null) {
+            return false;
+        }
+
+        if (object instanceof ShadowClass) {
+            //
+            // ShadowClass instances have no shadow class. If this shadow class
+            // represents the Object or Class types, then the other shadow class
+            // can be considered an instance of this type.
+            //
+            return __isObjectClass () || __isClassClass ();
+
+        } else {
+            //
+            // For all other cases, check whether the type represented by the
+            // given class is assignable to the type represented by this class.
+            //
+            return this.isAssignableFrom (object.getShadowClass ());
+        }
     }
 
 
-    /**
-     * @see Class#isAssignableFrom(Class)
-     */
+    private boolean __isObjectClass () {
+        return this.__superClass == null;
+    }
+
+
+
+    private boolean __isClassClass () {
+        return this == ShadowClassTable.JAVA_LANG_CLASS.get ();
+    }
+
+
     @Override
     public boolean isAssignableFrom (final ShadowClass other) {
-        // while (other != null) {
-        //     if (other.equals(this)) {
-        //         return true;
-        //     }
         //
-        //     other = other.getSuperclass();
-        // }
+        // A reference class type is not assignable from a primitive type.
+        // This check also ensures that we throw a NullPointerException if
+        // the other reference is null.
         //
-        // return false;
-        throw new UnsupportedOperationException ("not yet implemented");
+        if (other.isPrimitive ()) {
+            return false;
+        }
+
+        // Classes loaded by different class loaders are not assignable.
+        if (this.getClassLoader () != other.getClassLoader ()) {
+            return false;
+        }
+
+        // If this class represents Object, then anything is assignable to it.
+        if (__isObjectClass ()) {
+            return true;
+        }
+
+        // In all other cases, check along the inheritance hierarchy.
+        return __isAssignableFrom (other);
+    }
+
+
+    private boolean __isAssignableFrom (final ShadowClass other) {
+        if (other == null) {
+            // We reached the root of the inheritance hierarchy.
+            return false;
+        }
+
+        if (this.equals (other)) {
+            // We found a matching class in the inheritance hierarchy.
+            return true;
+        }
+
+        for (final ShadowClass otherIface : other.getInterfaces ()) {
+            if (this.isAssignableFrom (otherIface)) {
+                // The other class implements an assignable interface.
+                return true;
+            }
+        }
+
+        return __isAssignableFrom (other.getSuperclass ());
     }
 
     //

@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.experimental.theories.ParameterSignature;
 import org.junit.experimental.theories.ParameterSupplier;
 import org.junit.experimental.theories.ParametersSuppliedBy;
@@ -152,16 +151,14 @@ public class ObjectShadowClassTest extends ShadowClassTestBase {
 
     //
 
-    @Override @Theory @Ignore
+    @Override @Theory
     public void isInstanceOnSelfMatchesReflection (@ParametersSuppliedBy (ReferenceTypeSupplier.class) final Class <?> type) {
-        // TODO Enable ObjectShadowClassTest.isInstanceOnSelfMatchesReflection when implemented.
         super.isInstanceOnSelfMatchesReflection (type);
     }
 
 
-    @Override @Theory @Ignore
+    @Override @Theory
     public void isAssignableOnSelfMatchesReflection (@ParametersSuppliedBy (ReferenceTypeSupplier.class) final Class <?> type) {
-        // TODO Enable ObjectShadowClassTest.isAssignableOnSelfMatchesReflection when implemented.
         super.isAssignableOnSelfMatchesReflection (type);
     }
 
