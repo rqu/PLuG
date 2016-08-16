@@ -191,6 +191,32 @@ public abstract class ShadowClass extends ShadowObject {
      */
     public abstract boolean isAssignableFrom (ShadowClass other);
 
+
+    //
+
+    /**
+     * Returns {@code true} if this class matches the given {@link Type type}.
+     */
+    final boolean equalsType (final Type type) {
+        return __type.equals (type);
+    }
+
+
+    /**
+     * Returns {@code true} if this class is derived from the given {@link Type
+     * type}. This method checks for presence of {@link Type type} in the
+     * inheritance hierarchy of this class.
+     */
+    final boolean extendsType (final Type type) {
+        if (equalsType (type)) {
+            return true;
+
+        } else {
+            final ShadowClass superClass = getSuperclass ();
+            return (superClass != null) ? superClass.extendsType (type) : false;
+        }
+    }
+
 	//
 
     public abstract int getModifiers ();

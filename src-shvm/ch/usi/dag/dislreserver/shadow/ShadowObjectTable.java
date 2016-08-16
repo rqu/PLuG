@@ -4,6 +4,8 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.objectweb.asm.Type;
+
 import ch.usi.dag.dislreserver.DiSLREServerFatalException;
 import ch.usi.dag.dislreserver.util.Logging;
 import ch.usi.dag.util.logging.Logger;
@@ -42,19 +44,6 @@ public final class ShadowObjectTable {
     }
 
 
-    private static boolean isAssignableFromThread (ShadowClass klass) {
-        while (!"java.lang.Object".equals (klass.getName ())) {
-            if ("java.lang.Thread".equals (klass.getName ())) {
-                return true;
-            }
-
-            klass = klass.getSuperclass ();
-        }
-
-        return false;
-    }
-
-
     public static ShadowObject get (final long netReference) {
         final long objectId = NetReferenceHelper.getObjectId (netReference);
         if (objectId == 0) {
@@ -88,7 +77,8 @@ public final class ShadowObjectTable {
     }
 
 
-    private static final String __STRING_CLASS_NAME__ = String.class.getName ();
+    private static final Type __THREAD_CLASS_TYPE__ = Type.getType (Thread.class);
+    private static final Type __STRING_CLASS_TYPE__ = Type.getType (String.class);
 
     private static ShadowObject __createShadowObject (
         final long netReference
@@ -97,10 +87,10 @@ public final class ShadowObjectTable {
             NetReferenceHelper.getClassId (netReference)
         );
 
-        if (__STRING_CLASS_NAME__.equals (shadowClass.getName ())) {
+        if (shadowClass.equalsType (__STRING_CLASS_TYPE__)) {
             return new ShadowString (netReference, shadowClass);
 
-        } else if (isAssignableFromThread (shadowClass)) {
+        } else if (shadowClass.extendsType (__THREAD_CLASS_TYPE__)) {
             return new ShadowThread (netReference, shadowClass);
 
         } else {
