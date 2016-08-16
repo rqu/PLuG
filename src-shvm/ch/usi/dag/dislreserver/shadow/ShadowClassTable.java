@@ -39,7 +39,8 @@ public final class ShadowClassTable {
 
     private static final ConcurrentHashMap <Integer, ShadowClass> shadowClasses;
 
-    private static final ConcurrentHashMap <ShadowObject, ConcurrentHashMap <String, byte []>> classLoaderMap;
+    // TODO LB: Associate class code with class loader shadow objects.
+    private static final ConcurrentHashMap <ShadowObject, ConcurrentHashMap <Type, byte []>> classLoaderMap;
 
     //
 
@@ -61,16 +62,15 @@ public final class ShadowClassTable {
         final String classInternalName, final long classLoaderNetReference,
         final byte [] classCode
     ) {
-        final ConcurrentHashMap <String, byte []> classNameMap = classLoaderMap.computeIfAbsent (
+        final ConcurrentHashMap <Type, byte []> classNameMap = classLoaderMap.computeIfAbsent (
             __safeClassLoader (ShadowObjectTable.get (classLoaderNetReference)),
             cl -> new ConcurrentHashMap <> ()
         );
 
-        // TODO LB: Consider using Type directly as the key.
-        final String className = classInternalName.replace ('/', '.');
-        if (classNameMap.putIfAbsent (className, classCode) != null) {
+        final Type type = Type.getObjectType (classInternalName);
+        if (classNameMap.putIfAbsent (type, classCode) != null) {
             if (__log.debugIsLoggable ()) {
-                __log.debug ("reloading/redefining %s", classInternalName);
+                __log.debug ("reloading/redefining %s", type);
             }
         }
     }
@@ -154,17 +154,14 @@ public final class ShadowClassTable {
                 classLoader = BOOTSTRAP_CLASSLOADER;
             }
 
-            final ConcurrentHashMap <String, byte []> classNameMap = classLoaderMap.get (classLoader);
-            if (classNameMap == null) {
+            final ConcurrentHashMap <Type, byte []> classTypeMap = classLoaderMap.get (classLoader);
+            if (classTypeMap == null) {
                 throw new DiSLREServerFatalException ("Unknown class loader");
             }
 
-            // TODO LB: Consider using Type directly as the key.
-            final byte [] classCode = classNameMap.get (type.getClassName ());
+            final byte [] classCode = classTypeMap.get (type);
             if (classCode == null || classCode.length == 0) {
-                throw new DiSLREServerFatalException (
-                    "No bytecode provided for class "+ type.getClassName ()
-                );
+                throw new DiSLREServerFatalException ("No bytecode found for "+ type);
             }
 
             return new ObjectShadowClass (
