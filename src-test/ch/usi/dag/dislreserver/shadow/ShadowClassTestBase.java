@@ -256,6 +256,8 @@ abstract class ShadowClassTestBase {
     ) {
         out.printf ("%08x [%s] %s\n", type.getModifiers (), Modifier.toString (type.getModifiers ()), type.getName ());
 
+        out.printf ("\tsuperclass: %s\n", type.getSuperclass ());
+
         out.printf ("\tinterfaces:\n");
         Arrays.stream (type.getInterfaces ()).forEach (
             c -> out.printf ("\t\t%s, %s\n", c.getName (), Type.getType (c).getDescriptor ())
