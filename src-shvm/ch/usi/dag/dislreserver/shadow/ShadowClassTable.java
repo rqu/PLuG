@@ -161,7 +161,20 @@ public final class ShadowClassTable {
 
             final byte [] classCode = classTypeMap.get (type);
             if (classCode == null || classCode.length == 0) {
-                throw new DiSLREServerFatalException ("No bytecode found for "+ type);
+                //
+                // Lambda classes have no bytecode. Create a dummy shadow class
+                // for them until we need to figure out how to get the information
+                // about the class (i.e. what interface it implements) to the
+                // Shadow VM.
+                //
+                if (type.getInternalName ().contains ("$$Lambda$")) {
+                    return new LambdaShadowClass (
+                        netReference, type, classLoader, superClass
+                    );
+
+                } else {
+                    throw new DiSLREServerFatalException ("No bytecode found for "+ type + classCode);
+                }
             }
 
             return new ObjectShadowClass (

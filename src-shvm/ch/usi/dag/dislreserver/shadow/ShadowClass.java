@@ -120,22 +120,35 @@ public abstract class ShadowClass extends ShadowObject {
 	//
 
     public String getName () {
-        return __type.getInternalName ().replace ('/', '.');
+        //
+        // Avoid Type.getClassName() because it adds "class" prefix to array types.
+        //
+        return _javaName (__type.getInternalName ());
+    }
+
+
+    protected static String _javaName (final String name) {
+        return name.replace ('/', '.');
     }
 
 
     public String getSimpleName () {
-        return __simpleName (getCanonicalName ());
+        return _simpleName (__canonicalName ());
     }
 
 
-    private static String __simpleName (final String name) {
+    protected static String _simpleName (final String name) {
         // If '.' is not found, index is -1 => +1 adjustment gives index 0
         return name.substring (name.lastIndexOf ('.') + 1);
     }
 
 
     public String getCanonicalName () {
+        return __canonicalName ();
+    }
+
+
+    private String __canonicalName () {
         return __type.getClassName ().replace ('$',  '.');
     }
 

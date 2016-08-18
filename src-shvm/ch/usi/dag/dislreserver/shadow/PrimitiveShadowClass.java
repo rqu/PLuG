@@ -51,7 +51,7 @@ final class PrimitiveShadowClass extends ShadowClass {
     @Override
     public String getName () {
         // Avoid Type.getInternalName() -- returns null for primitive types.
-        return getCanonicalName ();
+        return _type ().getClassName ();
     }
 
     //
