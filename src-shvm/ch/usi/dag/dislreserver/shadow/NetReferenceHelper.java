@@ -21,12 +21,18 @@ final class NetReferenceHelper {
     private static final long CBIT_MASK = (1L << 1) - 1;
 
     /**
-     * 1-bit special flag at bit 63 (used internally in the agent).
+     * 1-bit special payload flag at bit 63. Indicates that the object has
+     * extra payload attached.
      */
     private static final short SPEC_POS = 63;
     private static final long SPEC_MASK = (1L << 1) - 1;
 
     //
+
+    static long getUniqueId (final long netReference) {
+        return netReference & ~SPEC_MASK;
+    }
+
 
     static long getObjectId (final long netReference) {
         return __bits (netReference, OBJECT_ID_POS, OBJECT_ID_MASK);

@@ -34,7 +34,7 @@ public final class ShadowObjectTable {
 
         final long objectId = object.getId ();
         final ShadowObject existing = shadowObjects.putIfAbsent (objectId, object);
-        if (existing != null) {
+        if (existing != null && object.isSpecial ()) {
             if (__log.traceIsLoggable ()) {
                 __log.trace ("updating shadow object 0x%x", objectId);
             }

@@ -42,12 +42,6 @@ public abstract class ShadowClass extends ShadowObject {
 
     //
 
-    // No need to expose the interface to user. getId() should be sufficient
-    protected final int _classId () {
-        return NetReferenceHelper.getClassId (getNetRef ());
-    }
-
-
     protected final Type _type () {
         return __type;
     }
@@ -92,7 +86,7 @@ public abstract class ShadowClass extends ShadowObject {
         // Use the 22 bits of the class identifier padded with 10 bits of the
         // class loader object identifier.
         //
-        return (_classId () << 22) ^ (int) (__classLoaderId () & ((1 << 10) - 1));
+        return (getClassId () << 22) ^ (int) (__classLoaderId () & ((1 << 10) - 1));
     }
 
 

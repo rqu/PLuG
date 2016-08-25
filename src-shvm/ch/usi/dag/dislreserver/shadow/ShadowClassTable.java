@@ -206,10 +206,8 @@ public final class ShadowClassTable {
 
 
     static void freeShadowObject (final ShadowObject object) {
-        final long netReference = object.getNetRef ();
-        if (NetReferenceHelper.isClassInstance (netReference)) {
-            final int classId = NetReferenceHelper.getClassId (netReference);
-            shadowClasses.remove (classId);
+        if (object.isClassInstance ()) {
+            shadowClasses.remove (object.getClassId ());
 
         } else if (classLoaderMap.containsKey (object)) {
             classLoaderMap.remove (object);

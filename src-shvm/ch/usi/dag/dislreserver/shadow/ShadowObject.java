@@ -30,11 +30,30 @@ public class ShadowObject implements Formattable {
     }
 
     //
+    // These methods are meant to be only used internally, so that we avoid
+    // exposing the net reference.
+    //
 
-    final long getNetRef () {
-        return __netReference;
+    final long getUniqueId () {
+        return NetReferenceHelper.getUniqueId (__netReference);
     }
 
+
+    final int getClassId () {
+        return NetReferenceHelper.getClassId (__netReference);
+    }
+
+
+    final boolean isClassInstance () {
+        return NetReferenceHelper.isClassInstance (__netReference);
+    }
+
+
+    final boolean isSpecial () {
+        return NetReferenceHelper.isSpecial (__netReference);
+    }
+
+    //
 
     public final long getId () {
         return NetReferenceHelper.getObjectId (__netReference);
@@ -150,12 +169,15 @@ public class ShadowObject implements Formattable {
 
     private boolean __equals (final ShadowObject other) {
         //
-        // The equality of shadow objects should be based purely on
-        // the equality of the net reference. The value of some special
-        // shadow objects can be updated lazily, so we should not really
-        // compare the values.
+        // The equality of shadow objects should be based purely on the equality of
+        // the net reference, without taking into account the special bit which
+        // indicates whether the object has been sent with additional data.
         //
-        return this.__netReference == other.__netReference;
+        // The value of some special shadow objects can be updated lazily, so we
+        // should not really compare their values unless we can make sure that
+        // the comparison makes sense at all times.
+        //
+        return this.getUniqueId () == other.getUniqueId ();
     }
 
     //
@@ -163,7 +185,9 @@ public class ShadowObject implements Formattable {
     final void updateFrom (final ShadowObject other) {
         //
         // When updating value from another shadow object, the net reference
-        // of this and the other object must be the same.
+        // of this and the other object (without the special bit) must be the same.
+        // The other object must have the SPECIAL bit set (this is checked by the
+        // caller of this method).
         //
         if (this.__equals (other)) {
             _updateFrom (other);
@@ -178,10 +202,12 @@ public class ShadowObject implements Formattable {
 
 
     /**
-     * This method is intended to be override by the subclasses to implement
-     * updating of a shadow object's state. The caller of this method guarantees
-     * that the net reference of the object to update from will be the same
-     * as the net reference of this shadow object.
+     * This method is intended to be overriden by subclasses to update shadow
+     * object's internal values. The caller of this method guarantees that the
+     * unique id part of the net reference of the object to update from will be
+     * the same as that of this shadow object. In addition, the other object
+     * will have the special bit of the net reference set, indicating that it
+     * contains additional payload specific to that object.
      *
      * @param object
      *        the {@link ShadowObject} instance to update from.
