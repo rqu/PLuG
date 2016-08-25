@@ -1,55 +1,146 @@
 package ch.usi.dag.dislre;
 
-public class REDispatch {
+/**
+ * Provides Shadow VM clients with an interface to register and invoke remote
+ * analysis methods. Each remote analysis method should be first registered by a
+ * call to the {@link #registerMethod(String)} method, providing a fully
+ * qualified method name on the analysis server. To invoke that method, either
+ * {@link #analysisStart(short)} or {@link #analysisStart(short, byte)} method
+ * should be called, followed by calls to appropriate {@code send*} methods. The
+ * invocation sequence should end with a call to {@link #analysisEnd()} method.
+ */
+public final class REDispatch {
+
+    //
+    // Analysis method registration.
+    //
 
     /**
-     * Register method and receive id for this transmission
+     * Registers a remote analysis method. Returns an identifier to be used in
+     * subsequent invocations to {@link #analysisStart(short)} and
+     * {@link #analysisStart(short, byte) methods.
      *
-     * @param analysisMethodDesc
-     * @return
+     * @param methodDesc
+     *        fully qualified name of the method, without signature.
+     * @return remote method identifier.
      */
-    public static native short registerMethod(String analysisMethodDesc);
+    public static native short registerMethod (String methodDesc);
+
+
+    //
+    // Analysis method invocation.
+    //
 
     /**
-     * Announce start of an analysis transmission
+     * Marks the beginning of marshaling phase of the given analysis method
+     * invocation.
      *
-     * @param analysisMethodDesc remote analysis method id
+     * @param methodId
+     *        the identifier of the remote analysis method.
      */
-    public static native void analysisStart(short analysisMethodId);
+    public static native void analysisStart (short methodId);
+
 
     /**
-     * Announce start of an analysis transmission with total ordering (among
-     * several threads) under the same orderingId
+     * Marks the beginning of marshaling phase of the given analysis method
+     * invocation with the given ordering identifier. Analysis method
+     * invocations sharing the same ordering identifier will be mutually
+     * (globally) ordered.
      *
-     * @param analysisMethodId remote analysis method id
-     * @param orderingId analyses with the same orderingId are guaranteed to
-     *                   be ordered. Only non-negative values are valid.
+     * @param methodId
+     *        the identifier of the remote analysis method.
+     * @param orderingId
+     *        the ordering identifier to associate the analysis method
+     *        invocation with. Only non-negative values are valid.
      */
-    public static native void analysisStart(short analysisMethodId,
-            byte orderingId);
+    public static native void analysisStart (short methodId, byte orderingId);
+
 
     /**
-     * Announce end of an analysis transmission
+     * Marks the end of the marshaling phase of analysis method invocation
+     * currently ongoing in the caller's thread.
      */
-    public static native void analysisEnd();
+    public static native void analysisEnd ();
 
-    // allows transmitting types
-    public static native void sendBoolean(boolean booleanToSend);
-    public static native void sendByte(byte byteToSend);
-    public static native void sendChar(char charToSend);
-    public static native void sendShort(short shortToSend);
-    public static native void sendInt(int intToSend);
-    public static native void sendLong(long longToSend);
-    public static native void sendObject(Object objToSend);
-    public static native void sendObjectPlusData(Object objToSend);
-    public static native void sendObjectSize(Object objToSend);
-    public static native void sendCurrentThread();
 
-    // Methods use similar logic as Float.floatToIntBits() and
-    // Double.doubleToLongBits() but implemented in the native code
-    // to avoid perturbation
-    public static native void sendFloat(float floatToSend);
-    public static native void sendDouble(double doubleToSend);
+    //
+    // Primitive types.
+    //
+
+    public static native void sendBoolean (boolean value);
+
+
+    public static native void sendByte (byte value);
+
+
+    public static native void sendChar (char value);
+
+
+    public static native void sendShort (short value);
+
+
+    public static native void sendInt (int value);
+
+
+    public static native void sendLong (long value);
+
+
+    public static native void sendFloat (float value);
+
+
+    public static native void sendDouble (double value);
+
+
+    //
+    // Reference types.
+    //
+
+    /**
+     * Sends an object reference to the Shadow VM. The analysis method must
+     * expect to receive a {@link ch.usi.dag.disl.reserver.shadow.ShadowObject}.
+     *
+     * @param object
+     *        the object to send.
+     */
+    public static native void sendObject (Object object);
+
+
+    /**
+     * Sends an object reference to the Shadow VM, along with data payload
+     * containing values provided by special shadow objects such as
+     * {@link ch.usi.dag.disl.reserver.shadow.ShadowString} and
+     * {@link ch.usi.dag.disl.reserver.shadow.ShadowThread}.
+     *
+     * @param object
+     *        object to send.
+     */
+    public static native void sendObjectPlusData (Object object);
+
+
+    /**
+     * Send the current thread reference to the Shadow VM, including
+     * {@code null} if the current thread does not exist yet. This is only
+     * useful to analyses that run very early (i.e., during VM initialization)
+     * where the call to {@link Thread#currentThread()} may actually return
+     * {@code null}, which cannot be send by the {@link #sendObject(Object)
+     * sendObject} and {@link #sendObjectPlusData(Object) sendObjectPlusData}
+     * methods.
+     */
+    public static native void sendCurrentThread ();
+
+
+    //
+    // Specials.
+    //
+
+    /**
+     * Sends object size to the Shadow VM. The analysis method must expect to
+     * receive a {@code long} data type.
+     *
+     * @param object the object the size of which to send.
+     */
+    public static native void sendObjectSize (Object object);
+
 
     // TODO re - basic type array support
     //  - send length + all values in for cycle - all in native code
