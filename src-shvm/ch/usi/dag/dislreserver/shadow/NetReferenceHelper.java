@@ -25,7 +25,7 @@ final class NetReferenceHelper {
      * extra payload attached.
      */
     private static final short SPEC_POS = 63;
-    private static final long SPEC_MASK = (1L << 1) - 1;
+    private static final long SPEC_MASK = 1L << 63;
 
     //
 
