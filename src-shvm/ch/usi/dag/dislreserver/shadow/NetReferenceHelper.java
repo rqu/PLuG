@@ -25,12 +25,13 @@ final class NetReferenceHelper {
      * extra payload attached.
      */
     private static final short SPEC_POS = 63;
-    private static final long SPEC_MASK = 1L << 63;
+    private static final long SPEC_MASK = (1L << 1) - 1;
 
     //
 
     static long getUniqueId (final long netReference) {
-        return netReference & ~SPEC_MASK;
+        // The mask used here needs to have an absolute position.
+        return netReference & ~(1L << SPEC_POS);
     }
 
 

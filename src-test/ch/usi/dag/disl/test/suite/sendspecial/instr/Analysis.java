@@ -18,6 +18,12 @@ public class Analysis extends RemoteAnalysis {
     }
 
 
+    public void emptyEvent () {
+        // Called to insert extra events into the client's buffer.
+    }
+
+    //
+
     @Override
     public void atExit () {
         // do nothing
@@ -25,7 +31,7 @@ public class Analysis extends RemoteAnalysis {
 
 
     @Override
-    public void objectFree (final ShadowObject netRef) {
+    public void objectFree (final ShadowObject object) {
         // do nothing
     }
 
