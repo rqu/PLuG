@@ -31,42 +31,69 @@ endif
 
 ifneq (,$(filter MinGW Cygwin,$(TARGET_ENV)))
     JDK_TARGET := windows
-    LIBRARY := $(LIBRARY_WINDOWS)
+    LIB_PREFIX :=
+    LIB_SUFFIX := .dll
 
     ifeq (MinGW,$(TARGET_ENV))
         CC := $(TARGET_CPU)-w64-mingw32-gcc
+        LD := $(TARGET_CPU)-w64-mingw32-ld
 
-        CFLAGS += -DMINGW -mthreads
-        CFLAGS_LD += -Wl,--kill-at
-        CFLAGS_PARTS := -flto
+        CFLAGS += -DMINGW -mthreads -fPIC
         CFLAGS_WHOLE := -flto -fwhole-program
 
-        LIBS += -lws2_32
+        LDFLAGS += --kill-at -output-def $(LIBRARY).def
+        LIBDIRS += -L=/mingw/lib -L$(dir $(shell $(CC) -print-libgcc-file-name))
+        LIBS += -lws2_32 -lmingwex -lmingw32 -lcrtdll -lmsvcrt -lkernel32 -lgcc
     endif
 
 else ifneq (,$(filter DarwinX Darwin,$(TARGET_ENV)))
     JDK_TARGET := macosx
-    LIBRARY := $(LIBRARY_MACOSX)
+    LIB_PREFIX := lib
+    LIB_SUFFIX := .jnilib
 
     ifeq (DarwinX,$(TARGET_ENV))
         CC := darwinx-gcc
+        LD := darwinx-ld
         CFLAGS += -DDARWINX
     endif
 
 else ifeq (Linux,$(TARGET_ENV))
-    LIBRARY := $(LIBRARY_LINUX)
     JDK_TARGET := linux
+    LIB_PREFIX := lib
+    LIB_SUFFIX := .so
 
     #
     # Despite the GCC documentation saying that -flto should not be used with
     # -fwhole-program, the option needs to be there, otherwise GCC produces a
     # library with undefined symbols (bypass bytecode) despite them being present.
     #
-    CFLAGS_PARTS := -flto
     CFLAGS_WHOLE := -flto -fwhole-program
+
+    ifneq (x86_64,$(TARGET_CPU))
+        CFLAGS += -m32
+        LDFLAGS += -melf_i386
+    endif
 else
     $(error Target environment $(TARGET_ENV) is not supported)
 endif
+
+
+ifeq (x86_64,$(TARGET_CPU))
+    BUILD_DIR := $(JDK_TARGET)-x86_64
+else
+    BUILD_DIR := $(JDK_TARGET)-x86
+endif
+
+#
+# TARGET_DIR defaults to BUILD_DIR, but it can be overriden from outside.
+# However, the Makefile is not responsible for creating it, i.e., it has to exist.
+# BUILD_DIR, on the other hand, is created by the Makefile.
+#
+TARGET_DIR ?= $(BUILD_DIR)
+
+
+LIBRARY_NAME := $(LIB_PREFIX)$(LIBRARY_BASE)$(LIB_SUFFIX)
+LIBRARY := $(TARGET_DIR)/$(LIBRARY_NAME)
 
 
 # Source and object files needed to create the library
@@ -76,9 +103,8 @@ SOURCES = bytecode.c common.c jvmtiutil.c connection.c \
 
 HEADERS = $(wildcard *.h) codeflags.h
 GENSRCS = bytecode.c codeflags.h
-OBJECTS = $(SOURCES:%.c=%.o)
+OBJECTS = $(addprefix $(BUILD_DIR)/,$(SOURCES:%.c=%.o))
 SRCDEPS = $(SOURCES:%.c=%.d)
-
 
 
 # Base options depending on the build
@@ -88,23 +114,34 @@ else
     CFLAGS += -g3 -DDEBUG
 endif
 
+# Generate position independent code
+CFLAGS += -fPIC
+
+# Path to JNI and JVMTI includes
+CFLAGS += -I$(INCLUDE_DIR) -I$(INCLUDE_DIR)/$(JDK_TARGET)
+
+# Use GNU extensions and warn on most things
+CFLAGS += -std=gnu99 -W -Wall -Wextra -Wno-unused-parameter
+
+# Hide most symbols except those exported
+CFLAGS_PARTS += -fvisibility=hidden
+
+
+# Derive GCC flags for linker from LDFLAGS
+COMMA := ,
+CFLAGS_LD := $(CFLAGS_LD) $(addprefix -Wl$(COMMA),$(LDFLAGS))
+
 # Tell the linker to create a shared library.
+LDFLAGS += -shared
 CFLAGS_LD += -shared
 
 #
-# For non-MinGW targets, use position independent code
-# and dynamically link to the pthread library.
+# Link non-MinGW targets with the pthread library.
 #
 ifneq (MinGW,$(TARGET_ENV))
-    CFLAGS += -fPIC
     LIBS += -lpthread
 endif
 
-# JNI and JVMTI includes
-CFLAGS += -I$(INCLUDE_DIR) -I$(INCLUDE_DIR)/$(JDK_TARGET)
-
-# Source code options
-CFLAGS += -std=gnu99 -W -Wall -Wextra -Wno-unused-parameter
 
 # Fix-up quirks before first target
 -include Makefile.quirks
@@ -113,7 +150,7 @@ CFLAGS += -std=gnu99 -W -Wall -Wextra -Wno-unused-parameter
 # Default goal
 
 .PHONY: agent
-agent: $(GENSRCS) $(LIBRARY)
+agent: $(GENSRCS) $(BUILD_DIR) $(LIBRARY)
 
 
 # Convenience targets
@@ -126,20 +163,24 @@ whole:
 debug:
 	@$(MAKE) DEBUG=1
 
+
 # Generated files
 
-bytecode.c:
-	ant -f ../build.xml prepare-disl-agent-bytecode
+bytecode.c codeflags.h:
+	ant -f ../build.xml prepare-disl-agent
 
-codeflags.h:
-	ant -f ../build.xml prepare-disl-agent-codeflags
+
+# Output directory for compiled object files
+
+$(BUILD_DIR):
+	mkdir $@
 
 
 # Compilation and linking targets
 
 ifneq (,$(WHOLE))
 
-CFLAGS += -DWHOLE $(CFLAGS_WHOLE)
+CFLAGS += $(CFLAGS_WHOLE) -DWHOLE
 
 $(LIBRARY): $(HEADERS) $(SOURCES)
 	$(CC) $(CFLAGS) $(TARGET_ARCH) $(CFLAGS_LD) $(SOURCES) $(LIBS) $(OUTPUT_OPTION)
@@ -149,7 +190,10 @@ else
 CFLAGS += $(CFLAGS_PARTS)
 
 $(LIBRARY): $(OBJECTS)
-	$(CC) $(CFLAGS) $(TARGET_ARCH) $(CFLAGS_LD) $(OBJECTS) $(LIBS) $(OUTPUT_OPTION)
+	$(LD) $(LDFLAGS) $(TARGET_ARCH) $(LIBDIRS) $(OBJECTS) $(LIBS) $(OUTPUT_OPTION)
+
+$(BUILD_DIR)/%.o: %.c
+	$(CC) $(CFLAGS) $(TARGET_ARCH) -c $? $(OUTPUT_OPTION)
 
 %.d: %.c
 	@$(CC) -MM $< | sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' > $@
@@ -168,7 +212,7 @@ clean:
 
 .PHONY: cleanall
 cleanall: clean
-	-rm -f $(LIBRARY_LINUX) $(LIBRARY_MACOSX) $(LIBRARY_WINDOWS)
+	-rm -rf $(BUILD_DIR)
 
 .PHONY: pristine
 pristine: cleanall

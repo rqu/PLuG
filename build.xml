@@ -281,17 +281,20 @@
 			<ac:then>
 				<property name="dl.prefix" value=""/>
 				<property name="dl.suffix" value=".dll"/>
+				<property name="disl.agent.os" value="windows"/>
 			</ac:then><ac:else>
 				<ac:if>
 					<os family="unix"/>
 					<ac:then>
 						<property name="dl.prefix" value="lib"/>
 						<ac:if>
-							<os family="mac"/>
+							<os name="Mac OS X"/>
 							<ac:then>
 								<property name="dl.suffix" value=".jnilib"/>
+								<property name="disl.agent.os" value="macosx"/>
 							</ac:then><ac:else>
 								<property name="dl.suffix" value=".so"/>
+								<property name="disl.agent.os" value="linux"/>
 							</ac:else>
 						</ac:if>
 					</ac:then><ac:else>
@@ -300,6 +303,12 @@
 				</ac:if>
 			</ac:else>
 		</ac:if>
+
+		<ac:switch value="${os.arch}" caseinsensitive="true">
+			<case value="x86_64"><property name="disl.agent.arch" value="x86_64"/></case>
+			<case value="amd64"><property name="disl.agent.arch" value="x86_64"/></case>
+			<default><property name="disl.agent.arch" value="x86"/></default>
+		</ac:switch>
 
 		<property name="disl.agent.lib" value="${dl.prefix}${disl.agent.lib.base}${dl.suffix}"/>
 		<property name="shvm.agent.lib" value="${dl.prefix}${shvm.agent.lib.base}${dl.suffix}"/>
@@ -549,7 +558,7 @@
 		<echo file="${output.file}">/**${line.separator}</echo>
 		<echo file="${output.file}" append="true"> * DO NOT EDIT!${line.separator}</echo>
 		<echo file="${output.file}" append="true"> *${line.separator}</echo>
-		<echo file="${output.file}" append="true"> * This file was generated using the 'generate-disl-agent-bytecode' target.${line.separator}</echo>
+		<echo file="${output.file}" append="true"> * This file was generated using the '-generate-disl-agent-bytecode' target.${line.separator}</echo>
 		<echo file="${output.file}" append="true"> */${line.separator}</echo>
 		<echo file="${output.file}" append="true">#include &lt;jvmti.h&gt;${line.separator}</echo>
 
@@ -591,13 +600,11 @@
 	</target>
 
 
-	<target name="-prepare-disl-agent" depends="-generate-disl-agent-codeflags-if-needed,-generate-disl-agent-bytecode-if-needed"/>
+	<target name="prepare-disl-agent" depends="-generate-disl-agent-codeflags-if-needed,-generate-disl-agent-bytecode-if-needed"/>
 
 
-	<target name="compile-disl-agent" depends="-prepare-disl-agent">
-		<exec executable="make" dir="${src.disl.agent}">
-			<arg value="WHOLE=1"/>
-		</exec>
+	<target name="compile-disl-agent" depends="prepare-disl-agent">
+		<exec executable="make" dir="${src.disl.agent}"/>
 	</target>
 
 
@@ -606,7 +613,7 @@
 		Windows using MinGW. It is currently not used in the
 		default build, but should be used for binary releases.
 	-->
-	<target name="compile-disl-agent-mingw" depends="-prepare-disl-agent">
+	<target name="compile-disl-agent-mingw" depends="prepare-disl-agent">
 		<exec executable="make" dir="${src.disl.agent}">
 			<arg value="WHOLE=1"/>
 			<arg value="TARGET_ENV=MinGW"/>
@@ -615,7 +622,7 @@
 
 
 	<target name="build-disl-agent" depends="compile-disl-agent,-determine-lib-names">
-		<copy file="${src.disl.agent}/${disl.agent.lib}" todir="${out.lib}"/>
+		<copy file="${src.disl.agent}/${disl.agent.os}-${disl.agent.arch}/${disl.agent.lib}" todir="${out.lib}"/>
 	</target>
 
 
@@ -1045,6 +1052,9 @@
 
 
 	<!-- Summary targets -->
+        <target name="properties" depends="-determine-lib-names">
+		<echoproperties/>
+        </target>
 
 	<target name="compile" depends="compile-disl,compile-disl-agent,compile-shvm,compile-shvm-agent" description="Compiles DiSL, Shadow VM, and the JVM agents for both."/>
 
