@@ -6,6 +6,7 @@ import ch.usi.dag.disl.marker.BasicBlockMarker;
 import ch.usi.dag.disl.marker.PreciseBasicBlockMarker;
 import ch.usi.dag.disl.staticcontext.BasicBlockStaticContext;
 
+
 public class DiSLClass {
 
     @Before(marker = PreciseBasicBlockMarker.class, scope = "TargetClass.print(boolean)", order = 0)
@@ -19,8 +20,8 @@ public class DiSLClass {
     }
 
     @Before(marker = BasicBlockMarker.class, scope = "TargetClass.print(boolean)", order = 2)
-    public static void precondition1(BasicBlockStaticContext bba) {
-        System.out.println("disl: b enter bb index=" + bba.getBBindex() + " size=" + bba.getBBSize());
+    public static void precondition1(final BasicBlockStaticContext bba) {
+        System.out.println("disl: b enter bb index=" + bba.getIndex()	+ " size=" + bba.getSize());
     }
 
     @AfterReturning(marker = BasicBlockMarker.class, scope = "TargetClass.print(boolean)", order = 3)

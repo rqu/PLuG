@@ -6,7 +6,7 @@ import ch.usi.dag.disl.annotation.After;
 import ch.usi.dag.disl.annotation.Before;
 import ch.usi.dag.disl.annotation.ThreadLocal;
 import ch.usi.dag.disl.marker.BodyMarker;
-import ch.usi.dag.disl.staticcontext.uid.UniqueMethodId;
+import ch.usi.dag.disl.staticcontext.uid.RandomMethodUid;
 import ch.usi.dag.disl.test.suite.after2.instr.runtime.Analysis;
 
 public class DiSLClass {
@@ -15,7 +15,7 @@ public class DiSLClass {
     static Stack<Integer> stackTL;
 
     @Before(marker = BodyMarker.class, order = 0, scope = "*.*", guard = NotInitNorClinit.class)
-    public static void onMethodEntryObjectArgs(UniqueMethodId id) {
+    public static void onMethodEntryObjectArgs(final RandomMethodUid id) {
         Stack<Integer> thisStack;
         if((thisStack = stackTL) == null) {
             thisStack = (stackTL = new Stack<Integer>());
@@ -24,7 +24,7 @@ public class DiSLClass {
     }
 
     @After(marker = BodyMarker.class, order = 0, scope = "*.*", guard = NotInitNorClinit.class)
-    public static void onMethodExit(UniqueMethodId id) {
+    public static void onMethodExit(final RandomMethodUid id) {
         Analysis.onExit(stackTL, id.get());
     }
 

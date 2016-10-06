@@ -9,18 +9,14 @@ public class TargetClass {
 
         @Override
         public void run() {
-            final long start = System.nanoTime();
             final int COUNT = 2000000;
             final TargetClass ta[] = new TargetClass[COUNT];
 
-            int i;
-            for (i = 0; i < COUNT; ++i) {
+            for (int i = 0; i < COUNT; ++i) {
                 ta[i] = new TargetClass();
             }
 
-            System.out.println("Allocated " + i + " objects");
-            //System.out.println("Allocated " + i + " objects in "
-            //		+ (System.nanoTime() - start) / 1000000 + " ms");
+            System.out.println("Allocated " + COUNT + " objects");
         }
 
     }
