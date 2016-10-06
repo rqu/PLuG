@@ -7,23 +7,22 @@ import org.objectweb.asm.tree.MethodInsnNode;
 
 import ch.usi.dag.disl.staticcontext.AbstractStaticContext;
 
+
 public class GetTargetAnalysis extends AbstractStaticContext {
 
-	public boolean isCalleeStatic() {
+    public boolean isCalleeStatic() {
+        AbstractInsnNode instr = staticContextData.getRegionStart();
+        return instr.getOpcode() == Opcodes.INVOKESTATIC;
+    }
 
-		AbstractInsnNode instr = staticContextData.getRegionStart();
+    public int calleeParCount() {
+        AbstractInsnNode instr = staticContextData.getRegionStart();
 
-		return instr.getOpcode() == Opcodes.INVOKESTATIC;
-	}
+        if (!(instr instanceof MethodInsnNode)) {
+            return 0;
+        }
 
-	public int calleeParCount() {
+        return Type.getArgumentTypes(((MethodInsnNode) instr).desc).length;
+    }
 
-		AbstractInsnNode instr = staticContextData.getRegionStart();
-
-		if (!(instr instanceof MethodInsnNode)) {
-			return 0;
-		}
-
-		return Type.getArgumentTypes(((MethodInsnNode) instr).desc).length;
-	}
 }

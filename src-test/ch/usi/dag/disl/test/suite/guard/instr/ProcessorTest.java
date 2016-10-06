@@ -4,6 +4,7 @@ import ch.usi.dag.disl.annotation.Guarded;
 import ch.usi.dag.disl.annotation.ArgumentProcessor;
 import ch.usi.dag.disl.processorcontext.ArgumentContext;
 
+
 @ArgumentProcessor
 public class ProcessorTest {
 
@@ -23,4 +24,5 @@ public class ProcessorTest {
         System.out.println("app: " + ac.getTotalCount());
         System.out.println("app: --------------------");
     }
+
 }

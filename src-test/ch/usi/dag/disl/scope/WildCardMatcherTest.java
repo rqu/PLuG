@@ -3,6 +3,7 @@ package ch.usi.dag.disl.scope;
 import org.junit.Assert;
 import org.junit.Test;
 
+
 public class WildCardMatcherTest {
 
     @Test

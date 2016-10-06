@@ -5,6 +5,7 @@ import ch.usi.dag.disl.annotation.Before;
 import ch.usi.dag.disl.annotation.ThreadLocal;
 import ch.usi.dag.disl.marker.BodyMarker;
 
+
 public class DiSLClass {
 
     @ThreadLocal
@@ -71,12 +72,12 @@ public class DiSLClass {
 
     //
 
-	@Before(marker = BodyMarker.class, scope = "*.foo*", order=0)
-	public static void precondition() {
-		System.out.printf (
-		    "Thread %s, before method body\n",
-		    Thread.currentThread ().getName ()
-	    );
+    @Before(marker = BodyMarker.class, scope = "*.foo*", order=0)
+    public static void precondition() {
+        System.out.printf (
+            "Thread %s, before method body\n",
+            Thread.currentThread ().getName ()
+        );
 
         // print the values
 
@@ -132,10 +133,10 @@ public class DiSLClass {
         doubleAny = 4.9E-324d;
 
         stringTlv = "bye";
-	}
+    }
 
-	@After(marker = BodyMarker.class, scope = "*.foo*", order=0)
-	public static void postcondition() {
+    @After(marker = BodyMarker.class, scope = "*.foo*", order=0)
+    public static void postcondition() {
         System.out.printf (
             "Thread %s, after method body\n",
             Thread.currentThread ().getName ()
@@ -168,5 +169,6 @@ public class DiSLClass {
         System.out.printf ("\tdouble\t%s\n", doubleAny);
 
         System.out.printf ("\tString\t%s\n", stringTlv);
-	}
+    }
+
 }

@@ -40,4 +40,5 @@ public class TargetClass {
         final TargetSubclass t = new TargetSubclass ();
         t.method ();
     }
+
 }

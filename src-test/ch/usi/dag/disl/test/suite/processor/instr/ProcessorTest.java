@@ -8,6 +8,7 @@ import ch.usi.dag.disl.dynamiccontext.DynamicContext;
 import ch.usi.dag.disl.processorcontext.ArgumentContext;
 import ch.usi.dag.disl.staticcontext.MethodStaticContext;
 
+
 @ArgumentProcessor
 public class ProcessorTest {
 
@@ -60,4 +61,5 @@ public class ProcessorTest {
         System.out.println(ac.getTypeDescriptor());
         System.out.println("--------------------");
     }
+
 }

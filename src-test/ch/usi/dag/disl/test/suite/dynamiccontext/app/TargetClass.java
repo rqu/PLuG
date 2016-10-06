@@ -2,6 +2,7 @@ package ch.usi.dag.disl.test.suite.dynamiccontext.app;
 
 import java.util.Random;
 
+
 public class TargetClass {
 
     static final Class <?> STATIC_TYPE = TargetClass.class;
@@ -15,23 +16,24 @@ public class TargetClass {
     final double instMath = Math.pow (Math.PI,  Math.E);
 
 
-	public static void printStaticFields () {
-	    System.out.println ("app: STATIC_TYPE="+ STATIC_TYPE);
-	    System.out.println ("app: STATIC_NAME="+ STATIC_NAME);
-	    System.out.println ("app: STATIC_RAND="+ STATIC_RAND);
+    public static void printStaticFields () {
+        System.out.println ("app: STATIC_TYPE="+ STATIC_TYPE);
+        System.out.println ("app: STATIC_NAME="+ STATIC_NAME);
+        System.out.println ("app: STATIC_RAND="+ STATIC_RAND);
         System.out.println ("app: STATIC_MATH="+ STATIC_MATH);
-	}
+    }
 
 
-	public void printInstanceFields () {
+    public void printInstanceFields () {
         System.out.println ("app: instType="+ instType);
         System.out.println ("app: instName="+ instName);
         System.out.println ("app: instRand="+ instRand);
         System.out.println ("app: instMath="+ instMath);
     }
 
-	public static void main(final String[] args) {
-		printStaticFields ();
-		new TargetClass().printInstanceFields ();
-	}
+    public static void main(final String[] args) {
+        printStaticFields ();
+        new TargetClass().printInstanceFields ();
+    }
+
 }

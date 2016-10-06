@@ -13,10 +13,10 @@ import org.objectweb.asm.util.TraceClassVisitor;
 
 import ch.usi.dag.disl.DiSL;
 
+
 public class OnPlaceTransformer {
 
     public static void main(String[] args) throws Exception {
-
         // INSTRUCTIONS: Under Eclipse call me with these jvm params (example)
         // -Ddisltest.transform=bin/ch/usi/dag/disl/test/bodymarker/TargetClass.class
         // -Ddisl.classes=bin/ch/usi/dag/disl/test/bodymarker/DiSLClass.class
@@ -66,7 +66,6 @@ public class OnPlaceTransformer {
     }
 
     public final static byte[] loadAsBytes(InputStream is) throws IOException {
-
         byte readBuf[] = new byte[512 * 1024];
 
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -81,4 +80,5 @@ public class OnPlaceTransformer {
 
         return bout.toByteArray();
     }
+
 }

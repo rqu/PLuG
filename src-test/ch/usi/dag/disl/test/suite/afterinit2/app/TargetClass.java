@@ -32,4 +32,5 @@ public class TargetClass {
         final TargetClass t = new TargetSubclass ();
         System.out.println (t.getClass ().getSimpleName ());
     }
+
 }

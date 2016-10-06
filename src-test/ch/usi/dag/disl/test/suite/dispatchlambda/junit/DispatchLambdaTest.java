@@ -8,4 +8,5 @@ import ch.usi.dag.disl.test.suite.ShadowVmOnlyTest;
 
 @RunWith (JUnit4.class)
 public class DispatchLambdaTest extends ShadowVmOnlyTest {
+
 }

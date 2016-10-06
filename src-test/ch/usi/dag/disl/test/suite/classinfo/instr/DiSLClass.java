@@ -7,9 +7,9 @@ import ch.usi.dag.disl.staticcontext.MethodStaticContext;
 
 public class DiSLClass {
 
-	@Before(marker = BodyMarker.class, scope = "TargetClass.print(boolean)", order = 0)
-	public static void precondition(MethodStaticContext msc, ClassContext cc) {
-		System.out.println("disl: " + cc.asClass( msc.thisClassName()));
-	}
+    @Before(marker = BodyMarker.class, scope = "TargetClass.print(boolean)", order = 0)
+    public static void precondition(MethodStaticContext msc, ClassContext cc) {
+        System.out.println("disl: " + cc.asClass( msc.thisClassName()));
+    }
 
 }

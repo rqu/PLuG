@@ -30,6 +30,6 @@ public class TargetClass {
         IntStream.range (10,  20).forEach (i -> {
             sendLambda (i, (IntFunction <String>) Integer::toString);
         });
-	}
+    }
 
 }

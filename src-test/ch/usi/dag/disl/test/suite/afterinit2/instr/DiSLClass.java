@@ -18,4 +18,5 @@ public class DiSLClass {
     public static void afterThrowning (final MethodStaticContext msc) {
         System.out.println (msc.thisClassSimpleName () +"."+ msc.thisMethodName () +" after");
     }
+
 }

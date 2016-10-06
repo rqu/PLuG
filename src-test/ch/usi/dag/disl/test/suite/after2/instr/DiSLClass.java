@@ -10,6 +10,7 @@ import ch.usi.dag.disl.staticcontext.uid.UniqueMethodId;
 import ch.usi.dag.disl.test.suite.after2.instr.runtime.Analysis;
 
 public class DiSLClass {
+
     @ThreadLocal
     static Stack<Integer> stackTL;
 
@@ -26,4 +27,5 @@ public class DiSLClass {
     public static void onMethodExit(UniqueMethodId id) {
         Analysis.onExit(stackTL, id.get());
     }
+
 }

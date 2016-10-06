@@ -7,6 +7,7 @@ import ch.usi.dag.disl.marker.BytecodeMarker;
 import ch.usi.dag.disl.staticcontext.FieldAccessStaticContext;
 import ch.usi.dag.disl.test.suite.dynamiccontext.app.TargetClass;
 
+
 public class DiSLClass {
 
     /**

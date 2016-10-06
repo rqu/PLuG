@@ -2,6 +2,7 @@ package ch.usi.dag.disl.test.suite.sendspecial.app;
 
 import ch.usi.dag.dislre.REDispatch;
 
+
 public class TargetClass {
 
     private static short __stringEventId__ = REDispatch.registerMethod (
@@ -69,6 +70,6 @@ public class TargetClass {
 
         sendString (true, string);
         sendThread (true, thread);
-	}
+    }
 
 }
