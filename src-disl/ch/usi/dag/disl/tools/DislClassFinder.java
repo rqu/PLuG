@@ -2,7 +2,10 @@ package ch.usi.dag.disl.tools;
 
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import javax.annotation.processing.Completion;
@@ -26,7 +29,6 @@ import ch.usi.dag.disl.annotation.Before;
 import ch.usi.dag.disl.annotation.Guarded;
 import ch.usi.dag.disl.annotation.ProcessAlso;
 import ch.usi.dag.disl.annotation.SyntheticLocal;
-import ch.usi.dag.util.Sets;
 
 
 /**
@@ -53,7 +55,7 @@ public final class DislClassFinder implements Processor {
     //
 
     private String __effectiveSeparator;
-    private final Set <String> __dislClasses = Sets.newHashSet ();
+    private final Set <String> __dislClasses = new HashSet <> ();
 
     //
 
@@ -62,7 +64,7 @@ public final class DislClassFinder implements Processor {
     private static final String __OPTION_FORCE_EOL__ = "disl.classfinder.force-eol";
 
     private static final Set <String> __options__ = Collections.unmodifiableSet (
-        Sets.newHashSet (__OPTION_OUTPUT__, __OPTION_SEPARATOR__)
+        new HashSet <> (Arrays.asList (__OPTION_OUTPUT__, __OPTION_SEPARATOR__))
     );
 
     @Override
@@ -80,7 +82,7 @@ public final class DislClassFinder implements Processor {
     @Override
     public Set <String> getSupportedAnnotationTypes () {
 
-        final Set <String> result = Sets.newLinkedHashSet ();
+        final Set <String> result = new LinkedHashSet <> ();
         for (final Class <?> annotationClass : __annotations__) {
             result.add (annotationClass.getName ());
         }
@@ -153,7 +155,7 @@ public final class DislClassFinder implements Processor {
         // The annotations may be processed in multiple rounds. Collect
         // DiSL classes in each round and only report those not seen before.
         //
-        final Set <String> newClasses = Sets.newHashSet ();
+        final Set <String> newClasses = new HashSet <> ();
 
         for (final TypeElement te : annotations) {
             for (final Element e : env.getElementsAnnotatedWith (te)) {

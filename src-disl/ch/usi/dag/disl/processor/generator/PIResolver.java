@@ -1,15 +1,15 @@
 package ch.usi.dag.disl.processor.generator;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 import ch.usi.dag.disl.snippet.Shadow;
-import ch.usi.dag.util.Maps;
 
 
 public class PIResolver {
 
-    private final Map <ResolverKey, ProcInstance> piStore = Maps.newHashMap ();
+    private final Map <ResolverKey, ProcInstance> piStore = new HashMap <> ();
 
     //
 

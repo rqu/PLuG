@@ -6,10 +6,10 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 import ch.usi.dag.util.Duration;
-import ch.usi.dag.util.Lists;
 
 
 public class ClientEvaluationRunner extends Runner {
@@ -61,10 +61,10 @@ public class ClientEvaluationRunner extends Runner {
     private Job __startShadow (
         final File instJar, final File statusFile
     ) throws IOException {
-        final List <String> command = Lists.newLinkedList (
+        final List <String> command = new LinkedList <> (Arrays.asList (
             __SHADOW_JAVA_COMMAND__, "-Xms1G", "-Xmx2G",
             "-classpath", Runner.classPath (_SHVM_SERVER_JAR_, instJar)
-        );
+        ));
 
         if (statusFile != null) {
             command.add (String.format (
@@ -82,13 +82,13 @@ public class ClientEvaluationRunner extends Runner {
     private Job __startClient (
         final File instJar, final File appJar
     ) throws IOException {
-        final List <String> command = Lists.newLinkedList (
+        final List <String> command = new LinkedList <> (Arrays.asList (
             __CLIENT_JAVA_COMMAND__,
             String.format ("-agentpath:%s", _SHVM_AGENT_LIB_),
             String.format ("-Xbootclasspath/a:%s", Runner.classPath (
                 _SHVM_DISPATCH_JAR_, instJar
             ))
-        );
+        ));
 
         command.addAll (propertiesStartingWith ("disl."));
         command.addAll (Arrays.asList (

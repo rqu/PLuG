@@ -1,8 +1,10 @@
 package ch.usi.dag.util.logging;
 
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -10,8 +12,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 import ch.usi.dag.util.Assert;
-import ch.usi.dag.util.Lists;
-import ch.usi.dag.util.Maps;
 
 
 /**
@@ -380,7 +380,7 @@ public final class Logger {
      * ***********************************************************************/
 
     private static final List <String>
-        __providerAliases__ = Lists.newLinkedList (__PROVIDER_PROPERTY__);
+        __providerAliases__ = new LinkedList <> (Arrays.asList (__PROVIDER_PROPERTY__));
 
 
     /**
@@ -405,7 +405,7 @@ public final class Logger {
 
 
     private static final List <String>
-        __levelAliases__ = Lists.newLinkedList (__LEVEL_PROPERTY__);
+        __levelAliases__ = new LinkedList <> (Arrays.asList (__LEVEL_PROPERTY__));
 
 
     /**
@@ -442,7 +442,7 @@ public final class Logger {
      * ***********************************************************************/
 
     private static final ConcurrentHashMap <String, Logger>
-        __loggers__ = Maps.newConcurrentHashMap ();
+        __loggers__ = new ConcurrentHashMap <> ();
 
 
     public static Logger getInstance (final String name) {
