@@ -137,11 +137,10 @@ public class SCGenerator {
             return method.invoke (staticContext);
 
         } catch (final Exception e) {
-            final String message = String.format (
-                "Invocation of static context method %s failed",
-                method.getName ()
+            throw new StaticContextGenException (
+                e, "Invocation of static context method %s.%s failed",
+                method.getDeclaringClass ().getName (), method.getName ()
             );
-            throw new StaticContextGenException (message, e);
         }
     }
 
