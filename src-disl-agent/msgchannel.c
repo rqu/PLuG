@@ -67,7 +67,7 @@ message_send (struct connection * conn, struct message * msg) {
 	assert (conn != NULL);
 	assert (msg != NULL);
 
-	dlprintf (
+	ldebug (
 		"sending message: flags %08x, control %d, code %d ... ",
 		msg->message_flags, msg->control_size, msg->classcode_size
 	);
@@ -85,7 +85,7 @@ message_send (struct connection * conn, struct message * msg) {
 
 	//
 
-	dprintf ("sent %ld bytes ... done\n", sent);
+	debug ("sent %ld bytes ... done\n", sent);
 	return sent;
 }
 
@@ -119,7 +119,7 @@ message_recv (struct connection * conn, struct message * msg) {
 	assert (conn != NULL);
 	assert (msg != NULL);
 
-	dlprintf ("receiving message: ");
+	ldebug ("receiving message: ");
 
 	//
 	// First, receive the flags, the control and class code sizes.
@@ -151,7 +151,7 @@ message_recv (struct connection * conn, struct message * msg) {
 
 	//
 
-	dprintf (
+	debug (
 		"flags %08x, control %d, code %d ... done\n",
 		response_flags, control_size, classcode_size
 	);

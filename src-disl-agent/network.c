@@ -114,7 +114,7 @@ network_fini () {
 
 struct connection *
 network_acquire_connection () {
-	dlprintf ("acquiring connection ... ");
+	ldebug ("acquiring connection ... ");
 
 	//
 	// The connection pool must be protected by a lock so that multiple threads
@@ -129,7 +129,7 @@ network_acquire_connection () {
 
 	//
 
-	dprintf ("done\n");
+	debug ("done\n");
 	return connection;
 }
 
@@ -140,7 +140,7 @@ network_acquire_connection () {
 void
 network_release_connection (struct connection * connection) {
 	assert (connection != NULL);
-	dlprintf ("releasing connection ... ");
+	ldebug ("releasing connection ... ");
 
 	//
 	// The connection pool must be protected by a lock so that multiple threads
@@ -154,5 +154,5 @@ network_release_connection (struct connection * connection) {
 
 	//
 
-	dprintf ("done\n");
+	debug ("done\n");
 }
