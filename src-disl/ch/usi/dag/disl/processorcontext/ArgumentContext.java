@@ -1,24 +1,27 @@
 package ch.usi.dag.disl.processorcontext;
 
+import ch.usi.dag.disl.annotation.ArgumentProcessor;
+
 /**
- * Allows accessing information about particular argument.
+ * Provides information about a particular method argument from within an
+ * {@link ArgumentProcessor} snippet.
  */
 public interface ArgumentContext {
 
     /**
-     * Returns position of the processed argument.
+     * @return the position of the argument currently being processed.
      */
     int getPosition ();
 
 
     /**
-     * Returns type descriptor of the processed argument.
+     * @return the type descriptor of the processed argument.
      */
     String getTypeDescriptor ();
 
 
     /**
-     * Returns total number of processed arguments.
+     * @return the total number of arguments to be processed.
      */
     int getTotalCount ();
 }

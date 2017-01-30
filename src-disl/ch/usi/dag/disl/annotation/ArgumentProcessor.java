@@ -19,16 +19,16 @@ import ch.usi.dag.disl.staticcontext.StaticContext;
  * <p>
  * An argument processor <b>method</b> has the argument type as its first
  * parameter. Only primitive, {@link String}, and {@link Object} types are
- * allowed. In some cases, the type accepted by the argument processor method
- * can be extended using the {@link ProcessAlso} annotation. At runtime, the
- * second parameter of the argument processor will contain the value of the
- * argument being processed.
+ * permitted. For some primitive integer types, the set of types accepted by an
+ * argument processor method can be extended using the {@link ProcessAlso}
+ * annotation.
  * <p>
- * Additional information (e.g. position) about the argument can be obtained
- * using the {@link ArgumentContext} interface. To use it, an argument processor
- * method must have a parameter of type {@link ArgumentContext}. Other allowed
- * contexts are {@link StaticContext}, {@link DynamicContext}, and
- * {@link ClassContext}.
+ * At runtime, the second parameter of an argument processor method will contain
+ * the value of the argument being processed. Additional information (e.g.
+ * position) about the argument being processed can be obtained using the
+ * {@link ArgumentContext} interface. To use it, an argument processor method
+ * must have a parameter of type {@link ArgumentContext}. Other allowed contexts
+ * are {@link StaticContext}, {@link DynamicContext}, and {@link ClassContext}.
  * <p>
  * All argument processor methods must be static, may not return any values, and
  * may not throw any exceptions.

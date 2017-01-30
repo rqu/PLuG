@@ -30,7 +30,7 @@ public @interface ProcessAlso {
     // Also note that the defaults are not retrieved from here, but
     // are set in the DiSL class parser.
     //
-    // TODO Consider support for {@code long} types.
+    // TODO Support for {@code integer} and {@code float} types with {@code long} and {@code double} parameters.
     //
 
     /**

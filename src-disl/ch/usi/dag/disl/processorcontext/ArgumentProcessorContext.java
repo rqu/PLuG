@@ -1,18 +1,21 @@
 package ch.usi.dag.disl.processorcontext;
 
 /**
+ * Provides access to method arguments. This can be done either by querying the
+ * arguments directly using the {@link #getArgs(ArgumentProcessorMode) getArgs)
+ * method, which returns a newly allocated array containing the method
+ * arguments, or by applying an argument processor using the
+ * {@link #apply(Class, ArgumentProcessorMode) apply} method, which allows
+ * iterating over the arguments without having to allocate any memory.
  * <p>
- * Allows accessing method arguments and applying argument processors.
- * <ul>
- * <li>{@link #apply(Class, ArgumentProcessorMode)}</li>
- * <li>{@link #getReceiver(ArgumentProcessorMode)}</li>
- * <li>{@link #getArgs(ArgumentProcessorMode)}</li>
- * </ul>
+ * Depending on the {@link ArgumentProcessorMode}, the methods of an
+ * {@link ArgumentProcessorContext} refer either to the currently executing
+ * method, or to the current call site.
  */
 public interface ArgumentProcessorContext {
 
     /**
-     * Applies given argument processor to method arguments, either at call-site
+     * Applies the given argument processor to method arguments, either at call-site
      * or within an invoked method.
      *
      * @param argumentProcessorClass
