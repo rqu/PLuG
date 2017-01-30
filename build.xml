@@ -1091,6 +1091,7 @@
 		<delete dir="${lib.ant.dir}"/>
 		<delete dir="${lib.disl.dir}"/>
 		<delete dir="${lib.test.dir}"/>
+		<delete dir="${lib.devel.dir}"/>
 	</target>
 
 </project>
