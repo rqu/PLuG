@@ -25,7 +25,6 @@
 
 #include "dislreagent.h"
 
-static const int ERR_SERVER = 10003;
 
 // defaults - be sure that space in host_name is long enough
 static const char * DEFAULT_HOST = "localhost";
@@ -1339,8 +1338,6 @@ void JNICALL jvmti_callback_class_file_load_hook(
 		jint class_data_len, const unsigned char* class_data,
 		jint* new_class_data_len, unsigned char** new_class_data
 ) {
-	struct tldata * tld = tld_get();
-
 	// TODO instrument analysis classes
 
 #ifdef DEBUG
@@ -1363,7 +1360,7 @@ void JNICALL jvmti_callback_class_file_load_hook(
 		jlong loader_id = NULL_NET_REF;
 
 		// obtain buffer
-		process_buffs * buffs = buffs_utility_get(tld->id);
+		process_buffs * buffs = buffs_utility_get();
 		buffer * buff = buffs->analysis_buff;
 
 		// this callback can be called before the jvm is started
