@@ -29,6 +29,13 @@ ifneq ($(HOST_ENV),$(TARGET_ENV))
     endif
 endif
 
+
+# Default compiler and linker flags to produce a shared library.
+# These should be redefined for platform-specific toolchains.
+
+LD_SHARED := -shared
+CC_SHARED := -shared
+
 ifneq (,$(filter MinGW Cygwin,$(TARGET_ENV)))
     JDK_TARGET := windows
     LIB_PREFIX :=
@@ -55,6 +62,8 @@ else ifneq (,$(filter DarwinX Darwin,$(TARGET_ENV)))
         CC := darwinx-gcc
         LD := darwinx-ld
         CFLAGS += -DDARWINX
+    else
+        LD_SHARED := -dylib
     endif
 
 else ifeq (Linux,$(TARGET_ENV))
@@ -131,10 +140,6 @@ CFLAGS_PARTS += -fvisibility=hidden
 COMMA := ,
 CFLAGS_LD := $(CFLAGS_LD) $(addprefix -Wl$(COMMA),$(LDFLAGS))
 
-# Tell the linker to create a shared library.
-LDFLAGS += -shared
-CFLAGS_LD += -shared
-
 #
 # Link non-MinGW targets with the pthread library.
 #
@@ -183,14 +188,14 @@ ifneq (,$(WHOLE))
 CFLAGS += $(CFLAGS_WHOLE) -DWHOLE
 
 $(LIBRARY): $(HEADERS) $(SOURCES)
-	$(CC) $(CFLAGS) $(TARGET_ARCH) $(CFLAGS_LD) $(SOURCES) $(LIBS) $(OUTPUT_OPTION)
+	$(CC) $(CC_SHARED) $(CFLAGS) $(TARGET_ARCH) $(CFLAGS_LD) $(SOURCES) $(LIBS) $(OUTPUT_OPTION)
 
 else
 
 CFLAGS += $(CFLAGS_PARTS)
 
 $(LIBRARY): $(OBJECTS)
-	$(LD) $(LDFLAGS) $(TARGET_ARCH) $(LIBDIRS) $(OBJECTS) $(LIBS) $(OUTPUT_OPTION)
+	$(LD) $(LD_SHARED) $(LDFLAGS) $(TARGET_ARCH) $(LIBDIRS) $(OBJECTS) $(LIBS) $(OUTPUT_OPTION)
 
 $(BUILD_DIR)/%.o: %.c
 	$(CC) $(CFLAGS) $(TARGET_ARCH) -c $? $(OUTPUT_OPTION)
