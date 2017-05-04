@@ -1756,7 +1756,7 @@ void JNICALL jvmti_callback_thread_end_hook(
 
 // ******************* JVMTI entry method *******************
 
-#ifdef WHOLE
+#if defined(WHOLE) && __has_attribute(externally_visible)
 #define VISIBLE __attribute__((externally_visible))
 #else
 #define VISIBLE
