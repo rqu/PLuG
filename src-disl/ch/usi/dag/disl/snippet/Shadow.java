@@ -14,16 +14,18 @@ import org.objectweb.asm.tree.MethodNode;
  * region is designed as a guidance for the weaver, and indicates where exactly
  * should the code be woven.
  */
-public class Shadow {
+public final class Shadow {
 
-    protected ClassNode classNode;
-    protected MethodNode methodNode;
-    protected Snippet snippet;
+    protected final ClassNode classNode;
+    protected final MethodNode methodNode;
 
-    private AbstractInsnNode regionStart;
-    private List<AbstractInsnNode> regionEnds;
+    protected final Snippet snippet;
 
-    private WeavingRegion weavingRegion;
+    private final AbstractInsnNode regionStart;
+    private final List <AbstractInsnNode> regionEnds;
+
+    private final WeavingRegion weavingRegion;
+
 
     /**
      * Holds exact information where the code will be woven. This structure is
@@ -47,15 +49,18 @@ public class Shadow {
         private AbstractInsnNode afterThrowStart;
         private AbstractInsnNode afterThrowEnd;
 
-        public WeavingRegion(AbstractInsnNode start,
-                List<AbstractInsnNode> ends, AbstractInsnNode afterThrowStart,
-                AbstractInsnNode afterThrowEnd) {
-            super();
+
+        public WeavingRegion (
+            final AbstractInsnNode start, final List <AbstractInsnNode> ends,
+            final AbstractInsnNode afterThrowStart, final AbstractInsnNode afterThrowEnd
+        ) {
+            super ();
             this.start = start;
             this.ends = ends;
             this.afterThrowStart = afterThrowStart;
             this.afterThrowEnd = afterThrowEnd;
         }
+
 
         public AbstractInsnNode getStart() {
             return start;
@@ -73,28 +78,31 @@ public class Shadow {
             return afterThrowEnd;
         }
 
-        public void setStart(AbstractInsnNode start) {
+        public void setStart(final AbstractInsnNode start) {
             this.start = start;
         }
 
-        public void setEnds(List<AbstractInsnNode> ends) {
+        public void setEnds(final List<AbstractInsnNode> ends) {
             this.ends = ends;
         }
 
-        public void setAfterThrowStart(AbstractInsnNode afterThrowStart) {
+        public void setAfterThrowStart(final AbstractInsnNode afterThrowStart) {
             this.afterThrowStart = afterThrowStart;
         }
 
-        public void setAfterThrowEnd(AbstractInsnNode afterThrowEnd) {
+        public void setAfterThrowEnd(final AbstractInsnNode afterThrowEnd) {
             this.afterThrowEnd = afterThrowEnd;
         }
 
     }
 
-    public Shadow(ClassNode classNode, MethodNode methodNode, Snippet snippet,
-            AbstractInsnNode regionStart, List<AbstractInsnNode> regionEnds,
-            WeavingRegion weavingRegion) {
-        super();
+
+    public Shadow (
+        final ClassNode classNode, final MethodNode methodNode, final Snippet snippet,
+        final AbstractInsnNode regionStart, final List <AbstractInsnNode> regionEnds,
+        final WeavingRegion weavingRegion
+    ) {
+        super ();
         this.classNode = classNode;
         this.methodNode = methodNode;
         this.snippet = snippet;
@@ -103,16 +111,17 @@ public class Shadow {
         this.weavingRegion = weavingRegion;
     }
 
-    // special copy constructor for caching support
-    public Shadow(Shadow sa) {
 
-        this.classNode = sa.classNode;
-        this.methodNode = sa.methodNode;
-        this.snippet = sa.snippet;
-        this.regionStart = sa.regionStart;
-        this.regionEnds = sa.regionEnds;
-        this.weavingRegion = sa.weavingRegion;
+    // special copy constructor for caching support
+    public Shadow (final Shadow that) {
+        this.classNode = that.classNode;
+        this.methodNode = that.methodNode;
+        this.snippet = that.snippet;
+        this.regionStart = that.regionStart;
+        this.regionEnds = that.regionEnds;
+        this.weavingRegion = that.weavingRegion;
     }
+
 
     /**
      * Returns class node of the class where the shadow is defined.
