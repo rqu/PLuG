@@ -22,7 +22,11 @@
 		<dependency org="${junit.org}" name="junit" rev="${junit.rev}" conf="test->default;devel->sources,javadoc" />
 
 		<!-- DiSL libraries -->
-		<dependency org="${asm.org}" name="asm-debug-all" rev="${asm.rev}" conf="disl->default;devel->sources,javadoc" />
+		<dependency org="${asm.org}" name="asm" rev="${asm.rev}" conf="disl->default;devel->sources,javadoc" />
+		<dependency org="${asm.org}" name="asm-tree" rev="${asm.rev}" conf="disl->default;devel->sources,javadoc" />
+		<dependency org="${asm.org}" name="asm-analysis" rev="${asm.rev}" conf="disl->default;devel->sources,javadoc" />
+		<dependency org="${asm.org}" name="asm-util" rev="${asm.rev}" conf="disl->default;devel->sources,javadoc" />
+		<dependency org="${asm.org}" name="asm-commons" rev="${asm.rev}" conf="disl->default;devel->sources,javadoc" />
 		<dependency org="${log4j.org}" name="log4j" rev="${log4j.rev}" conf="disl->default;devel->sources,javadoc" />
 	</dependencies>
 
