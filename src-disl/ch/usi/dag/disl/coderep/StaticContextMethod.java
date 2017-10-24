@@ -17,9 +17,14 @@ public class StaticContextMethod {
     private final Method __method;
 
     /**
-     * The owner of the static context method.
+     * The static context class referenced when invoking the static context
+     * method.
      * <p>
-     * TODO LB: What's wrong with {@link Method#getDeclaringClass()}?
+     * <b>Note:</b> This may be a different from
+     * {@link Method#getDeclaringClass()} because the referenced static context
+     * class may inherit methods from another static context class. This is not
+     * so important for invocation, but for creating (and finding) instances of
+     * the referenced static context class.
      */
     private final Class <?> __referencedClass;
 
