@@ -85,7 +85,7 @@ public class ClientServerRunner extends Runner {
         final File testInstJar, final File testAppJar
     ) throws IOException {
         final List <String> command = new LinkedList <> (Arrays.asList (
-            __CLIENT_JAVA_COMMAND__,
+            __CLIENT_JAVA_COMMAND__, "-noverify",
             String.format ("-agentpath:%s", _DISL_AGENT_LIB_),
             String.format ("-Xbootclasspath/a:%s", Runner.classPath (
                 _DISL_BYPASS_JAR_, testInstJar

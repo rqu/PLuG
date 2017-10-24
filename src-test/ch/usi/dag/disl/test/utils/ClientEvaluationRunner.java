@@ -83,7 +83,7 @@ public class ClientEvaluationRunner extends Runner {
         final File instJar, final File appJar
     ) throws IOException {
         final List <String> command = new LinkedList <> (Arrays.asList (
-            __CLIENT_JAVA_COMMAND__,
+            __CLIENT_JAVA_COMMAND__, "-noverify",
             String.format ("-agentpath:%s", _SHVM_AGENT_LIB_),
             String.format ("-Xbootclasspath/a:%s", Runner.classPath (
                 _SHVM_DISPATCH_JAR_, instJar
