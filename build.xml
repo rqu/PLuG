@@ -2,7 +2,6 @@
 	name="disl" default="build" basedir="."
 	xmlns:ivy="antlib:org.apache.ivy.ant"
 	xmlns:ac="antlib:net.sf.ant-contrib"
-	xmlns:jj="antlib:com.tonicsystems.jarjar"
 >
 
 	<property name="build.sysclasspath" value="ignore"/>
@@ -230,16 +229,15 @@
 			<fileset dir="${lib.ant.dir}" includes="*.jar"/>
 		</path>
 
-		<!-- taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask" uri="antlib:com.conicsystems.jarjar" classpathref="build.ant.classpath" /-->
 		<taskdef resource="net/sf/antcontrib/antlib.xml" uri="antlib:net.sf.ant-contrib" classpathref="build.ant.classpath"/>
 
 		<!-- Dependency class paths -->
 		<path id="asm.classpath">
-			<fileset dir="${lib.disl.dir}" includes="asm*.jar"/>
+			<fileset dir="${lib.disl.dir}" includes="asm*.jar" id="asm.fileset"/>
 		</path>
 
 		<!-- Get ASM libs from ASM class path. -->
-		<pathconvert property="asm.libs" refid="asm.classpath">
+		<pathconvert pathsep=" " property="asm.libs" refid="asm.classpath">
 			<mapper type="flatten"/>
 		</pathconvert>
 
