@@ -22,9 +22,8 @@ public class LoopStaticContext extends BasicBlockStaticContext {
     private Map<BasicBlock, Set<BasicBlock>> dominatormapping;
 
     @Override
-    protected CtrlFlowGraph createControlFlowGraph() {
+    protected CtrlFlowGraph createControlFlowGraph(final MethodNode method) {
 
-        MethodNode method = staticContextData.getMethodNode();
         CtrlFlowGraph cfg = CtrlFlowGraph.build(method);
 
         dominatormapping = new HashMap<BasicBlock, Set<BasicBlock>>();
@@ -86,8 +85,7 @@ public class LoopStaticContext extends BasicBlockStaticContext {
      */
     public boolean isFirstOfLoop() {
 
-        BasicBlock entry = methodCfg.getBB(staticContextData
-                .getRegionStart());
+        BasicBlock entry = _getMethodCfg ().getBB(staticContextData.getRegionStart());
 
         for (BasicBlock bb : entry.getPredecessors()) {
             if (dominatormapping.get(bb).contains(entry)) {

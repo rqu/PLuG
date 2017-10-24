@@ -1,15 +1,15 @@
 package ch.usi.dag.disl.staticcontext;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.ref.WeakReference;
 
 import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.MethodNode;
 
-import ch.usi.dag.disl.snippet.Shadow;
 import ch.usi.dag.disl.util.Insn;
-import ch.usi.dag.disl.util.JavaNames;
+import ch.usi.dag.disl.util.Logging;
 import ch.usi.dag.disl.util.cfg.BasicBlock;
 import ch.usi.dag.disl.util.cfg.CtrlFlowGraph;
+import ch.usi.dag.util.logging.Logger;
 
 
 /**
@@ -20,28 +20,46 @@ import ch.usi.dag.disl.util.cfg.CtrlFlowGraph;
  */
 public class BasicBlockStaticContext extends AbstractStaticContext {
 
-    private final Map <String, CtrlFlowGraph> __cfgCache = new HashMap <String, CtrlFlowGraph> ();
-
-    protected CtrlFlowGraph methodCfg;
+    private final Logger __log = Logging.getPackageInstance ();
 
     //
 
-    @Override
-    public void staticContextData (final Shadow shadow) {
-        super.staticContextData (shadow);
-
-        final String key = JavaNames.methodUniqueName (
-            staticContextData.getClassNode().name,
-            staticContextData.getMethodNode().name,
-            staticContextData.getMethodNode().desc
-        );
-
-        methodCfg = __cfgCache.computeIfAbsent (key, k -> createControlFlowGraph ());
+    protected CtrlFlowGraph createControlFlowGraph (final MethodNode method) {
+        return new CtrlFlowGraph (method);
     }
 
+    //
+    // Some classes may be loaded by multiple class loaders.  Until we support
+    // this properly, we just cache the last CFG associated with a concrete
+    // MethodNode instance. This should be enough, because we don't return to
+    // CFG of methods that have already been instrumented.
+    //
 
-    protected CtrlFlowGraph createControlFlowGraph () {
-        return new CtrlFlowGraph(staticContextData.getMethodNode());
+    private static class Memo {
+        final MethodNode method;
+        final CtrlFlowGraph cfg;
+
+        Memo (final MethodNode method, final CtrlFlowGraph cfg) {
+            this.method = method;
+            this.cfg = cfg;
+        }
+    }
+
+    private WeakReference <Memo> __memoReference = new WeakReference <> (null);
+
+
+    protected final CtrlFlowGraph _getMethodCfg () {
+        final Memo memo = __memoReference.get ();
+        final MethodNode method = staticContextData.getMethodNode ();
+
+        if (memo != null && memo.method == method) {
+            return memo.cfg;
+
+        } else {
+            final CtrlFlowGraph result = createControlFlowGraph (method);
+            __memoReference = new WeakReference <> (new Memo (method, result));
+            return result;
+        }
     }
 
 
@@ -65,7 +83,7 @@ public class BasicBlockStaticContext extends AbstractStaticContext {
      * @return the number of basic blocks in this method.
      */
     public int getCount () {
-        return methodCfg.getNodes ().size ();
+        return _getMethodCfg ().getNodes ().size ();
     }
 
 
@@ -89,7 +107,20 @@ public class BasicBlockStaticContext extends AbstractStaticContext {
      * @return size of this basic block.
      */
     public int getSize () {
-        return __getSize (getIndex ());
+        final int index = getIndex ();
+        if (index >= 0) {
+            return __getSize (index);
+
+        } else {
+            __log.warn (
+                "could not determine basic block index in %s.%s%s",
+                staticContextData.getClassNode ().name,
+                staticContextData.getMethodNode ().name,
+                staticContextData.getMethodNode ().desc
+            );
+
+            return 0;
+        }
     }
 
 
@@ -98,7 +129,7 @@ public class BasicBlockStaticContext extends AbstractStaticContext {
         // If the start instruction is also an end instruction,
         // then the size of the basic block is 1 instruction.
         //
-        final BasicBlock bb = methodCfg.getNodes ().get (index);
+        final BasicBlock bb = _getMethodCfg ().getNodes ().get (index);
 
         AbstractInsnNode insn = bb.getEntryNode ();
         final AbstractInsnNode exit = bb.getExitNode ();
@@ -130,10 +161,11 @@ public class BasicBlockStaticContext extends AbstractStaticContext {
     /**
      * Returns the index of this basic block within the instrumented method.
      *
-     * @return index of this basic block within a method.
+     * @return index of this basic block within a method, or -1 if the basic
+     *         block index could not be found.
      */
     public int getIndex () {
-        return methodCfg.getIndex (staticContextData.getRegionStart ());
+        return _getMethodCfg ().getIndex (staticContextData.getRegionStart ());
     }
 
 }
