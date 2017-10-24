@@ -6,6 +6,7 @@
 	<property name="build.sysclasspath" value="ignore" />
 	<dirname property="examples.basedir" file="${ant.file.example}" />
 
+	<property name="jvmarg.verify" value="-verify" />
 	<property file="${examples.basedir}/build-override.properties" />
 	<property file="${examples.basedir}/build.properties" />
 
@@ -49,6 +50,7 @@
 			<!-- <arg value="-e_out=evaluation.out" /> -->
 			<arg value="--" />
 			<arg value="${inst.path}" />
+			<arg value="${jvmarg.verify}" />
 			<arg value="-jar" />
 			<arg value="${app.path}" />
 		</exec>
