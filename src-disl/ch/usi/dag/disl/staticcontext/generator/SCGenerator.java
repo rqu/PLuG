@@ -1,6 +1,5 @@
 package ch.usi.dag.disl.staticcontext.generator;
 
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,12 +57,10 @@ public class SCGenerator {
                 final StaticContextKey that = (StaticContextKey) object;
 
                 //
-                // Shadows and methods must either be null in both
-                // objects, or equal.
+                // Shadows and methods must be either both null or equal.
                 //
-                final boolean shadowsEqual = __nullOrEqual (this.shadow, that.shadow);
-                if (shadowsEqual) {
-                    return __nullOrEqual (this.methodId, that.methodId);
+                if (__bothNullOrEqual (this.shadow, that.shadow)) {
+                    return __bothNullOrEqual (this.methodId, that.methodId);
                 }
             }
 
@@ -71,7 +68,7 @@ public class SCGenerator {
         }
     }
 
-    private static boolean __nullOrEqual (final Object obj1, final Object obj2) {
+    private static boolean __bothNullOrEqual (final Object obj1, final Object obj2) {
         if (obj1 == null) {
             return obj2 == null;
         } else {
@@ -101,47 +98,29 @@ public class SCGenerator {
         // context data for each static context method for each snippet
         // instance (shadow).
         //
-        final Map <StaticContextKey, Object> staticInfoData = new HashMap <> ();
+        final Map <StaticContextKey, Object> result = new HashMap <> ();
         for (final Snippet snippet : snippetMarkings.keySet ()) {
             for (final StaticContextMethod scm : snippet.getCode ().getReferencedSCMs ()) {
 
                 for (final Shadow shadow : snippetMarkings.get (snippet)) {
-                    final StaticContext staticContext =
-                        SCResolver.getInstance().getStaticContextInstance (
-                            scm.getReferencedClass (), shadow
-                        );
+                    //
+                    // Get SC instance, associate it with the shadow location, and
+                    // cache it along with the method.
+                    //
+                    final StaticContext staticContext = SCResolver.getInstance()
+                        .getStaticContextInstance (scm.getReferencedClass ());
 
-                    final Object result = getStaticContextData (
-                        staticContext, scm.getMethod ()
-                    );
+                    staticContext.staticContextData (shadow);
 
-                    // store the result
-                    staticInfoData.put (
-                        new StaticContextKey (shadow, scm.getId ()), result
+                    result.put (
+                        new StaticContextKey (shadow, scm.getId ()),
+                        scm.invoke (staticContext)
                     );
                 }
             }
         }
 
-        return new SCGenerator (staticInfoData);
-    }
-
-    // resolves static context data - uses static context data caching
-    private static Object getStaticContextData (
-        final StaticContext staticContext, final Method method
-    ) throws StaticContextGenException, ReflectionException {
-
-        try {
-            // get static data by invoking static context method
-            method.setAccessible (true);
-            return method.invoke (staticContext);
-
-        } catch (final Exception e) {
-            throw new StaticContextGenException (
-                e, "Invocation of static context method %s.%s failed",
-                method.getDeclaringClass ().getName (), method.getName ()
-            );
-        }
+        return new SCGenerator (result);
     }
 
     //

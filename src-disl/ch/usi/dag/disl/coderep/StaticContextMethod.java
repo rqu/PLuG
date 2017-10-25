@@ -2,6 +2,9 @@ package ch.usi.dag.disl.coderep;
 
 import java.lang.reflect.Method;
 
+import ch.usi.dag.disl.exception.StaticContextGenException;
+import ch.usi.dag.disl.staticcontext.StaticContext;
+
 
 public class StaticContextMethod {
 
@@ -50,6 +53,31 @@ public class StaticContextMethod {
 
     public Class <?> getReferencedClass () {
         return __referencedClass;
+    }
+
+
+    /**
+     * Invokes the static context method on the given static context instance.
+     *
+     * @param staticContext
+     *        the target of the static context method invocation
+     * @return static context data
+     * @throws StaticContextGenException
+     *         if the static context method invocation fails for some reason
+     */
+    public Object invoke (
+        final StaticContext staticContext
+    ) throws StaticContextGenException {
+        try {
+            __method.setAccessible (true);
+            return __method.invoke (staticContext);
+
+        } catch (final Exception e) {
+            throw new StaticContextGenException (
+                e, "Invocation of static context method %s.%s failed",
+                __method.getDeclaringClass ().getName (), __method.getName ()
+            );
+        }
     }
 
 }

@@ -1,6 +1,5 @@
 package ch.usi.dag.disl.classparser;
 
-import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -23,8 +22,10 @@ import org.objectweb.asm.tree.VarInsnNode;
 import org.objectweb.asm.tree.analysis.Frame;
 import org.objectweb.asm.tree.analysis.SourceValue;
 
+import ch.usi.dag.disl.InitializationException;
 import ch.usi.dag.disl.annotation.SyntheticLocal;
-import ch.usi.dag.disl.exception.DiSLFatalException;
+import ch.usi.dag.disl.annotation.SyntheticLocal.Initialize;
+import ch.usi.dag.disl.annotation.ThreadLocal;
 import ch.usi.dag.disl.exception.ParserException;
 import ch.usi.dag.disl.exception.ReflectionException;
 import ch.usi.dag.disl.localvar.LocalVars;
@@ -82,8 +83,8 @@ abstract class AbstractParser {
 
         // parse init code for local vars and assigns them accordingly
         if (cinit != null && cinit.instructions != null) {
-            parseInitCodeForSLV(cinit.instructions, localVars.getSyntheticLocals());
-            parseInitCodeForTLV(dislClass.name, cinit, localVars.getThreadLocals());
+            parseInitCodeForSLV (cinit.instructions, localVars.getSyntheticLocals ());
+            parseInitCodeForTLV (dislClass.name, cinit, localVars.getThreadLocals ());
         }
     }
 
@@ -140,7 +141,10 @@ abstract class AbstractParser {
 
 
     private static class TLAnnotationData {
-        public boolean inheritable = false; // default
+        /**
+         * The default for the {@link ThreadLocal#inheritable} attribute.
+         */
+        boolean inheritable = false;
     }
 
 
@@ -148,27 +152,37 @@ abstract class AbstractParser {
         final String className, final FieldNode field,
         final AnnotationNode annotation
     ) throws ParserException {
-        // check if field is static
+        //
+        // Ensure that the thread local field is declared static
+        // and parse the annotation data.
+        //
         if ((field.access & Opcodes.ACC_STATIC) == 0) {
             throw new ParserException("Field " + className + "." + field.name
                     + " declared as ThreadLocal but is not static");
         }
 
-        // parse annotation
-        final TLAnnotationData tlad = new TLAnnotationData();
-        AbstractParser.parseAnnotation(annotation, tlad);
+        final TLAnnotationData tlad = parseAnnotation (
+            annotation, new TLAnnotationData ()
+        );
 
-        final Type fieldType = Type.getType (field.desc);
-
-        // default value will be set later on
-        return new ThreadLocalVar(className, field.name, fieldType,
-                tlad.inheritable);
+        return new ThreadLocalVar (
+            className, field.name, Type.getType (field.desc), tlad.inheritable
+        );
     }
 
 
     private static class SLAnnotationData {
-        // see code below for default
-        public String[] initialize = null;
+        /**
+         * The default for the {@link SyntheticLocal#initialize} attribute.
+         * <p>
+         * <b>Note:</b> The {@link AnnotationNode} represents an enum as a
+         * two-value String array containing a type descriptor and the value.
+         * See {@link AnnotationNode#values} and the implementation of
+         * {@link AnnotationNode#visitEnum(String, String, String)} for details.
+         */
+        String [] initialize = {
+            Type.getDescriptor (Initialize.class), Initialize.ALWAYS.name ()
+        };
     }
 
 
@@ -176,31 +190,25 @@ abstract class AbstractParser {
         final String className, final FieldNode field,
         final AnnotationNode annotation
     ) throws ParserException {
-        // check if field is static
+        //
+        // Ensure that the synthetic local field is declared static, parse
+        // annotation data and determine the initialization mode for the
+        // variable.
+        //
         if ((field.access & Opcodes.ACC_STATIC) == 0) {
             throw new ParserException("Field " + field.name + className
                     + "." + " declared as SyntheticLocal but is not static");
         }
 
-        // parse annotation data
-        final SLAnnotationData slad = new SLAnnotationData();
-        AbstractParser.parseAnnotation(annotation, slad);
+        final SLAnnotationData slad = parseAnnotation (
+            annotation, new SLAnnotationData ()
+        );
 
-        // default val for init
-        SyntheticLocal.Initialize slvInit = SyntheticLocal.Initialize.ALWAYS;
+        final Initialize initMode = Initialize.valueOf (slad.initialize [1]);
 
-        if(slad.initialize != null) {
-
-            // enum is converted to array
-            //  - first value is class name
-            //  - second value is value name
-            slvInit = SyntheticLocal.Initialize.valueOf(slad.initialize[1]);
-        }
-
-        // field type
-        final Type fieldType = Type.getType (field.desc);
-
-        return new SyntheticLocalVar(className, field.name, fieldType, slvInit);
+        return new SyntheticLocalVar (
+            className, field.name, Type.getType (field.desc), initMode
+        );
     }
 
 
@@ -430,7 +438,7 @@ abstract class AbstractParser {
 
     //
 
-    public static void ensureMethodReturnsVoid (
+    static void ensureMethodReturnsVoid (
         final MethodNode method
     ) throws ParserException {
         final Type returnType = Type.getReturnType (method.desc);
@@ -440,7 +448,7 @@ abstract class AbstractParser {
     }
 
 
-    public static void ensureMethodIsStatic (
+    static void ensureMethodIsStatic (
         final MethodNode method
     ) throws ParserException {
         if ((method.access & Opcodes.ACC_STATIC) == 0) {
@@ -449,7 +457,7 @@ abstract class AbstractParser {
     }
 
 
-    public static void ensureMethodUsesContextProperly (
+    static void ensureMethodUsesContextProperly (
         final MethodNode method
     ) throws ParserException {
         //
@@ -498,7 +506,7 @@ abstract class AbstractParser {
     }
 
 
-    public static void ensureMethodHasOnlyContextArguments (
+    static void ensureMethodHasOnlyContextArguments (
         final MethodNode method
     ) throws ParserException {
         //
@@ -527,7 +535,7 @@ abstract class AbstractParser {
      * @param method the method to check
      * @throws ParserException if the method is empty
      */
-    public static void ensureMethodIsNotEmpty (
+    static void ensureMethodIsNotEmpty (
         final MethodNode method
     ) throws ParserException {
         final AbstractInsnNode head = method.instructions.getFirst ();
@@ -538,7 +546,7 @@ abstract class AbstractParser {
     }
 
 
-    public static void ensureMethodThrowsNoExceptions (
+    static void ensureMethodThrowsNoExceptions (
         final MethodNode method
     ) throws ParserException {
         if (! method.exceptions.isEmpty ()) {
@@ -547,13 +555,23 @@ abstract class AbstractParser {
     }
 
 
-    // NOTE: second parameter is modified by this function
-    static <T> void parseAnnotation (
-        final AnnotationNode annotation, final T parsedDataObject
+    /**
+     * Parses an annotation node and sets the fields of the given object to the
+     * values found in the annotation. All fields must be declared in the class
+     * of which the object is an instance.
+     *
+     * @param annotation
+     *        the annotation to process
+     * @param result
+     *        the result object in which to modify field values
+     * @return the modified result object
+     */
+    static <T> T parseAnnotation (
+        final AnnotationNode annotation, final T result
     ) {
         // nothing to do
         if (annotation.values == null) {
-            return;
+            return result;
         }
 
         try {
@@ -561,33 +579,40 @@ abstract class AbstractParser {
             while (it.hasNext ()) {
                 //
                 // Name-value pairs are stored as two consecutive elements.
-                // Find the right field and set its value.
+                // Set the value of the field with the corresponding name.
                 //
                 final String name = (String) it.next ();
                 final Object value = it.next ();
 
-                final Field attr = parsedDataObject.getClass ().getField (name);
-                if (attr != null) {
-                    attr.set (parsedDataObject, value);
-
-                } else {
-                    throw new DiSLFatalException (
-                        "Unknown attribute "+ name +" in annotation "+
-                        Type.getType (annotation.desc).toString () +
-                        ". This may happen if annotation class is changed"+
-                        "  but parser class is not."
-                    );
-                }
+                __setFieldValue (name, value, result);
             }
 
+            return result;
+
         } catch (final Exception e) {
-            throw new DiSLFatalException (
-                "Reflection error while parsing annotation", e);
+            throw new InitializationException (
+                e, "failed to parse the %s annotation",
+                Type.getType (annotation.desc).getClassName ()
+            );
         }
     }
 
 
-    public static Class <?> getGuard (final Type guardType)
+    private static <T> void __setFieldValue (
+        final String name, final Object value, final T target
+    ) {
+        try {
+            target.getClass ().getDeclaredField (name).set (target, value);
+
+        } catch (final NoSuchFieldException | IllegalAccessException e) {
+            throw new InitializationException (
+                e, "failed to store annotation attribute '%s'", name
+            );
+        }
+    }
+
+
+    static Class <?> getGuard (final Type guardType)
     throws ReflectionException {
         if (guardType == null) {
             return null;

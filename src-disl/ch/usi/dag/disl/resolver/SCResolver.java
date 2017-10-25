@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ch.usi.dag.disl.exception.ReflectionException;
-import ch.usi.dag.disl.snippet.Shadow;
 import ch.usi.dag.disl.staticcontext.StaticContext;
 import ch.usi.dag.disl.util.ReflectionHelper;
 
@@ -19,12 +18,12 @@ public class SCResolver {
     // list of static context instances
     // validity of an instance is for whole instrumentation run
     // instances are created lazily when needed
-    private Map <Class <?>, Object>
+    private final Map <Class <?>, Object>
         staticContextInstances = new HashMap <Class <?>, Object> ();
 
 
     public synchronized StaticContext getStaticContextInstance (
-        final Class <?> staticContextClass, final Shadow shadow
+        final Class <?> staticContextClass
     ) throws ReflectionException {
         //
         // Get a static context instance from cache, or create a new one and
@@ -38,7 +37,6 @@ public class SCResolver {
         }
 
         final StaticContext result = (StaticContext) sc;
-        result.staticContextData (shadow);
         return result;
     }
 

@@ -26,8 +26,8 @@ import ch.usi.dag.disl.exception.SnippetParserException;
 import ch.usi.dag.disl.guard.GuardHelper;
 import ch.usi.dag.disl.marker.Marker;
 import ch.usi.dag.disl.marker.Parameter;
-import ch.usi.dag.disl.scope.ScopeMatcher;
 import ch.usi.dag.disl.scope.Scope;
+import ch.usi.dag.disl.scope.ScopeMatcher;
 import ch.usi.dag.disl.snippet.Snippet;
 import ch.usi.dag.disl.snippet.SnippetUnprocessedCode;
 import ch.usi.dag.disl.util.AsmHelper;
@@ -216,18 +216,20 @@ class SnippetParser extends AbstractParser {
 
     // data holder for AnnotationParser
     private static class SnippetAnnotationData {
+        final Class <?> type;
 
-        public Class<?> type;
+        Type marker;
 
-        // annotation values
-        public Type marker = null;
-        public String args = null; // default
-        public String scope = "*"; // default
-        public Type guard = null; // default
-        public int order = 100; // default
-        public boolean dynamicBypass = true; // default
+        //
+        // Default values of annotation attributes.
+        //
+        String args = null;
+        String scope = "*";
+        Type guard = null;
+        int order = 100;
+        boolean dynamicBypass = true;
 
-        public SnippetAnnotationData(final Class<?> type) {
+        SnippetAnnotationData (final Class <?> type) {
             this.type = type;
         }
     }
@@ -236,12 +238,13 @@ class SnippetParser extends AbstractParser {
     private SnippetAnnotationData __parseSnippetAnnotationFields (
         final AnnotationNode annotation, final Class <?> type
     ) {
-        final SnippetAnnotationData result = new SnippetAnnotationData (type);
+        final SnippetAnnotationData result = parseAnnotation (
+            annotation, new SnippetAnnotationData (type)
+        );
 
-        parseAnnotation (annotation, result);
         if (result.marker == null) {
             throw new DiSLFatalException (
-                "Missing [marker] attribute in annotation "+ type.toString ()
+                "Missing [marker] attribute in annotation "+ type.getName ()
                 + ". This may happen if annotation class is changed but"
                 + " data holder class is not."
             );

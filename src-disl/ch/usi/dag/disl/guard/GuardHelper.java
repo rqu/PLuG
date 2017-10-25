@@ -227,12 +227,14 @@ public abstract class GuardHelper {
             } else {
                 //
                 // The guard method passed validation, so here it can only
-                // require static context. Get a static context instance
-                // for the shadow location.
+                // require static context. Get a static context instance and
+                // associate it with the shadow location.
                 //
                 try {
-                    arguments [argIndex] = SCResolver.getInstance ().
-                        getStaticContextInstance (parameterType, shadow);
+                    final StaticContext staticContext = SCResolver.getInstance ().
+                        getStaticContextInstance (parameterType);
+                    staticContext.staticContextData (shadow);
+                    arguments [argIndex] = staticContext;
 
                 } catch (final ReflectionException re) {
                     final String message = String.format (
