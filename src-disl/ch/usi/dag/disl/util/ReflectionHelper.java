@@ -23,7 +23,7 @@ public final class ReflectionHelper {
      * @throws ReflectionException
      *         if the class could not be instantiated
      */
-    public static <T> T createInstance(
+    public static <T> T createInstance (
         final Class<T> classToInstantiate, final Object... args
     ) throws ReflectionException {
         try {

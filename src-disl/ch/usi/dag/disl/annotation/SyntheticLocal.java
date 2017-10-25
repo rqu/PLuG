@@ -48,5 +48,5 @@ public @interface SyntheticLocal {
      *
      * Default value: Initialize.ALWAYS
      */
-    Initialize initialize() default (Initialize.ALWAYS);
+    Initialize initialize () default (Initialize.ALWAYS);
 }
