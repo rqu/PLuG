@@ -80,7 +80,9 @@ public class BasicBlockStaticContext extends AbstractStaticContext {
     /**
      * Returns total number of basic blocks in this method.
      *
-     * @return the number of basic blocks in this method.
+     * @return The number of basic blocks in this method, must be greater than
+     *         zero, because every method should have at least one basic block
+     *         represented by the return instruction.
      */
     public int getCount () {
         return _getMethodCfg ().getNodes ().size ();
