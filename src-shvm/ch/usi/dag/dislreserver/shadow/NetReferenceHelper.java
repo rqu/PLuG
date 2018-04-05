@@ -69,14 +69,14 @@ final class NetReferenceHelper {
      * Returns bits from the given {@code long} value masked using the given
      * mask and shifted to the right by the given amount.
      */
-    private static long __bits (
+    static long __bits (
         final long value, final long mask, final short shift
     ) {
         return (value & mask) >>> shift;
     }
 
 
-    private static long __mask (final int length, final int shift) {
+    static long __mask (final int length, final int shift) {
         assert length > 0 && shift >= 0;
         return ((1L << length) - 1) << shift;
     }
