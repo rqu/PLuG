@@ -33,14 +33,14 @@ necessary. Simply extract the archive to a preferred location and update your
 project to use it.
 
 If you have downloaded a source distribution of DiSL, you need to compile it
-first by running the "ant" command in the top-level directory.
+first by running the ``ant`` command in the top-level directory.
 
 While most of the DiSL is written in Java, it requires a JVM enhanced with a
 native agent written in C. Compiling the agent requires JNI header files for
 your platform. For commonly used platforms, these are part of the DiSL source
 distribution. Should the compilation fail on your machine, you may need to
-modify Makefile.local files in the src-disl-agent and src-shvm-agent
-directories to override the default value of the INCLUDE_DIR variable.
+modify ``Makefile.local`` files in the ``src-disl-agent`` and ``src-shvm-agent``
+directories to override the default value of the ``INCLUDE_DIR`` variable.
 
 DiSL currently fully supports "Linux" and "OS X" platforms with Java, ant, GCC
 and make installed and found on the executable path. DiSL has been used on the
@@ -52,21 +52,19 @@ these targets were not extensively tested.
 DOCUMENTATION
 =============
 
-Please look at http://disl.projects.ow2.org/xwiki/bin/view/Main/Doc.
-
-After building DiSL, you will find the API documentation in the output/jdoc
-directory, and document containing an introduction to instrumenting
-applications with DiSL in the output/build/intro directory. However, to build
-the document, you will need a working LaTeX installation with "pdflatex".
+After building DiSL, you will find the API documentation in the ``output/jdoc``
+directory, and document containing an introduction to instrumenting applications
+with DiSL in the ``output/build/intro`` directory. However, to build the
+document, you will need a working LaTeX installation with ``pdflatex``.
 
 
 EXAMPLES
 ========
 
 For a set of simple examples showcasing basic DiSL features, please check
-the "examples" directory.
+the ``examples`` directory.
 
-In addition, the "src-test" directory contains additional examples used for
+In addition, the ``src-test`` directory contains additional examples used for
 testing other DiSL features -- these can be run using Ant.
 
 
@@ -74,4 +72,5 @@ USER ERRORS
 ===========
 
 If you get a Java error during instrumentation or running your application,
-please look at the USER_ERRORS document describing the most common problems.
+please consult the ``USER_ERRORS`` document describing some of the most common
+problems.
