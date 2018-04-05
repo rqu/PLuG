@@ -21,10 +21,10 @@ public class BasicBlock implements Iterable <AbstractInsnNode> {
     private AbstractInsnNode __exitNode;
 
     /** The set of predecessor basic blocks. */
-    private final Set<BasicBlock> predecessors = new HashSet <> ();
+    private final Set <BasicBlock> __predecessors = new HashSet <> ();
 
     /** The set of successor basic blocks. */
-    private final Set<BasicBlock> successors = new HashSet <> ();
+    private final Set <BasicBlock> __successors = new HashSet <> ();
 
     // joins refer to the join point of a new cfg to an existing cfg in the
     // same method. NOTE that an exception handler is regarded as a new cfg
@@ -63,12 +63,12 @@ public class BasicBlock implements Iterable <AbstractInsnNode> {
 
 
     public Set <BasicBlock> getPredecessors () {
-        return predecessors;
+        return __predecessors;
     }
 
 
     public Set <BasicBlock> getSuccessors () {
-        return successors;
+        return __successors;
     }
 
 
