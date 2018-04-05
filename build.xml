@@ -809,6 +809,7 @@
 					<include name="**/junit/*Test.java"/>
 					<include name="**/disl/*Test.java"/>
 					<include name="**/disl/scope/*Test.java"/>
+					<include name="**/disl/util/cfg/*Test.java"/>
 					<include name="**/dislreserver/shadow/*Test.java"/>
 				</fileset>
 			</ac:else>
