@@ -654,6 +654,14 @@ public final class Reflection {
             return Modifier.isStatic (__modifiers);
         }
 
+
+        /**
+         * Returns {@code true} if this method is native.
+         */
+        public boolean isNative () {
+            return Modifier.isNative (__modifiers);
+        }
+
     }
 
 }
