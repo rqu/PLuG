@@ -397,7 +397,7 @@ public final class DiSL {
 
             try {
                 __log.trace (
-                    "processing method: %s.%s(%s)",
+                    "processing method: %s.%s%s",
                     classNode.name, methodNode.name, methodNode.desc
                 );
 
