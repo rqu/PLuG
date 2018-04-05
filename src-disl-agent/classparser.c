@@ -252,7 +252,7 @@ class_alloc (const uint8_t * class_bytes, size_t byte_count) {
 			warn ("failed to allocate java_class structure");
 		}
 	} else {
-		warn ("invalid class bytecode passed to java_class_alloc is invalid");
+		warn ("invalid class bytecode passed to class_alloc is invalid");
 	}
 
 	return NULL;
