@@ -73,17 +73,13 @@ public class CtrlFlowGraph {
         return nodes;
     }
 
-    // Return the index of basic block that contains the input instruction.
-    // If not found, return NOT_FOUND.
-    public int getIndex(AbstractInsnNode instr) {
-
-        BasicBlock bb = getBB(instr);
-
-        if (bb == null) {
-            return NOT_FOUND;
-        } else {
-            return bb.getIndex();
-        }
+    /**
+     * @return the index of the basic block that contains the given instruction
+     *         or -1 (NOT_FOUND) if the basic block could not be found.
+     */
+    public int getIndex (final AbstractInsnNode insn) {
+        final BasicBlock bb = getBB (insn);
+        return (bb != null) ? bb.getIndex () : NOT_FOUND;
     }
 
     // Return a basic block that contains the input instruction.
