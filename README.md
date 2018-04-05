@@ -24,8 +24,6 @@ bytecode coverage out-of-the-box and avoids structural modifications of
 classes that would be visible through reflection and could break the
 instrumented code.
 
-link: http://forge.ow2.org/projects/disl/
-
 
 INSTALL
 =======
