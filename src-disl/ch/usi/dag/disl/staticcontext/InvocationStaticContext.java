@@ -43,7 +43,7 @@ public class InvocationStaticContext extends AbstractStaticContext {
      * @return The name of the method being invoked.
      */
     public String getName () {
-        return __methodInsnNode ().name;
+        return __methodName ();
     }
 
 
@@ -55,8 +55,7 @@ public class InvocationStaticContext extends AbstractStaticContext {
      * @return Fully qualified internal name of the method being invoked.
      */
     public String getInternalName () {
-        final MethodInsnNode node = __methodInsnNode ();
-        return JavaNames.methodName (node.owner,  node.name);
+        return JavaNames.methodName (__methodOwner (), __methodName ());
     }
 
 
@@ -68,8 +67,9 @@ public class InvocationStaticContext extends AbstractStaticContext {
      * @return Fully qualified unique internal name of the method being invoked.
      */
     public String getUniqueInternalName () {
-        final MethodInsnNode node = __methodInsnNode ();
-        return JavaNames.methodUniqueName (node.owner,  node.name, node.desc);
+        return JavaNames.methodUniqueName (
+            __methodOwner (), __methodName (), __descriptor ()
+        );
     }
 
 
@@ -94,7 +94,7 @@ public class InvocationStaticContext extends AbstractStaticContext {
      * @return The internal name of the class owning the method being invoked.
      */
     public String getOwnerInternalName () {
-        return __methodInsnNode ().owner;
+        return __methodOwner ();
     }
 
     //
@@ -146,9 +146,36 @@ public class InvocationStaticContext extends AbstractStaticContext {
 
     //
 
+    /**
+     * Returns {@code true} if this method is a constructor.
+     */
+    public boolean isConstructor () {
+        return JavaNames.isConstructorName (__methodName ());
+    }
+
+
+    /**
+     * Returns {@code true} if this method is a class initializer.
+     */
+    public boolean isInitializer () {
+        return JavaNames.isInitializerName (__methodName ());
+    }
+
+    //
+
+    private String __methodOwner () {
+        return __methodInsnNode ().owner;
+    }
+
+    private String __methodName () {
+        return __methodInsnNode ().name;
+    }
+
+
     private String __descriptor () {
         return __methodInsnNode ().desc;
     }
+
 
     private MethodInsnNode __methodInsnNode () {
         //
