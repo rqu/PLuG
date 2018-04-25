@@ -2,12 +2,16 @@ package ch.usi.dag.dislre;
 
 /**
  * Provides Shadow VM clients with an interface to register and invoke remote
- * analysis methods. Each remote analysis method should be first registered by a
- * call to the {@link #registerMethod(String)} method, providing a fully
- * qualified method name on the analysis server. To invoke that method, either
- * {@link #analysisStart(short)} or {@link #analysisStart(short, byte)} method
- * should be called, followed by calls to appropriate {@code send*} methods. The
- * invocation sequence should end with a call to {@link #analysisEnd()} method.
+ * analysis methods.
+ * <p>
+ * Each remote analysis method should be first registered by a call to the
+ * {@link #registerMethod(String)} method, providing a fully qualified method
+ * name on the analysis server (without signature).
+ * <p>
+ * To invoke that method later, either {@link #analysisStart(short)} or
+ * {@link #analysisStart(short, byte)} method should be called, followed by
+ * calls to appropriate {@code send*} methods. The invocation sequence should
+ * end with a call to {@link #analysisEnd()} method.
  */
 public final class REDispatch {
 
@@ -20,11 +24,11 @@ public final class REDispatch {
      * subsequent invocations to {@link #analysisStart(short)} and
      * {@link #analysisStart(short, byte) methods.
      *
-     * @param methodDesc
+     * @param fqMethodName
      *        fully qualified name of the method, without signature.
      * @return remote method identifier.
      */
-    public static native short registerMethod (String methodDesc);
+    public static native short registerMethod (String fqMethodName);
 
 
     //
@@ -97,7 +101,7 @@ public final class REDispatch {
 
     /**
      * Sends an object reference to the Shadow VM. The analysis method must
-     * expect to receive a {@link ch.usi.dag.disl.reserver.shadow.ShadowObject}.
+     * expect to receive a {@link ch.usi.dag.dislreserver.shadow.ShadowObject}.
      *
      * @param object
      *        the object to send.
@@ -108,8 +112,8 @@ public final class REDispatch {
     /**
      * Sends an object reference to the Shadow VM, along with data payload
      * containing values provided by special shadow objects such as
-     * {@link ch.usi.dag.disl.reserver.shadow.ShadowString} and
-     * {@link ch.usi.dag.disl.reserver.shadow.ShadowThread}.
+     * {@link ch.usi.dag.dislreserver.shadow.ShadowString} and
+     * {@link ch.usi.dag.dislreserver.shadow.ShadowThread}.
      *
      * @param object
      *        object to send.
@@ -118,13 +122,14 @@ public final class REDispatch {
 
 
     /**
-     * Send the current thread reference to the Shadow VM, including
-     * {@code null} if the current thread does not exist yet. This is only
-     * useful to analyses that run very early (i.e., during VM initialization)
-     * where the call to {@link Thread#currentThread()} may actually return
-     * {@code null}, which cannot be send by the {@link #sendObject(Object)
-     * sendObject} and {@link #sendObjectPlusData(Object) sendObjectPlusData}
-     * methods.
+     * Sends the reference to the current thread to the Shadow VM, including
+     * {@code null} if the current thread does not exist yet.
+     * <p>
+     * This is only useful to analyses that run very early during VM
+     * initialization. At that time, the call to {@link Thread#currentThread()}
+     * may actually return {@code null}, which cannot be sent to the analysis
+     * using the {@link #sendObject(Object) sendObject} and
+     * {@link #sendObjectPlusData(Object) sendObjectPlusData} methods.
      */
     public static native void sendCurrentThread ();
 
@@ -140,10 +145,4 @@ public final class REDispatch {
      * @param object the object the size of which to send.
      */
     public static native void sendObjectSize (Object object);
-
-
-    // TODO re - basic type array support
-    //  - send length + all values in for cycle - all in native code
-    //  PROBLEM: somebody can change the values from the outside
-    //   - for example different thread
 }
