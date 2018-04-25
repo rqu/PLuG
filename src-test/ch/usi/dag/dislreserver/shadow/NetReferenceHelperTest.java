@@ -1,7 +1,6 @@
 package ch.usi.dag.dislreserver.shadow;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.theories.Theories;
 import org.junit.runner.RunWith;
