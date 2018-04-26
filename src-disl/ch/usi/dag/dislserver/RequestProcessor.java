@@ -16,7 +16,6 @@ import ch.usi.dag.disl.DiSL;
 import ch.usi.dag.disl.DiSL.CodeOption;
 import ch.usi.dag.disl.exception.DiSLException;
 import ch.usi.dag.disl.util.JavaNames;
-import ch.usi.dag.disl.util.Logging;
 import ch.usi.dag.util.Strings;
 import ch.usi.dag.util.logging.Logger;
 
@@ -90,7 +89,7 @@ final class RequestProcessor {
 
             __log.error (message);
 
-            throw new DiSLServerException (message);
+            return Message.createErrorResponse (message);
         }
     }
 
