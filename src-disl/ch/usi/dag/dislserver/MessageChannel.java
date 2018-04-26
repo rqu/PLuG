@@ -1,6 +1,7 @@
 package ch.usi.dag.dislserver;
 
 import java.io.Closeable;
+import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -8,14 +9,21 @@ import java.nio.channels.SocketChannel;
 
 final class MessageChannel implements Closeable {
 
+    private static final int __HEADER_LENGTH__ = 3 * Integer.BYTES;
+
+    //
+
     private final SocketChannel __socket;
 
-    private final ByteBuffer __head = ByteBuffer.allocateDirect (12).order (ByteOrder.BIG_ENDIAN);
-    private ByteBuffer __body = ByteBuffer.allocateDirect (128 * 1024);
+    private final ByteBuffer __head = __allocateDirect (4096);
 
     private final ByteBuffer [] __sendBuffers = new ByteBuffer [] {
         __head, null, null
     };
+
+    //
+
+    private ByteBuffer __body = __allocateDirect (128 * 1024);
 
     //
 
@@ -36,11 +44,8 @@ final class MessageChannel implements Closeable {
         // bytes[pdl] - payload data (contains class code)
         //
 
-        __head.rewind ();
-
-        do {
-            __socket.read (__head);
-        } while (__head.hasRemaining ());
+        __head.clear ();
+        __bufferRecvFrom (__socket, __HEADER_LENGTH__, __head);
 
         //
 
@@ -52,13 +57,11 @@ final class MessageChannel implements Closeable {
 
         //
 
-        __ensureBodyCapacity (controlLength + payloadLength);
+        final int expectedLength = controlLength + payloadLength;
+        __ensureBodyCapacity (expectedLength);
 
-        __body.rewind ();
-
-        do {
-            __socket.read (__body);
-        } while (__body.hasRemaining ());
+        __body.clear ();
+        __bufferRecvFrom (__socket, expectedLength, __body);
 
         //
 
@@ -74,6 +77,33 @@ final class MessageChannel implements Closeable {
     }
 
 
+    private void __bufferRecvFrom (
+        final SocketChannel sc, final int length, final ByteBuffer buffer
+    ) throws IOException {
+        buffer.limit (buffer.position () + length);
+        while (buffer.hasRemaining ()) {
+            final int bytesRead = sc.read (buffer);
+            if (bytesRead < 0) {
+                throw new EOFException ("unexpected end of stream");
+            }
+        }
+    }
+
+
+    private void __ensureBodyCapacity (final int requiredCapacity) {
+        if (__body.capacity () < requiredCapacity) {
+            __body = __allocateDirect (__align (requiredCapacity, 12));
+        }
+    }
+
+    private static int __align (final int value, final int bits) {
+        final int mask = -1 << bits;
+        final int fill = (1 << bits) - 1;
+        return (value + fill) & mask;
+    }
+
+    //
+
     public void sendMessage (final Message message) throws IOException {
         //
         // response protocol:
@@ -85,7 +115,7 @@ final class MessageChannel implements Closeable {
         // bytes[pdl] - payload data (instrumented class code)
         //
 
-        __head.rewind ();
+        __head.clear ();
 
         __head.putInt (message.flags ());
 
@@ -102,7 +132,7 @@ final class MessageChannel implements Closeable {
 
         //
 
-        __head.rewind ();
+        __head.flip ();
 
         do {
             __socket.write (__sendBuffers);
@@ -110,24 +140,15 @@ final class MessageChannel implements Closeable {
     }
 
 
-    private void __ensureBodyCapacity (final int length) {
-        if (__body.capacity () < length) {
-            __body = ByteBuffer.allocateDirect (__align (length, 12));
-        }
-
-        __body.limit (length);
-    }
-
-    private static int __align (final int value, final int bits) {
-        final int mask = -1 << bits;
-        final int fill = (1 << bits) - 1;
-        return (value + fill) & mask;
-    }
-
-
     @Override
     public void close () throws IOException {
         __socket.close ();
+    }
+
+    //
+
+    private static ByteBuffer __allocateDirect (final int capacity) {
+        return ByteBuffer.allocateDirect (capacity).order (ByteOrder.BIG_ENDIAN);
     }
 
 }
