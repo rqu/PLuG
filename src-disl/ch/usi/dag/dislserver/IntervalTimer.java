@@ -16,9 +16,11 @@ final class IntervalTimer <E extends Enum <E>> {
         __intervals = new long [count];
     }
 
+
     void reset () {
         __start = System.nanoTime ();
     }
+
 
     void mark (final E ts) {
         __stamps [ts.ordinal ()] = System.nanoTime ();
@@ -31,7 +33,7 @@ final class IntervalTimer <E extends Enum <E>> {
         long start = __start;
         for (int i = 0; i < count; i++) {
             final long stamp = __stamps [i];
-            __intervals [i] = stamp - start;
+            __intervals [i] = Math.max (0, stamp - start);
             start = stamp;
         }
 
