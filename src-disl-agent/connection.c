@@ -87,7 +87,7 @@ connection_close (struct connection * connection) {
 typedef ssize_t (* xfer_fn) (int sockfd, void * buf, size_t len, int flags);
 
 static inline ssize_t
-__socket_xfer (xfer_fn xfer, const int sockfd, const void * buf, const ssize_t len) {
+__socket_xfer_full (xfer_fn xfer, const int sockfd, const void * buf, const size_t len) {
 	unsigned char * buf_tail = (unsigned char *) buf;
 	size_t remaining = len;
 
@@ -110,13 +110,12 @@ __socket_xfer (xfer_fn xfer, const int sockfd, const void * buf, const ssize_t l
  * data has been sent. Returns the number of bytes sent.
  */
 ssize_t
-connection_send (struct connection * connection, const void * buf, const ssize_t len) {
+connection_send_full (struct connection * connection, const void * buf, const size_t len) {
 	assert (connection != NULL);
-	assert (buf != NULL);
-	assert (len >= 0);
+	assert ((buf != NULL) || (buf == NULL && len == 0));
 
-	ssize_t sent = __socket_xfer ((xfer_fn) send, connection->sockfd, buf, len);
-	check_std_error (sent < 0, "error sending data to server");
+	ssize_t sent = __socket_xfer_full ((xfer_fn) send, connection->sockfd, buf, len);
+	check_std_error (sent < 0, "connection_send_full: error sending data to server");
 
 #ifdef DEBUG
 	connection->sent_bytes += sent;
@@ -131,13 +130,31 @@ connection_send (struct connection * connection, const void * buf, const ssize_t
  * until all requested data has been received. Returns the number of bytes received.
  */
 ssize_t
-connection_recv (struct connection * connection, void * buf, const ssize_t len) {
+connection_recv_full (struct connection * connection, void * buf, const size_t len) {
+	assert (connection != NULL);
+	assert ((buf != NULL) || (buf == NULL && len == 0));
+
+	ssize_t received = __socket_xfer_full ((xfer_fn) recv, connection->sockfd, buf, len);
+	check_std_error (received < 0, "connection_recv_full: error receiving data from server");
+
+#ifdef DEBUG
+	connection->recv_bytes += received;
+#endif
+
+	return received;
+}
+
+/**
+ * Receives data from the given connection.
+ * Returns the number of bytes received.
+ */
+ssize_t
+connection_recv (struct connection * connection, void * buf, const size_t len) {
 	assert (connection != NULL);
 	assert (buf != NULL);
-	assert (len >= 0);
 
-	ssize_t received = __socket_xfer ((xfer_fn) recv, connection->sockfd, buf, len);
-	check_std_error (received < 0, "error receiving data from server");
+	ssize_t received = recv (connection->sockfd, buf, len, 0);
+	check_std_error (received < 0, "connection_recv: error receiving data from server");
 
 #ifdef DEBUG
 	connection->recv_bytes += received;
@@ -153,7 +170,7 @@ connection_recv (struct connection * connection, void * buf, const ssize_t len) 
 typedef ssize_t (* xfer_iov_fn) (int sockfd, struct iovec * iovs, int iov_count);
 
 static inline ssize_t
-__socket_xfer_iov (
+__socket_xfer_iov_full (
 	xfer_iov_fn xfer_iov, const int sockfd, struct iovec * iovs, const int iov_count
 ) {
 	ssize_t total = 0;
@@ -198,12 +215,12 @@ __socket_xfer_iov (
  * data have been sent. Returns the number of bytes sent.
  */
 ssize_t
-connection_send_iov (struct connection * connection, struct iovec * iovs, int iov_count) {
+connection_send_iov_full (struct connection * connection, struct iovec * iovs, int iov_count) {
 	assert (connection != NULL);
 	assert (iovs != NULL);
 	assert (iov_count >= 0);
 
-	ssize_t sent = __socket_xfer_iov ((xfer_iov_fn) writev, connection->sockfd, iovs, iov_count);
+	ssize_t sent = __socket_xfer_iov_full ((xfer_iov_fn) writev, connection->sockfd, iovs, iov_count);
 	check_std_error (sent < 0, "error sending data to server");
 
 #ifdef DEBUG
@@ -219,13 +236,13 @@ connection_send_iov (struct connection * connection, struct iovec * iovs, int io
  * all requested data have been received. Returns the number of bytes received.
  */
 ssize_t
-connection_recv_iov (struct connection * connection, struct iovec * iovs, int iov_count) {
+connection_recv_iov_full (struct connection * connection, struct iovec * iovs, int iov_count) {
 	assert (connection != NULL);
 	assert (iovs != NULL);
 	assert (iov_count >= 0);
 
-	ssize_t received = __socket_xfer_iov ((xfer_iov_fn) readv, connection->sockfd, iovs, iov_count);
-	check_std_error (received < 0, "error receiving data from server");
+	ssize_t received = __socket_xfer_iov_full ((xfer_iov_fn) readv, connection->sockfd, iovs, iov_count);
+	check_std_error (received < 0, "connection_recv_iov_full: error receiving data from server");
 
 #ifdef DEBUG
 	connection->recv_bytes += received;
