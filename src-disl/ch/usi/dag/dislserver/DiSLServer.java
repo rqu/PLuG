@@ -14,7 +14,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import ch.usi.dag.disl.util.Logging;
 import ch.usi.dag.util.logging.Logger;
 
 
@@ -95,27 +94,26 @@ public final class DiSLServer {
                     // Process the request and send the response to the client.
                     // Update the timing stats if everything goes well.
                     //
-                    try {
-                        final Message response = __requestProcessor.process (request);
-                        timer.mark (ElapsedTime.PROCESS);
+                    final Message response = __requestProcessor.process (request);
+                    timer.mark (ElapsedTime.PROCESS);
 
-                        mc.sendMessage (response);
-                        timer.mark (ElapsedTime.TRANSMIT);
+                    mc.sendMessage (response);
+                    timer.mark (ElapsedTime.TRANSMIT);
 
-                        stats.update (timer);
+                    //
 
-                    } catch (final DiSLServerException dse) {
+                    stats.update (timer);
+
+                    if (response.isError ()) {
                         //
                         // Error during instrumentation. Report it to the client
                         // and stop receiving requests from this connection.
                         //
-                        mc.sendMessage (
-                            Message.createErrorResponse (dse.getMessage ())
-                        );
-
                         break REQUEST_LOOP;
                     }
-                }
+
+
+                } // REQUEST_LOOP
 
                 //
                 // Merge thread-local stats with global stats when leaving
@@ -130,15 +128,19 @@ public final class DiSLServer {
                 __log.error (
                     "error communicating with client: %s", ioe.getMessage ()
                 );
-            }
 
-            //
-            // If there are no more workers left and we are not operating
-            // in continuous mode, shut the server down.
-            //
-            if (__workerCount.decrementAndGet () == 0) {
-                if (!continuous) {
-                    __serverThread.interrupt ();
+            } catch (final Throwable t) {
+                __log.error (t, "failed to process instrumentation request");
+
+            } finally {
+                //
+                // If there are no more workers left and we are not operating
+                // in continuous mode, shut the server down.
+                //
+                if (__workerCount.decrementAndGet () == 0) {
+                    if (!continuous) {
+                        __serverThread.interrupt ();
+                    }
                 }
             }
         }
@@ -198,6 +200,9 @@ public final class DiSLServer {
 
     public static void main (final String [] args) {
         __log.debug ("server starting");
+        __log.debug ("java.home: %s", System.getProperty ("java.home", ""));
+        __log.debug ("java.class.path: %s", System.getProperty ("java.class.path", ""));
+
         __serverStarting ();
 
         final InetSocketAddress address = __getListenAddressOrDie ();
