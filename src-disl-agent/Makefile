@@ -108,10 +108,12 @@ LIBRARY := $(TARGET_DIR)/$(LIBRARY_NAME)
 # Source and object files needed to create the library
 SOURCES = bytecode.c common.c jvmtiutil.c connection.c \
 	connpool.c msgchannel.c network.c classparser.c \
-	dislagent.c
+	dislserver.pb-c.c protobuf-c.c dislagent.c
 
-HEADERS = $(wildcard *.h) codeflags.h
-GENSRCS = bytecode.c codeflags.h
+HEADERS = $(wildcard *.h) codeflags.h dislserver.pb-c.h
+GENSRCS = bytecode.c codeflags.h \
+	dislserver.pb-c.c dislserver.pb-c.h
+
 OBJECTS = $(addprefix $(BUILD_DIR)/,$(SOURCES:%.c=%.o))
 SRCDEPS = $(SOURCES:%.c=%.d)
 
