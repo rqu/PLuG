@@ -1,8 +1,9 @@
 package ch.usi.dag.dislserver;
 
-
-
 final class Message {
+
+    private static final int __ERROR_FLAGS__ = -1;
+    private static final int __SUCCESS_FLAGS__ = 0;
 
     private static final byte [] __EMPTY_ARRAY__ = new byte [0];
 
@@ -46,6 +47,11 @@ final class Message {
         return (__control.length == 0) && (__payload.length == 0);
     }
 
+
+    public boolean isError () {
+        return (__flags == __ERROR_FLAGS__) && (__payload.length == 0);
+    }
+
     //
 
     /**
@@ -59,7 +65,7 @@ final class Message {
         // The flags are all reset, the control part of the network message
         // is empty, and the payload contains the modified class bytecode.
         //
-        return new Message (0, __EMPTY_ARRAY__, bytecode);
+        return new Message (__SUCCESS_FLAGS__, __EMPTY_ARRAY__, bytecode);
     }
 
 
@@ -71,7 +77,7 @@ final class Message {
         // The flags are all reset, and both the control part and the
         // payload parts of the network message are empty.
         //
-        return new Message (0, __EMPTY_ARRAY__, __EMPTY_ARRAY__);
+        return new Message (__SUCCESS_FLAGS__, __EMPTY_ARRAY__, __EMPTY_ARRAY__);
     }
 
     /**
@@ -82,7 +88,7 @@ final class Message {
         // The flags are all set, the control part of the network message
         // contains the error message, and the payload is empty.
         //
-        return new Message (-1, error.getBytes (), __EMPTY_ARRAY__);
+        return new Message (__ERROR_FLAGS__, error.getBytes (), __EMPTY_ARRAY__);
     }
 
 }
