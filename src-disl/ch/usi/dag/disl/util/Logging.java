@@ -16,13 +16,13 @@ public final class Logging {
      * Package name of the framework entry class.
      */
     private static final String
-        __OLD_PREFIX__ = DiSL.class.getPackage ().getName ();
+        __BASE_PREFIX__ = DiSL.class.getPackage ().getName ();
 
     /**
      * Default prefix for top-level logs.
      */
     private static final String
-        __NEW_PREFIX__ = "disl";
+        __SHORT_PREFIX__ = "disl";
 
     /**
      * Register provider property alias with the logging class.
@@ -49,7 +49,7 @@ public final class Logging {
             Thread.currentThread ().getStackTrace () [2];
 
         return Logger.getPackageInstance (
-            caller, __OLD_PREFIX__, __NEW_PREFIX__
+            caller, __BASE_PREFIX__, __SHORT_PREFIX__
         );
     }
 
