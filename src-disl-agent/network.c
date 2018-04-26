@@ -51,13 +51,8 @@ __connection_close_hook (struct connection * conn) {
 	// Send an empty message to the server before closing the connection
 	// to indicate end of processing for that connection.
 	//
-	struct message shutdown = {
-		.message_flags = 0,
-		.control_size = 0, .classcode_size = 0,
-		.control = NULL, .classcode = NULL
-	};
-
-	message_send (conn, &shutdown);
+	uint32_t message_size_data = htonl (0);
+	connection_send_full (conn, &message_size_data, sizeof (message_size_data));
 }
 
 
