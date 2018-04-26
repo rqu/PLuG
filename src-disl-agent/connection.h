@@ -43,15 +43,16 @@ struct connection {
 struct connection * connection_open (struct addrinfo * addr);
 void connection_close (struct connection * connection);
 
-ssize_t connection_send (struct connection * connection, const void * buf, const ssize_t len);
-ssize_t connection_recv (struct connection * connection, void * buf, const ssize_t len);
+ssize_t connection_send_full (struct connection * connection, const void * buf, const size_t len);
+ssize_t connection_recv_full (struct connection * connection, void * buf, const size_t len);
+ssize_t connection_recv (struct connection * connection, void * buf, const size_t len);
 
 #ifndef MINGW
 
 #include <sys/uio.h>
 
-ssize_t connection_send_iov (struct connection * connection, struct iovec * iovs, int iov_count);
-ssize_t connection_recv_iov (struct connection * connection, struct iovec * iovs, int iov_count);
+ssize_t connection_send_iov_full (struct connection * connection, struct iovec * iovs, int iov_count);
+ssize_t connection_recv_iov_full (struct connection * connection, struct iovec * iovs, int iov_count);
 
 #endif
 
