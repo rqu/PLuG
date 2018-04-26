@@ -5,54 +5,33 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 
 #ifndef MINGW
 #include <sys/uio.h>
 #endif
-
-#include <jni.h>
 
 //
 
 #ifdef MINGW
 
 static inline ssize_t
-__send (struct connection * conn, struct message * msg, void * header, const size_t header_size) {
-	ssize_t sent = connection_send (conn, header, header_size);
-	sent += connection_send (conn, msg->control, msg->control_size);
-	sent += connection_send (conn, msg->classcode, msg->classcode_size);
+__send (struct connection * conn, void * header, const size_t header_size, void * body, const size_t body_size) {
+	ssize_t sent = connection_send_full (conn, header, header_size);
+	sent += connection_send_full (conn, body, body_size);
 	return sent;
-}
-
-
-static inline void
-__recv (struct connection * conn, void * control, const size_t control_size, void * classcode, const size_t classcode_size) {
-	connection_recv (conn, control, control_size);
-	connection_recv (conn, classcode, classcode_size);
 }
 
 #else
 
 static inline ssize_t
-__send (struct connection * conn, struct message * msg, void * header, const size_t header_size) {
+__send (struct connection * conn, void * header, const size_t header_size, void * body, const size_t body_size) {
 	struct iovec iovs [] = {
 		{ .iov_base = header, .iov_len = header_size },
-		{ .iov_base = (void *) msg->control, .iov_len = msg->control_size },
-		{ .iov_base = (void *) msg->classcode, .iov_len = msg->classcode_size }
+		{ .iov_base = body, .iov_len = body_size },
 	};
 
-	return connection_send_iov (conn, &iovs [0], sizeof_array (iovs));
-}
-
-
-static inline void
-__recv (struct connection * conn, void * control, const size_t control_size, void * classcode, const size_t classcode_size) {
-	struct iovec iovs [2] = {
-		{ .iov_base = control, .iov_len = control_size },
-		{ .iov_base = classcode, .iov_len = classcode_size }
-	};
-
-	connection_recv_iov (conn, &iovs [0], sizeof_array (iovs));
+	return connection_send_iov_full (conn, &iovs [0], sizeof_array (iovs));
 }
 
 #endif /* !MINGW */
@@ -63,29 +42,22 @@ __recv (struct connection * conn, void * control, const size_t control_size, voi
  * via the given connection. Returns the number of bytes sent.
  */
 ssize_t
-message_send (struct connection * conn, struct message * msg) {
+message_send (struct connection * conn, void * message, const size_t message_size) {
 	assert (conn != NULL);
-	assert (msg != NULL);
+	assert (message != NULL);
 
-	ldebug (
-		"sending message: flags %08x, control %d, code %d ... ",
-		msg->message_flags, msg->control_size, msg->classcode_size
-	);
+	ldebug ("sending message: %lu bytes", message_size);
 
 	//
 
-	jint ints [] = {
-		htonl (msg->message_flags),
-		htonl (msg->control_size),
-		htonl (msg->classcode_size)
-	};
-
-	ssize_t sent = __send (conn, msg, &ints [0], sizeof (ints));
-	assert (sent == (ssize_t) (sizeof (ints) + msg->control_size + msg->classcode_size));
+	uint32_t message_size_data = htonl (message_size);
+	size_t header_size = sizeof (message_size_data);
+	ssize_t sent = __send (conn, &message_size_data, header_size, message, message_size);
+	assert (sent == (ssize_t) (header_size + message_size));
 
 	//
 
-	debug ("sent %ld bytes ... done\n", sent);
+	debug (", sent %ld bytes\n", sent);
 	return sent;
 }
 
@@ -114,45 +86,35 @@ __alloc_buffer (size_t len) {
 /**
  * Receives a message from the remote instrumentation server.
  */
-void
-message_recv (struct connection * conn, struct message * msg) {
+ssize_t
+message_recv (struct connection * conn, void ** message_ptr) {
 	assert (conn != NULL);
-	assert (msg != NULL);
+	assert (message_ptr != NULL);
 
 	ldebug ("receiving message: ");
 
 	//
-	// First, receive the flags, the control and class code sizes.
-	// Second, receive the control and class code data.
-	// The ordering of receive calls is determined by the protocol.
+	// First receive the size of the message.
+	// Then receive the message itself.
 	//
-	jint ints [3];
-	connection_recv (conn, &ints [0], sizeof (ints));
-	jint response_flags = ntohl (ints [0]);
-
-	//
-
-	jint control_size = ntohl (ints [1]);
-	uint8_t * control = __alloc_buffer (control_size);
-
-	jint classcode_size = ntohl (ints [2]);
-	uint8_t * classcode = __alloc_buffer (classcode_size);
-
-	__recv (conn, control, control_size, classcode, classcode_size);
+	uint32_t message_size_data;
+	connection_recv_full (conn, &message_size_data, sizeof (message_size_data));
+	size_t message_size = ntohl (message_size_data);
+	debug ("expecting %ld bytes", message_size);
 
 	//
-	// Update message fields only after the whole message was read.
+	// The message body can be completely empty. In this case,
+	// the buffer allocator will just return NULL and we avoid
+	// reading from the socket. We will set the message pointer
+	// to NULL and return zero as message size.
 	//
-	msg->message_flags = response_flags;
-	msg->control_size = control_size;
-	msg->classcode_size = classcode_size;
-	msg->control = control;
-	msg->classcode = classcode;
+	uint8_t * message = __alloc_buffer (message_size);
+	connection_recv_full (conn, message, message_size);
 
 	//
-
-	debug (
-		"flags %08x, control %d, code %d ... done\n",
-		response_flags, control_size, classcode_size
-	);
+	// Return the message only after the whole message was read.
+	//
+	debug ("... done\n");
+	* message_ptr = (void *) message;
+	return message_size;
 }
