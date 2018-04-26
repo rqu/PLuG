@@ -338,7 +338,7 @@ __force_classes (
 	JNIEnv * jni, const char * class_name,
 	const unsigned char * class_bytes, jint class_byte_count
 ) {
-	assert (jni != NULL & jvm_is_started);
+	assert (jni != NULL && jvm_is_started);
 
 	class_t inst_class = class_alloc (class_bytes, class_byte_count);
 	if (inst_class != NULL) {
