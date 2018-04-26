@@ -1,6 +1,8 @@
 package ch.usi.dag.util.logging;
 
 import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Iterator;
@@ -368,8 +370,10 @@ public final class Logger {
             final Throwable cause
         ) {
             __log (printer, message);
-            __log (printer, "Caused by: ");
-            __log (printer, cause.getMessage ());
+
+            final StringWriter trace = new StringWriter ();
+            cause.printStackTrace (new PrintWriter (trace));
+            __log (printer, trace.toString ());
         }
 
     }
