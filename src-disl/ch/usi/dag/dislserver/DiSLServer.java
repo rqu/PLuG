@@ -86,7 +86,7 @@ public final class DiSLServer {
                 // Process requests until a shutdown request is received, a
                 // communication error occurs, or an internal error occurs.
                 //
-                final ByteBuffer headBuffer = __allocBuffer (Integer.BYTES);
+                final ByteBuffer headBuffer = __allocDirect (4096);
                 ByteBuffer recvBuffer = __allocDirect (4096);
                 ByteBuffer sendBuffer = __allocDirect (4096);
 
@@ -226,8 +226,7 @@ public final class DiSLServer {
             final ByteBuffer buffer, final SocketChannel sc
         ) throws IOException {
             while (buffer.hasRemaining ()) {
-                final int bytesWritten = sc.write (buffer);
-                __log.trace ("sent %d bytes, %d remaining", bytesWritten, buffer.remaining ());
+                sc.write (buffer);
             }
         }
 
@@ -235,8 +234,8 @@ public final class DiSLServer {
         private void __bufferRecvFrom (
             final SocketChannel sc, final int length, final ByteBuffer buffer
         ) throws IOException {
-            final int expectedPosition = buffer.position () + length;
-            while (buffer.position () < expectedPosition) {
+            buffer.limit (buffer.position () + length);
+            while (buffer.hasRemaining ()) {
                 final int bytesRead = sc.read (buffer);
                 if (bytesRead < 0) {
                     throw new EOFException ("unexpected end of stream");
@@ -264,9 +263,6 @@ public final class DiSLServer {
             return __allocDirect (newCapacity).put (buffer);
         }
 
-        private ByteBuffer __allocBuffer (final int capacity) {
-            return ByteBuffer.allocate (capacity).order (ByteOrder.BIG_ENDIAN);
-        }
 
         private ByteBuffer __allocDirect (final int capacity) {
             return ByteBuffer.allocateDirect (capacity).order (ByteOrder.BIG_ENDIAN);
