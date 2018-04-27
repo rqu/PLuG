@@ -1,6 +1,7 @@
 # Generated dependency files
 src-disl-agent/*.d
 src-disl-agent/linux-*
+src-disl-agent/windows-*
 
 # Compiled shared libraries
 *.so
