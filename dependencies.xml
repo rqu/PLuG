@@ -28,6 +28,7 @@
 		<dependency org="${asm.org}" name="asm-util" rev="${asm.rev}" conf="disl->default;devel->sources,javadoc" />
 		<dependency org="${asm.org}" name="asm-commons" rev="${asm.rev}" conf="disl->default;devel->sources,javadoc" />
 		<dependency org="${log4j.org}" name="log4j" rev="${log4j.rev}" conf="disl->default;devel->sources,javadoc" />
+		<dependency org="${protobuf.org}" name="${protobuf.lib}" rev="${protobuf.rev}" conf="disl->default;devel->sources,javadoc" />
 	</dependencies>
 
 </ivy-module>
