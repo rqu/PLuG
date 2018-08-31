@@ -1,0 +1,41 @@
+image: gitlab.ow2.org:4567/disl/disl/disl-ci
+
+# Setup cache to prevent downloading deps and compiling sources in each stage
+cache: &cache
+  # Cache is branch-local
+  key: "${CI_COMMIT_REF_SLUG}"
+  # Cache deps and compiled classes
+  paths:
+  - 'output/'
+  - 'lib/'
+  - 'src-disl-agent/linux-x86_64' # Specific architecture of used container
+
+# Adjust modification date to prevent recompiling sources in different stages.
+before_script:
+- find . -exec touch -t 200001010000 {} \;
+
+stages:
+- build
+- test
+
+# Jobs definitions
+# The YAML Anchors are used because of Gitlab Issue#2838
+
+# Check whether the build task succeeded
+build:
+  stage: build
+  cache:
+    <<: *cache
+    policy:
+      push
+  script:
+  - ant build
+
+# Run tests
+test:
+  stage: test
+  cache:
+    <<: *cache
+    policy: pull
+  script:
+  - ant test
