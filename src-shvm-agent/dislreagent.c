@@ -1137,6 +1137,7 @@ static void close_connection(int conn, jlong thread_id) {
 	_buffs_release(buffs);
 
 	// close socket
+	shutdown(conn, SHUT_RDWR);
 	close(conn);
 }
 static void * send_thread_loop(void * obj) {
