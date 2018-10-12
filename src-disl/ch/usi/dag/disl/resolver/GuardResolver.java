@@ -12,6 +12,7 @@ import ch.usi.dag.disl.exception.GuardException;
  */
 public class GuardResolver {
 
+    // TODO LB: Get rid of guard resolver singleton
     private static GuardResolver instance = null;
 
     // Guard to guard method map
