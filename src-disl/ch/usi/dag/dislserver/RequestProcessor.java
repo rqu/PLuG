@@ -12,10 +12,14 @@ import java.util.UUID;
 
 import org.objectweb.asm.ClassReader;
 
+import com.google.protobuf.ByteString;
+
 import ch.usi.dag.disl.DiSL;
 import ch.usi.dag.disl.DiSL.CodeOption;
 import ch.usi.dag.disl.exception.DiSLException;
 import ch.usi.dag.disl.util.JavaNames;
+import ch.usi.dag.dislserver.Protocol.InstrumentClassRequest;
+import ch.usi.dag.dislserver.Protocol.InstrumentClassResponse;
 import ch.usi.dag.util.Strings;
 import ch.usi.dag.util.logging.Logger;
 
@@ -42,10 +46,10 @@ final class RequestProcessor {
 
     //
 
-    public Message process (final Message request) throws DiSLServerException {
-        final byte [] classBytes = request.payload ();
-        final String className = __getClassName (request.control (), classBytes);
-        final Set <CodeOption> options = CodeOption.setOf (request.flags ());
+    public InstrumentClassResponse process (final InstrumentClassRequest request) {
+        final byte [] classBytes = request.getClassBytes ().toByteArray ();
+        final String className = __getClassName (request.getClassNameBytes ().toByteArray (), classBytes);
+        final Set <CodeOption> options = CodeOption.setOf (request.getFlags ());
 
         if (__log.traceIsLoggable ()) {
             __log.trace (
@@ -76,10 +80,15 @@ final class RequestProcessor {
                     __dumpClass (newClassBytes, className, instrPath);
                 }
 
-                return Message.createClassModifiedResponse (newClassBytes);
+                return InstrumentClassResponse.newBuilder ()
+                    .setResult (Protocol.InstrumentClassResult.CLASS_MODIFIED)
+                    .setClassBytes (ByteString.copyFrom (newClassBytes))
+                    .build ();
 
             } else {
-                return Message.createNoOperationResponse ();
+                return InstrumentClassResponse.newBuilder ()
+                    .setResult (Protocol.InstrumentClassResult.CLASS_UNMODIFIED)
+                    .build ();
             }
 
         } catch (final Exception e) {
@@ -89,7 +98,10 @@ final class RequestProcessor {
 
             __log.error (message);
 
-            return Message.createErrorResponse (message);
+            return InstrumentClassResponse.newBuilder ()
+                .setResult (Protocol.InstrumentClassResult.ERROR)
+                .setErrorMessage (message)
+                .build ();
         }
     }
 

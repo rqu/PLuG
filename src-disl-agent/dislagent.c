@@ -4,6 +4,7 @@
 #include "connection.h"
 #include "network.h"
 #include "msgchannel.h"
+#include "dislserver.pb-c.h"
 
 #include "bytecode.h"
 #include "classparser.h"
@@ -217,31 +218,40 @@ __instrument_class (
 	// send the it to the server. Receive the response and release the
 	// connection again.
 	//
-	struct message request = {
-		.message_flags = request_flags,
-		.control_size = (class_name != NULL) ? strlen (class_name) : 0,
-		.classcode_size = class_def->class_byte_count,
-		.control = (unsigned char *) class_name,
-		.classcode = class_def->class_bytes,
-	};
+	InstrumentClassRequest request = INSTRUMENT_CLASS_REQUEST__INIT;
+	request.has_flags = true;
+	request.flags = request_flags;
+	request.classname = (char *) class_name;
+	request.has_classbytes = true;
+	request.classbytes.len = class_def->class_byte_count;
+	request.classbytes.data = (uint8_t *) class_def->class_bytes;
+
+	size_t send_size = instrument_class_request__get_packed_size (&request);
+	void * send_buffer = malloc (send_size);
+	assert (send_buffer != NULL);
+
+	instrument_class_request__pack (&request, send_buffer);
+	struct connection * conn = network_acquire_connection ();
+	message_send (conn, send_buffer, send_size);
 
 	//
 
-	struct connection * conn = network_acquire_connection ();
-	message_send (conn, &request);
-
-	struct message response;
-	message_recv (conn, &response);
+	void * recv_buffer;
+	size_t recv_size = message_recv (conn, &recv_buffer);
 	network_release_connection (conn);
+
+	InstrumentClassResponse * response = instrument_class_response__unpack (NULL, recv_size, recv_buffer);
+	assert (response != NULL);
+	free (recv_buffer);
 
 	//
 	// Check if error occurred on the server.
 	// The control field of the response contains the error message.
 	//
-	if (response.control_size > 0) {
+	if (response->result == INSTRUMENT_CLASS_RESULT__ERROR) {
 		fprintf (
 			stderr, "%sinstrumentation server error:\n%s\n",
-			ERROR_PREFIX, response.control
+			ERROR_PREFIX, response->errormessage
 		);
 
 		exit (ERROR_SERVER);
@@ -252,12 +262,19 @@ __instrument_class (
 	// modified if non-empty class code has been returned. Otherwise,
 	// signal that the class has not been modified.
 	//
-	if (response.classcode_size > 0) {
-		class_def->class_byte_count = response.classcode_size;
-		class_def->class_bytes = response.classcode;
+	if (response->result == INSTRUMENT_CLASS_RESULT__CLASS_MODIFIED) {
+		class_def->class_byte_count = response->classbytes.len;
+		class_def->class_bytes = response->classbytes.data;
+
+		response->has_classbytes = false;
+		response->classbytes.len = 0;
+		response->classbytes.data = NULL;
+
+		instrument_class_response__free_unpacked (response, NULL);
 		return true;
 
 	} else {
+		instrument_class_response__free_unpacked (response, NULL);
 		return false;
 	}
 }

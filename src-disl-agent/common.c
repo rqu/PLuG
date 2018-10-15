@@ -45,7 +45,7 @@ die_with_error (const char * message) {
 void
 die_with_std_error (const char * message, int errnum) {
 	char * cause = strerror (errnum);
-	fprintf (stderr, "%s%s\ncause: %s", ERROR_PREFIX, message, cause);
+	fprintf (stderr, "%s%s\ncause: %s\n", ERROR_PREFIX, message, cause);
 	exit (ERROR_STD);
 }
 

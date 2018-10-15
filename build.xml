@@ -249,6 +249,15 @@
 			<fileset dir="${lib.test.dir}" includes="*.jar"/>
 		</path>
 
+		<path id="protobuf.classpath">
+			<fileset dir="${lib.disl.dir}" includes="protobuf*.jar"/>
+		</path>
+
+		<!-- Get ProtoBuf Java libs from ProtoBuf class path. -->
+		<pathconvert pathsep=" " property="protobuf.libs" refid="protobuf.classpath">
+			<mapper type="flatten"/>
+		</pathconvert>
+
 		<!-- Project class paths -->
 		<path id="util.classpath">
 			<pathelement location="${build.util}"/>
@@ -470,6 +479,7 @@
 				<path refid="disl.bypass.classpath"/>
 				<path refid="util.classpath"/>
 				<path refid="asm.classpath"/>
+				<path refid="protobuf.classpath"/>
 			</classpath>
 		</javac>
 	</target>
@@ -484,7 +494,7 @@
 
 		<jar destfile="${out.lib}/${disl.lib}">
 			<manifest>
-				<attribute name="Class-Path" value="${asm.libs}"/>
+				<attribute name="Class-Path" value="${asm.libs} ${protobuf.libs}"/>
 				<attribute name="Main-Class" value="${server.class}"/>
 				<attribute name="DiSL-Version" value="${disl.version}"/>
 			</manifest>
@@ -973,9 +983,10 @@
 
 	<!-- Miscellaneous -->
 
-	<target name="copy-asm" depends="-init">
+	<target name="copy-libs" depends="-init">
 		<copy todir="${out.lib}" flatten="true">
 			<path refid="asm.classpath"/>
+			<path refid="protobuf.classpath"/>
 		</copy>
 	</target>
 
@@ -1057,7 +1068,7 @@
 
 	<target name="compile" depends="compile-disl,compile-disl-agent,compile-shvm,compile-shvm-agent" description="Compiles DiSL, Shadow VM, and the JVM agents for both."/>
 
-	<target name="build" depends="build-disl,build-disl-agent,build-shvm,build-shvm-agent,copy-asm" description="Builds DiSL and Shadow VM, without documentation."/>
+	<target name="build" depends="build-disl,build-disl-agent,build-shvm,build-shvm-agent,copy-libs" description="Builds DiSL and Shadow VM, without documentation."/>
 
 	<target name="eclipse" depends="download-sources,build-eclipse-agent,build-disl-bypass" description="Creates libraries for developing DiSL under Eclipse."/>
 
