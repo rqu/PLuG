@@ -91,6 +91,23 @@ public class InvocationStaticContext extends AbstractStaticContext {
     //
 
     /**
+     * @return The type name of the class owning the method being invoked, i.e.,
+     *         a fully qualified class name, with packages delimited by the '.'
+     *         character.
+     */
+    public String getOwnerName () {
+        return JavaNames.internalToType (__methodOwner ());
+    }
+
+    /**
+     * @return The simple name of the class owning the method being invoked,
+     *         i.e., a class name without the package part of the name.
+     */
+    public String getOwnerSimpleName () {
+        return JavaNames.simpleClassName (__methodOwner ());
+    }
+
+    /**
      * @return The internal name of the class owning the method being invoked.
      */
     public String getOwnerInternalName () {
