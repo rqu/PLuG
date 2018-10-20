@@ -1,5 +1,6 @@
 package ch.usi.dag.disl.classparser;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,7 +33,9 @@ import ch.usi.dag.disl.snippet.Snippet;
 import ch.usi.dag.disl.snippet.SnippetUnprocessedCode;
 import ch.usi.dag.disl.util.AsmHelper;
 import ch.usi.dag.disl.util.JavaNames;
+import ch.usi.dag.disl.util.Logging;
 import ch.usi.dag.disl.util.ReflectionHelper;
+import ch.usi.dag.util.logging.Logger;
 
 
 /**
@@ -40,6 +43,10 @@ import ch.usi.dag.disl.util.ReflectionHelper;
  * instances which it collects.
  */
 class SnippetParser extends AbstractParser {
+
+    private final Logger __log = Logging.getPackageInstance ();
+
+    //
 
     private final List <Snippet> snippets = new LinkedList <> ();
 
@@ -60,8 +67,7 @@ class SnippetParser extends AbstractParser {
             final String className = AsmHelper.typeName (dislClass);
 
             snippets.addAll (dislClass.methods.parallelStream ().unordered ()
-                .filter (m -> !JavaNames.isConstructorName (m.name))
-                .filter (m -> !JavaNames.isInitializerName (m.name))
+                .filter (m -> __isSnippetCandidate (m))
                 .map (m -> __parseSnippetWrapper (className, m))
                 .collect (Collectors.toList ())
             );
@@ -71,6 +77,24 @@ class SnippetParser extends AbstractParser {
         }
     }
 
+    private boolean __isSnippetCandidate (final MethodNode m) {
+        if (JavaNames.isConstructorName (m.name)) {
+            __log.trace ("ignoring %s (constructor)", m.name);
+            return false;
+        }
+
+        if (JavaNames.isInitializerName (m.name)) {
+            __log.trace ("ignoring %s (static initializer)", m.name);
+            return false;
+        }
+
+        if (m.invisibleAnnotations == null || m.invisibleAnnotations.isEmpty ()) {
+            __log.trace ("ignoring %s (no annotations found)", m.name);
+            return false;
+        }
+
+        return true;
+    }
 
     private Snippet __parseSnippetWrapper (
         final String className, final MethodNode method
@@ -130,8 +154,7 @@ class SnippetParser extends AbstractParser {
         // The ordering of (some of) these checks is important -- some may
         // rely on certain assumptions to be satisfied.
         //
-        __ensureSnippetHasAnnotations (method);
-        __ensureSnippetOnlyHasOneAnnotation (method);
+        __warnOnMultipleAnnotations (method);
         __ensureSnippetOnlyHasDislAnnotations (method);
 
         ensureMethodIsStatic (method);
@@ -143,20 +166,15 @@ class SnippetParser extends AbstractParser {
         ensureMethodUsesContextProperly (method);
     }
 
-    private static void __ensureSnippetHasAnnotations (
+    private void __warnOnMultipleAnnotations (
         final MethodNode method
     ) throws SnippetParserException {
-        if (method.invisibleAnnotations == null) {
-            throw new SnippetParserException ("no annotations found!");
-        }
-    }
-
-
-    private static void __ensureSnippetOnlyHasOneAnnotation (
-        final MethodNode method
-    ) throws SnippetParserException {
-        if (method.invisibleAnnotations.size () > 1) {
-            throw new SnippetParserException ("only one annotation allowed!");
+        final int annotationCount = method.invisibleAnnotations.size ();
+        if (annotationCount > 1) {
+            __log.warn (
+                "%s has %d annotations, one the first will apply",
+                method.name, annotationCount
+            );
         }
     }
 

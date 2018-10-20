@@ -25,6 +25,10 @@ public class InsnNodeMarker extends AbstractInsnMarker {
 
         classes = new HashSet<Class<? extends AbstractInsnNode>>();
 
+
+        // set delimiter for list of *InsnNode classes
+        param.setMultipleValDelim (",");
+        
         // translate all instructions to opcodes
         for (String className : param.getMultipleValues()) {
 

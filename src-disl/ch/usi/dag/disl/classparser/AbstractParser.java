@@ -101,8 +101,8 @@ abstract class AbstractParser {
         for (final FieldNode field : fields) {
 
             if (field.invisibleAnnotations == null) {
-                throw new ParserException("DiSL annotation for field "
-                        + className + "." + field.name + " is missing");
+                // Ignore fields without annotations.
+                continue;
             }
 
             if (field.invisibleAnnotations.size() > 1) {

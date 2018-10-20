@@ -1,40 +1,39 @@
 package ch.usi.dag.disl.marker;
 
 /**
- * <p>
  * Used for marker parameter parsing.
  */
-public class Parameter {
+public final class Parameter {
 
-    protected String value;
+    protected String __value;
 
-    protected String delim;
+    protected String __delimiter;
 
     /**
      * Create parameter with a value.
      */
-    public Parameter(String value) {
-        this.value = value;
+    public Parameter(final String value) {
+        __value = value;
     }
 
     /**
      * Set delimiter for multi-value parsing.
      */
-    public void setMultipleValDelim(String delim) {
-        this.delim = delim;
+    public void setMultipleValDelim(final String delim) {
+        __delimiter = delim;
     }
 
     /**
      * Get parameter value.
      */
     public String getValue() {
-        return value;
+        return __value;
     }
 
     /**
-     * Get array of values split according to the set delimiter.
+     * @return Array of values split using a predefined delimiter.
      */
-    public String[] getMultipleValues() {
-        return value.split(delim);
+    public String [] getMultipleValues () {
+        return __value.split (__delimiter);
     }
 }

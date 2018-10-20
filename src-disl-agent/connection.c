@@ -78,6 +78,7 @@ connection_close (struct connection * connection) {
 		connection->sockfd, connection->sent_bytes, connection->recv_bytes
 	);
 
+	shutdown (connection->sockfd, SHUT_RDWR);
 	close (connection->sockfd);
 	free (connection);
 }
