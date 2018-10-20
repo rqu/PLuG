@@ -6,9 +6,10 @@ import java.util.Map;
 
 import ch.usi.dag.disl.exception.GuardException;
 
+
 /**
- * Note that all methods accessing and working with singleton has to be
- * thread-safe.
+ * Note that all methods accessing and working with the {@link GuardResolver}
+ * singleton have to be thread-safe.
  */
 public class GuardResolver {
 
@@ -71,4 +72,5 @@ public class GuardResolver {
         }
         return instance;
     }
+
 }
