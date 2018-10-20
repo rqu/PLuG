@@ -14,11 +14,14 @@ import ch.usi.dag.disl.exception.GuardException;
 public class GuardResolver {
 
     // TODO LB: Get rid of guard resolver singleton
-    private static GuardResolver instance = null;
+    private static GuardResolver instance = new GuardResolver ();
 
     // Guard to guard method map
     private Map<Class<?>, GuardMethod> guardToMethod =
             new HashMap<Class<?>, GuardMethod>();
+    public static GuardResolver getInstance () {
+        return instance;
+    }
 
     public synchronized GuardMethod getGuardMethod(
             Class<?> guardClass) throws GuardException {
@@ -65,12 +68,7 @@ public class GuardResolver {
         return guardMethod;
     }
 
-    public static synchronized GuardResolver getInstance() {
 
-        if (instance == null) {
-            instance = new GuardResolver();
-        }
-        return instance;
     }
 
 }
