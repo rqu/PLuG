@@ -22,18 +22,13 @@ import ch.usi.dag.disl.util.AsmOpcodes;
  */
 public class BytecodeMarker extends AbstractDWRMarker {
 
-    protected static final String INSTR_DELIM = ",";
-
     protected Set <Integer> searchedInstrNums = new HashSet <Integer> ();
 
 
     public BytecodeMarker (final Parameter param) throws MarkerException {
 
-        // set delim for instruction list
-        param.setMultipleValDelim (INSTR_DELIM);
-
         // translate all instructions to opcodes
-        for (final String instr : param.getMultipleValues ()) {
+        for (final String instr : param.getMultipleValues (",")) {
             try {
                 final AsmOpcodes opcode = AsmOpcodes.valueOf (
                     instr.trim ().toUpperCase ()

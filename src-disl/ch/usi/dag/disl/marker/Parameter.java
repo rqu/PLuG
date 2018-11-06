@@ -7,8 +7,6 @@ public final class Parameter {
 
     protected String __value;
 
-    protected String __delimiter;
-
     /**
      * Create parameter with a value.
      */
@@ -16,12 +14,6 @@ public final class Parameter {
         __value = value;
     }
 
-    /**
-     * Set delimiter for multi-value parsing.
-     */
-    public void setMultipleValDelim(final String delim) {
-        __delimiter = delim;
-    }
 
     /**
      * Get parameter value.
@@ -30,10 +22,17 @@ public final class Parameter {
         return __value;
     }
 
+
     /**
-     * @return Array of values split using a predefined delimiter.
+     * Retrieves multiple values by splitting the annotation parameter using the
+     * given delimiter.
+     *
+     * @param delimiter
+     *        the delimiter to use for splitting the parameter
+     * @return An array of values obtained by splitting the annotation
+     *         parameter.
      */
-    public String [] getMultipleValues () {
-        return __value.split (__delimiter);
+    public String [] getMultipleValues (final String delimiter) {
+        return __value.split (delimiter);
     }
 }

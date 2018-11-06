@@ -30,7 +30,7 @@ public class StrictBytecodeMarker extends AbstractInsnMarker {
     public StrictBytecodeMarker(Parameter param) throws MarkerException {
 
         // translate all instructions to opcodes
-        for (String instr : param.getMultipleValues()) {
+        for (String instr : param.getMultipleValues(",")) {
 
             try {
 
