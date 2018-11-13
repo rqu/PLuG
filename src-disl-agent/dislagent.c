@@ -418,12 +418,21 @@ __thread_id (JNIEnv * jni) {
 
 
 static char *
-__thread_name (jvmtiEnv * jvmti) {
+__thread_name (jvmtiEnv * jvmti, JNIEnv * jni) {
 	assert (jvmti != NULL && jvm_is_initialized);
 
 	jvmtiThreadInfo info;
 	jvmtiError error = (* jvmti)->GetThreadInfo (jvmti, NULL, &info);
 	check_jvmti_error (jvmti, error, "failed to get current thread info");
+
+	//
+	// Release the thread_group and context_class_loader
+	// references because we dont not need them.
+	//
+	if (jni != NULL) {
+		(* jni)->DeleteLocalRef (jni, info.thread_group);
+		(* jni)->DeleteLocalRef (jni, info.context_class_loader);
+	}
 
 	return info.name;
 }
@@ -440,7 +449,7 @@ struct thread_info {
 static void
 __thread_info_init (jvmtiEnv * jvmti, JNIEnv * jni, struct thread_info * info) {
 	if (jvmti != NULL && jvm_is_initialized) {
-		info->name = __thread_name (jvmti);
+		info->name = __thread_name (jvmti, jni);
 	}
 
 	if (jni != NULL && jvm_is_started) {
