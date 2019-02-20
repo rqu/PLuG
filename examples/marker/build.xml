@@ -1,3 +1,0 @@
-<project name="disl-example" basedir="." default="build">
-	<import file="../build-example.xml" />
-</project>
