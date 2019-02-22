@@ -3,6 +3,7 @@ package ch.usi.dag.disl.weaver;
 import java.util.Collections;
 import java.util.Comparator;
 
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.TryCatchBlockSorter;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.TryCatchBlockNode;
@@ -14,8 +15,8 @@ import ch.usi.dag.disl.util.AsmHelper.Insns;
 public class AdvancedSorter extends TryCatchBlockSorter {
 
     public AdvancedSorter(MethodNode method) {
-        super(null, method.access, method.name, method.desc, method.signature,
-                null);
+        super(Opcodes.ASM6, null, method.access, method.name, method.desc,
+                method.signature, null);
 
         this.instructions = method.instructions;
         this.tryCatchBlocks = method.tryCatchBlocks;

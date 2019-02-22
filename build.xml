@@ -2,11 +2,11 @@
 <project name="plug" default="all">
 	<target name="download-deps">
 		<mkdir dir="lib"/>
-		<get src="http://central.maven.org/maven2/org/ow2/asm/asm/6.1/asm-6.1.jar" dest="lib/asm.jar"/>
-		<get src="http://central.maven.org/maven2/org/ow2/asm/asm-analysis/6.1/asm-analysis-6.1.jar" dest="lib/asm-analysis.jar"/>
-		<get src="http://central.maven.org/maven2/org/ow2/asm/asm-commons/6.1/asm-commons-6.1.jar" dest="lib/asm-commons.jar"/>
-		<get src="http://central.maven.org/maven2/org/ow2/asm/asm-tree/6.1/asm-tree-6.1.jar" dest="lib/asm-tree.jar"/>
-		<get src="http://central.maven.org/maven2/org/ow2/asm/asm-util/6.1/asm-util-6.1.jar" dest="lib/asm-util.jar"/>
+		<get src="http://central.maven.org/maven2/org/ow2/asm/asm/7.0/asm-7.0.jar" dest="lib/asm.jar"/>
+		<get src="http://central.maven.org/maven2/org/ow2/asm/asm-analysis/7.0/asm-analysis-7.0.jar" dest="lib/asm-analysis.jar"/>
+		<get src="http://central.maven.org/maven2/org/ow2/asm/asm-commons/7.0/asm-commons-7.0.jar" dest="lib/asm-commons.jar"/>
+		<get src="http://central.maven.org/maven2/org/ow2/asm/asm-tree/7.0/asm-tree-7.0.jar" dest="lib/asm-tree.jar"/>
+		<get src="http://central.maven.org/maven2/org/ow2/asm/asm-util/7.0/asm-util-7.0.jar" dest="lib/asm-util.jar"/>
 	</target>
 	
 	<target name="build" depends="download-deps">
