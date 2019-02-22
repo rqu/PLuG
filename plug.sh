@@ -22,7 +22,7 @@ output="$5"
 plug_home="`dirname $0`"
 plug_jar="$plug_home/dist/PLuG.jar"
 
-exec java -cp "$instr:$plug_jar" ch.usi.dag.disl.plug.PLuG "$input" > "$output"
+exec java -cp "$instr:$plug_jar" ch.usi.dag.disl.plug.PLuG "$input" "$instr" > "$output"
 
 # exec should not return
 
