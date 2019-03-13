@@ -5,6 +5,8 @@ import ch.usi.dag.disl.exception.DiSLException;
 import java.io.IOException;
 import java.io.InputStream;
 import static java.util.Arrays.stream;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.zip.CRC32;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -21,10 +23,13 @@ public class PLuG {
         final String[] libs = args[1].split(":");
         
         try(final ZipOutputStream out = new ZipOutputStream(System.out)) {
+            // remember copied directories
+            final Set<String> dirs = new HashSet<>();
+            
             // instrument/copy files from input to output
             final DiSL disl = DiSL.init();
             try(final ZipFile inzip = new ZipFile(in)) {
-                zipCopy(inzip, out, disl, false);
+                zipCopy(inzip, out, dirs, disl, false);
             } finally {
                 disl.terminate();
             }
@@ -32,7 +37,7 @@ public class PLuG {
             // copy classfiles from libraries to output
             stream(libs).forEachOrdered(lib -> {
                 try(final ZipFile libzip = new ZipFile(lib)) {
-                    zipCopy(libzip, out, null, true);
+                    zipCopy(libzip, out, dirs, null, true);
                 } catch(IOException e) {
                     System.err.printf("Ignoring library path entry \"%s\": %s", lib, e.getMessage());
                 }
@@ -40,14 +45,16 @@ public class PLuG {
         }
     }
 
-    private static void zipCopy(final ZipFile in, final ZipOutputStream out, final DiSL disl, final boolean onlyClasses) {
+    private static void zipCopy(final ZipFile in, final ZipOutputStream out, final Set<String> dirs, final DiSL disl, final boolean onlyClasses) {
         in.stream().forEachOrdered(entry -> {
             try {
                 final boolean isDir = entry.isDirectory();
                 final boolean isClass = entry.getName().endsWith(".class");
                 if(isDir) {
-                    out.putNextEntry(entry);
-                    out.closeEntry();
+                    if(dirs.add(entry.getName())) {
+                        out.putNextEntry(entry);
+                        out.closeEntry();
+                    }
                     return;
                 }
                 if(!isClass && onlyClasses) {
