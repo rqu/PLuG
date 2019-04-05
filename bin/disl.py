@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import argparse
 import itertools
@@ -306,12 +306,12 @@ def flatten_all(object):
 	if object is None:
 		return None
 
-	if isinstance(object, basestring):
+	if isinstance(object, str):
 		return [object]
 
 	result = []
 	for x in object:
-		if hasattr(x, "__iter__") and not isinstance(x, basestring):
+		if hasattr(x, "__iter__") and not isinstance(x, str):
 			result.extend(flatten_all(x))
 		else:
 			result.append(x)
