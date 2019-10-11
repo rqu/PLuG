@@ -7,12 +7,12 @@ import ch.usi.dag.disl.marker.BytecodeMarker;
 
 public class DiSLClass {
 
-    @Before(marker = BytecodeMarker.class, args= "aastore", scope = "*TCTask.*")
+    @Before(marker = BytecodeMarker.class, args= "aastore", scope = "*TCTask.run")
     public static void invokedInstr(DynamicContext dc) {
         CodeExecutedRE.intEvent(dc.getStackValue(1, int.class));
     }
 
-    @Before(marker = BytecodeMarker.class, args= "aastore", scope = "*TCTask.*")
+    @Before(marker = BytecodeMarker.class, args= "aastore", scope = "*TCTask.run")
     public static void testing(DynamicContext dc) {
         CodeExecutedRE.objectEvent(dc.getStackValue(0, Object.class));
     }

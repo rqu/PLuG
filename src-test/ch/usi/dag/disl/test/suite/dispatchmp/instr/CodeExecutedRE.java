@@ -13,8 +13,6 @@ public class CodeExecutedRE {
     private static short ieId = REDispatch.registerMethod(
         "ch.usi.dag.disl.test.suite.dispatchmp.instr.CodeExecuted.intEvent");
 
-    private static short oeId = REDispatch.registerMethod(
-        "ch.usi.dag.disl.test.suite.dispatchmp.instr.CodeExecuted.objectEvent");
 
     public static void intEvent(final int num) {
         REDispatch.analysisStart(ieId);
@@ -23,6 +21,10 @@ public class CodeExecutedRE {
 
         REDispatch.analysisEnd();
     }
+
+
+    private static short oeId = REDispatch.registerMethod(
+        "ch.usi.dag.disl.test.suite.dispatchmp.instr.CodeExecuted.objectEvent");
 
     public static void objectEvent(final Object o) {
         REDispatch.analysisStart(oeId);
