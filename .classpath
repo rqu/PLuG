@@ -15,6 +15,6 @@
 	<classpathentry kind="lib" path="lib/disl/asm-analysis.jar" sourcepath="lib/devel/asm-analysis-source.jar"/>
 	<classpathentry kind="lib" path="lib/disl/asm-commons.jar" sourcepath="lib/devel/asm-commons-source.jar"/>
 	<classpathentry kind="lib" path="lib/disl/asm-util.jar" sourcepath="lib/devel/asm-util-source.jar"/>
-	<classpathentry kind="lib" path="lib/disl/protobuf-lite.jar"/>
+	<classpathentry kind="lib" path="lib/disl/protobuf-javalite.jar"/>
 	<classpathentry kind="output" path="output/build/disl"/>
 </classpath>

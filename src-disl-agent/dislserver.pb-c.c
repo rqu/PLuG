@@ -10,7 +10,7 @@
 void   instrument_class_request__init
                      (InstrumentClassRequest         *message)
 {
-  static InstrumentClassRequest init_value = INSTRUMENT_CLASS_REQUEST__INIT;
+  static const InstrumentClassRequest init_value = INSTRUMENT_CLASS_REQUEST__INIT;
   *message = init_value;
 }
 size_t instrument_class_request__get_packed_size
@@ -47,13 +47,15 @@ void   instrument_class_request__free_unpacked
                      (InstrumentClassRequest *message,
                       ProtobufCAllocator *allocator)
 {
+  if(!message)
+    return;
   assert(message->base.descriptor == &instrument_class_request__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
 void   instrument_class_response__init
                      (InstrumentClassResponse         *message)
 {
-  static InstrumentClassResponse init_value = INSTRUMENT_CLASS_RESPONSE__INIT;
+  static const InstrumentClassResponse init_value = INSTRUMENT_CLASS_RESPONSE__INIT;
   *message = init_value;
 }
 size_t instrument_class_response__get_packed_size
@@ -90,6 +92,8 @@ void   instrument_class_response__free_unpacked
                      (InstrumentClassResponse *message,
                       ProtobufCAllocator *allocator)
 {
+  if(!message)
+    return;
   assert(message->base.descriptor == &instrument_class_response__descriptor);
   protobuf_c_message_free_unpacked ((ProtobufCMessage*)message, allocator);
 }
@@ -98,9 +102,9 @@ static const ProtobufCFieldDescriptor instrument_class_request__field_descriptor
   {
     "flags",
     1,
-    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_INT32,
-    offsetof(InstrumentClassRequest, has_flags),
+    0,   /* quantifier_offset */
     offsetof(InstrumentClassRequest, flags),
     NULL,
     NULL,
@@ -110,21 +114,21 @@ static const ProtobufCFieldDescriptor instrument_class_request__field_descriptor
   {
     "className",
     2,
-    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_STRING,
     0,   /* quantifier_offset */
     offsetof(InstrumentClassRequest, classname),
     NULL,
-    NULL,
+    &protobuf_c_empty_string,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
   {
     "classBytes",
     3,
-    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_BYTES,
-    offsetof(InstrumentClassRequest, has_classbytes),
+    0,   /* quantifier_offset */
     offsetof(InstrumentClassRequest, classbytes),
     NULL,
     NULL,
@@ -162,9 +166,9 @@ static const ProtobufCFieldDescriptor instrument_class_response__field_descripto
   {
     "result",
     1,
-    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_ENUM,
-    offsetof(InstrumentClassResponse, has_result),
+    0,   /* quantifier_offset */
     offsetof(InstrumentClassResponse, result),
     &instrument_class_result__descriptor,
     NULL,
@@ -174,21 +178,21 @@ static const ProtobufCFieldDescriptor instrument_class_response__field_descripto
   {
     "errorMessage",
     2,
-    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_STRING,
     0,   /* quantifier_offset */
     offsetof(InstrumentClassResponse, errormessage),
     NULL,
-    NULL,
+    &protobuf_c_empty_string,
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
   {
     "classBytes",
     3,
-    PROTOBUF_C_LABEL_OPTIONAL,
+    PROTOBUF_C_LABEL_NONE,
     PROTOBUF_C_TYPE_BYTES,
-    offsetof(InstrumentClassResponse, has_classbytes),
+    0,   /* quantifier_offset */
     offsetof(InstrumentClassResponse, classbytes),
     NULL,
     NULL,

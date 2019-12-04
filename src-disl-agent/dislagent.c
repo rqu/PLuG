@@ -219,10 +219,8 @@ __instrument_class (
 	// connection again.
 	//
 	InstrumentClassRequest request = INSTRUMENT_CLASS_REQUEST__INIT;
-	request.has_flags = true;
 	request.flags = request_flags;
 	request.classname = (char *) class_name;
-	request.has_classbytes = true;
 	request.classbytes.len = class_def->class_byte_count;
 	request.classbytes.data = (uint8_t *) class_def->class_bytes;
 
@@ -266,7 +264,6 @@ __instrument_class (
 		class_def->class_byte_count = response->classbytes.len;
 		class_def->class_bytes = response->classbytes.data;
 
-		response->has_classbytes = false;
 		response->classbytes.len = 0;
 		response->classbytes.data = NULL;
 
