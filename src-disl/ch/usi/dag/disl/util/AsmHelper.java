@@ -470,7 +470,7 @@ public abstract class AsmHelper {
      */
     public static MethodNode cloneMethod (final MethodNode method) {
         final MethodNode result = new MethodNode (
-            Opcodes.ASM5, method.access, method.name, method.desc,
+            Opcodes.ASM7, method.access, method.name, method.desc,
             method.signature, method.exceptions.toArray (
                 new String [method.exceptions.size ()]
             )
