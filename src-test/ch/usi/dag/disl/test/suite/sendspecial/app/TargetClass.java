@@ -64,7 +64,7 @@ public class TargetClass {
         sendThread (false, thread);
 
         // Send a lot of empty events to force the agent to flush buffers.
-        for (int i = 0; i < 35000; i++) {
+        for (int i = 0; i < 100000; i++) {
             sendEmpty ();
         }
 

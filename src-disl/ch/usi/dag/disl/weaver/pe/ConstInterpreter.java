@@ -17,7 +17,7 @@ import org.objectweb.asm.tree.analysis.Interpreter;
 public class ConstInterpreter extends Interpreter<ConstValue> {
 
     protected ConstInterpreter() {
-        super(Opcodes.ASM5);
+        super(Opcodes.ASM7);
     }
 
     @Override

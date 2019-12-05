@@ -513,7 +513,7 @@
 	<!--
 		The DiSL agent requires a header file containing flags for
 		various code generation options. This target generates the
-		header using "javah" after compiling DiSL.
+		header using "javac -h" after compiling DiSL.
 	-->
 	<target name="-check-disl-agent-codeflags">
 		<property name="build.disl.agent.codeflags.path" value="${src.disl.agent}/codeflags.h"/>
@@ -527,13 +527,25 @@
 	</target>
 
 	<target name="-generate-disl-agent-codeflags" depends="compile-disl">
-		<local name="flags.class"/>
-		<find-class property="flags.class" dir="${build.disl}" name="*CodeOption$Flag"/>
+	    <delete dir="${build.disl.native}" />
+        <mkdir dir="${build.disl.native}" />
 
-		<javah outputFile="${build.disl.agent.codeflags.path}" force="yes">
-			<class name="${flags.class}"/>
-			<classpath refid="disl.classpath"/>
-		</javah>
+		<javac srcdir="${src.disl}" destdir="${build.disl.native}" nativeheaderdir="${build.disl.native}" debug="false" includeantruntime="false">
+			<include name="**/DiSL.java"/>
+			<classpath>
+				<path refid="disl.classpath"/>
+				<path refid="disl.bypass.classpath"/>
+				<path refid="util.classpath"/>
+				<path refid="asm.classpath"/>
+				<path refid="protobuf.classpath"/>
+			</classpath>
+		</javac>
+
+		<concat destfile="${build.disl.agent.codeflags.path}">
+			<fileset file="${build.disl.native}/*.h" />
+		</concat>
+
+		<delete dir="${build.disl.native}"/>
 	</target>
 
 

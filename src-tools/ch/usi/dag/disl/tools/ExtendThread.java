@@ -60,7 +60,7 @@ public final class ExtendThread {
         private Type __owner;
 
         public FieldExtender (final FieldDefinition fd, final ClassWriter cw) {
-            super (Opcodes.ASM5, cw);
+            super (Opcodes.ASM7, cw);
             __fd = fd;
         }
 
@@ -86,7 +86,7 @@ public final class ExtendThread {
 
             if ("<init>".equals (name)) {
                 // Initialize the field.
-                return new AdviceAdapter (Opcodes.ASM5, mv, access, name, desc) {
+                return new AdviceAdapter (Opcodes.ASM7, mv, access, name, desc) {
                     @Override
                     protected void onMethodEnter () {
                         __fd.initialize (__owner, this);
@@ -150,7 +150,7 @@ public final class ExtendThread {
     throws IOException {
         final ClassReader cr = new ClassReader (Thread.class.getName ());
         final ClassWriter cw = new ClassWriter (cr, 0);
-        cr.accept (new FieldExtender (fd, cw), 0);
+        cr.accept (new FieldExtender (fd, cw), ClassReader.EXPAND_FRAMES);
         return cw.toByteArray ();
     }
 

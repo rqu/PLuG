@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.experimental.theories.PotentialAssignment;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
 
@@ -32,6 +33,18 @@ abstract class ShadowClassTestBase {
 
 
     protected abstract ShadowClass _createShadowClass (final Class <?> type);
+
+    /**
+     * Removes ASM specific access flags not defined in the
+     * JVM specification. This is necessary to compare regular and
+     * shadow info.
+     * 
+     * JVM access flags are stored using 16 bits only, so it is just
+     * possible to apply a mask.
+     */
+    private int removeASMSpecificAccessFlags(int modifiers) {
+        return modifiers & 65535;
+    }
 
     //
 
@@ -171,7 +184,7 @@ abstract class ShadowClassTestBase {
     private void __assertEquals (final Field field, final FieldInfo shadowField) {
         Assert.assertEquals (field.getName (), shadowField.getName ());
         Assert.assertEquals (Type.getType (field.getType ()).getDescriptor (), shadowField.getDescriptor ());
-        Assert.assertEquals (field.getModifiers (), shadowField.getModifiers ());
+        Assert.assertEquals (field.getModifiers (), removeASMSpecificAccessFlags(shadowField.getModifiers ()));
     }
 
     //
@@ -233,7 +246,7 @@ abstract class ShadowClassTestBase {
     private void __assertEqual (final Method method, final MethodInfo shadowMethod) {
         Assert.assertEquals (method.getName (), shadowMethod.getName ());
         Assert.assertEquals (Type.getMethodDescriptor (method), shadowMethod.getDescriptor ());
-        Assert.assertEquals (method.getModifiers (), shadowMethod.getModifiers ());
+        Assert.assertEquals (method.getModifiers (), removeASMSpecificAccessFlags(shadowMethod.getModifiers ()));
     }
 
     //
