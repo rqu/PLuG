@@ -78,7 +78,7 @@ else ifeq (Linux,$(TARGET_ENV))
     #
     CFLAGS_WHOLE := -flto -fwhole-program
 
-    ifneq (x86_64,$(TARGET_CPU))
+    ifeq (,$(filter $(TARGET_CPU),x86_64 ppc64))
         CFLAGS += -m32
         LDFLAGS += -melf_i386
     endif
@@ -89,6 +89,8 @@ endif
 
 ifeq (x86_64,$(TARGET_CPU))
     BUILD_DIR := $(JDK_TARGET)-x86_64
+else ifeq (ppc64,$(TARGET_CPU))
+    BUILD_DIR := $(JDK_TARGET)-ppc64
 else
     BUILD_DIR := $(JDK_TARGET)-x86
 endif
