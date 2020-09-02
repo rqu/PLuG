@@ -314,6 +314,7 @@
 		<ac:switch value="${os.arch}" caseinsensitive="true">
 			<case value="x86_64"><property name="disl.agent.arch" value="x86_64"/></case>
 			<case value="amd64"><property name="disl.agent.arch" value="x86_64"/></case>
+			<case value="ppc64"><property name="disl.agent.arch" value="ppc64"/></case>
 			<default><property name="disl.agent.arch" value="x86"/></default>
 		</ac:switch>
 
