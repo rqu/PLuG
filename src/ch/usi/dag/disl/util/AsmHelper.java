@@ -40,13 +40,16 @@ import ch.usi.dag.disl.exception.DiSLFatalException;
 
 public abstract class AsmHelper {
 
-    public static boolean offsetBefore(final InsnList ilst, final int from, final int to) {
-        if (from >= to) {
-            return false;
-        }
-
-        for (int i = from; i < to; i++) {
-            if (ilst.get(i).getOpcode() != -1) {
+    /**
+     * Returns {@code true} if the given list of instructions contains any real
+     * (non-pseudo) instruction node in the range between {@code start}
+     * (inclusive) and {@code end} exclusive.
+     */
+    public static boolean offsetBefore (
+        final InsnList insns, final int start, final int end
+    ) {
+        for (int i = start; i < end; i++) {
+            if (!Insn.isVirtual (insns.get (i))) {
                 return true;
             }
         }
@@ -467,7 +470,7 @@ public abstract class AsmHelper {
      */
     public static MethodNode cloneMethod (final MethodNode method) {
         final MethodNode result = new MethodNode (
-            Opcodes.ASM5, method.access, method.name, method.desc,
+            Opcodes.ASM7, method.access, method.name, method.desc,
             method.signature, method.exceptions.toArray (
                 new String [method.exceptions.size ()]
             )

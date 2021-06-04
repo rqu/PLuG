@@ -381,7 +381,8 @@ public class Weaver {
             new RewriteThreadLocalVarAccessesCodeTransformer (threadLocalVars)
         );
 
-        AdvancedSorter.sort(methodNode);
+        // Sort exception handlers from inner to outer
+        ValidatingTcbSorter.sortTcbs (methodNode);
     }
 
 }

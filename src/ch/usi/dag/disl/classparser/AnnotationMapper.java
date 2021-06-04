@@ -110,7 +110,7 @@ final class AnnotationMapper {
             Predicate <String>, BiConsumer <String, Object>
         > consumers = __findConsumers (ac);
 
-        an.accept (new AnnotationVisitor (Opcodes.ASM5) {
+        an.accept (new AnnotationVisitor (Opcodes.ASM7) {
             @Override
             public void visit (final String name, final Object value) {
                 __getConsumer (consumers, name).accept (name, value);
@@ -149,7 +149,7 @@ final class AnnotationMapper {
         final BiConsumer <String, Object> __consumer;
 
         ListCollector (final String name, final BiConsumer <String, Object> consumer) {
-            super (Opcodes.ASM5);
+            super (Opcodes.ASM7);
 
             __name = name;
             __consumer = consumer;

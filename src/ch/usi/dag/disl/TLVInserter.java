@@ -30,7 +30,7 @@ final class TLVInserter extends ClassVisitor {
     //
 
     public TLVInserter (final ClassVisitor cv, final Set <ThreadLocalVar> tlvs) {
-        super (Opcodes.ASM5, cv);
+        super (Opcodes.ASM7, cv);
         __threadLocals = tlvs;
     }
 
@@ -97,7 +97,7 @@ final class TLVInserter extends ClassVisitor {
             final MethodVisitor mv,
             final int access, final String name, final String desc
         ) {
-            super (Opcodes.ASM5, mv, access, name, desc);
+            super (Opcodes.ASM7, mv, access, name, desc);
             assert JavaNames.isConstructorName (name);
         }
 
