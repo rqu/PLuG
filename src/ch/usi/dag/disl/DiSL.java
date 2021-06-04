@@ -2,6 +2,7 @@ package ch.usi.dag.disl;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.annotation.Native;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -429,7 +430,7 @@ public final class DiSL {
 
             if (!tlvs.isEmpty ()) {
                 // instrument fields
-                final ClassNode cnWithFields = new ClassNode (Opcodes.ASM5);
+                final ClassNode cnWithFields = new ClassNode (Opcodes.ASM7);
                 classNode.accept (new TLVInserter (cnWithFields, tlvs));
 
                 // replace original code with instrumented one
@@ -586,9 +587,13 @@ public final class DiSL {
          * used when communicating with DiSL agent.
          */
         public interface Flag {
+            @Native
             static final int CREATE_BYPASS = 1 << 0;
+            @Native
             static final int DYNAMIC_BYPASS = 1 << 1;
+            @Native
             static final int SPLIT_METHODS = 1 << 2;
+            @Native
             static final int CATCH_EXCEPTIONS = 1 << 3;
         }
 

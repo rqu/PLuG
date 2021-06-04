@@ -52,7 +52,7 @@ public enum ClassNodeHelper {
      * from the given array.
      */
     public ClassNode unmarshal (final byte [] bytes) {
-        final ClassNode result = new ClassNode (Opcodes.ASM5);
+        final ClassNode result = new ClassNode (Opcodes.ASM7);
         new ClassReader (bytes).accept (result, __flags);
         return result;
     }
@@ -63,7 +63,7 @@ public enum ClassNodeHelper {
      * from the given input stream.
      */
     public ClassNode unmarshal (final InputStream is) throws IOException {
-        final ClassNode result = new ClassNode (Opcodes.ASM5);
+        final ClassNode result = new ClassNode (Opcodes.ASM7);
         new ClassReader (is).accept (result, __flags);
         return result;
     }
@@ -74,7 +74,7 @@ public enum ClassNodeHelper {
      * as a resource using the system class loader.
      */
     public ClassNode load (final String className) throws IOException {
-        final ClassNode result = new ClassNode (Opcodes.ASM5);
+        final ClassNode result = new ClassNode (Opcodes.ASM7);
         new ClassReader (className).accept (result, __flags);
         return result;
     }
@@ -89,7 +89,7 @@ public enum ClassNodeHelper {
      * @return a new {@link ClassNode} instance
      */
     public static ClassNode duplicate (final ClassNode source) {
-        final ClassNode result = new ClassNode (Opcodes.ASM5);
+        final ClassNode result = new ClassNode (Opcodes.ASM7);
         source.accept (result);
         return result;
     }
